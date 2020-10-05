@@ -14,24 +14,25 @@ AARPGCharacter::AARPGCharacter()
     PrimaryActorTick.bCanEverTick = false;
 
     CharacterStatusComponent = CreateDefaultSubobject<UCharacterStatusComponent>("CharacterStatusComponent");
+    
 }
-
+ 
 // Called when the game starts or when spawned
 void AARPGCharacter::BeginPlay()
 {
     Super::BeginPlay();
 
+    //检查角色是否设置了名称
     if (CharacterName.IsNone() || CharacterName.IsEqual("DefaultCharacter"))
     {
         if (GEngine)
         {
-            GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow,TEXT("未指定角色CharacterName属性，无法进行初始化"));
+            GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow,TEXT("未指定角色CharacterName属性，ARPGCharacter无法进行初始化"));
         }
-        if (CharacterStatusComponent)
-        {
-            CharacterStatusComponent->SetCharacterName(CharacterName);
-        }
+        
     }
+    CharacterStatusComponent->SetCharacterName(CharacterName);
+
 }
 
 // Called every frame

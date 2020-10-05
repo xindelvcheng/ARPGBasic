@@ -35,12 +35,6 @@ public:
 	UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
 	TSoftClassPtr<UARPGNotifyWidget> NotifyWidgetClass;
 
-	UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
-	TSoftClassPtr<UARPGProgressBar> HPBarClass;
-
-	UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
-	TSoftClassPtr<UARPGProgressBar> SPBarClass;
-	
 	UPROPERTY(Config=Game,EditAnywhere,BlueprintReadWrite,Category="Data Config")
 	TSoftObjectPtr<UDataTable> CharactersConfig;
 

@@ -103,12 +103,5 @@ void UCharacterStatusComponent::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (CharacterName == "DefaultCharacter")
-    {
-        if (GEngine)
-        {
-            GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow,TEXT("角色未设定CharacterName"));
-        }
-    }
     ReInitCharacterProperties(true);
 }

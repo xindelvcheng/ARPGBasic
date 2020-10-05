@@ -252,7 +252,7 @@ public:
         this->Attack = (Attack + Delta) * Radio;
     }
 
-    UFUNCTION(BlueprintCallable,Category="CharacterStatusComponent")
+    UFUNCTION(BlueprintCallable,DisplayName="BeAttackedCalculateBaseDamage",Category="CharacterStatusComponent")
     int CalculateBaseDamage(float BaseDamage)
     {
         return BaseDamage*BaseDamage/(BaseDamage + Defense);
@@ -261,7 +261,7 @@ public:
 protected:
     // Called when the game starts
     virtual void BeginPlay() override;
- 
+    
 
 public:
 
