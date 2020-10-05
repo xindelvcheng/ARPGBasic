@@ -21,6 +21,7 @@ class  UMeleeDamageState : public UAnimNotifyState
     UPROPERTY()
     TArray<AActor*> HitActors;
 
+    UPROPERTY()
     AController* EventInstigator;
 
     FVector LastLocation1;

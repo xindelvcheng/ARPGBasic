@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 
+
 #include "ARPGWidgetsLab.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/Button.h"
@@ -20,6 +21,7 @@
  * 
  */
 
+enum class ECharacterProperty : unsigned char;
 class UMessageWidget;
 
 UCLASS()
@@ -36,8 +38,16 @@ protected:
 
 	virtual void BeginDestroy() override;
 
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="ARPGStatusWidget")
 	TSubclassOf<class UARPGNotifyWidget> NotifyWidgetClass;
+
+	UPROPERTY(BlueprintReadOnly,Category="ARPGStatusWidget",meta=(BindWidget))
+	class UARPGProgressBar* SmoothProgressBar_HP;
+
+	UPROPERTY(BlueprintReadOnly,Category="ARPGStatusWidget",meta=(BindWidget))
+	class UARPGProgressBar* SmoothProgressBar_SP;
+
+	UPROPERTY(BlueprintReadOnly,Category="ARPGStatusWidget",meta=(BindWidget))
+	UTextBlock* TextBlock_Coins;
 	
 	UPROPERTY(BlueprintReadOnly,Category="ARPGStatusWidget",meta=(BindWidget))
 	UScrollBox* ScrollBox_Notifications;
@@ -53,4 +63,11 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	void ShowNotify(UTexture2D* Icon,FText Title,FText Content);
+
+	UFUNCTION(BlueprintCallable)
+	void BindToMainCharacter(class AARPGMainCharacter* MainCharacter);
+
+	UFUNCTION()
+	void ProcessCharacterPropertiesChanged(ECharacterProperty hangedProperty, int CurrentValue, int TotalValue,
+                                                  int DeltaValue);
 };

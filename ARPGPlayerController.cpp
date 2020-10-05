@@ -36,6 +36,7 @@ void AARPGPlayerController::OnPossess(APawn* InPawn)
                     ARPGGameInstanceSubsystem->StatusWidget = Cast<UARPGStatusWidget>(
                         CreateWidget(this, StatusWidgetClass));
                     ARPGGameInstanceSubsystem->StatusWidget->AddToViewport();
+                    ARPGGameInstanceSubsystem->StatusWidget->BindToMainCharacter(MainCharacter);
                 }
                 else
                 {

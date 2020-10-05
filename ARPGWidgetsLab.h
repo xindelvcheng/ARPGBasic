@@ -55,7 +55,10 @@ class UARPGProgressBar : public UUserWidget
 
 protected:
     virtual bool Initialize() override;
+    virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
+public:
     UFUNCTION(BlueprintCallable,Category="ARPGProgressBar")
     void SetPercent(int Current,int Total);
-    virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+    
 };

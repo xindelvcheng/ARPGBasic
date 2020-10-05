@@ -57,6 +57,9 @@ const float SpecialtyFactor = 30.f;
 const float SPCostPerNormalAttackFactor = 0.25;
 const float SPResumeTime = 1.f;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FCharacterPropertyChangedEvent, ECharacterProperty,
+                                                  ChangedProperty, int, CurrentValue, int, TotalValue,
+                                                  int, DeltaValue);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class  UCharacterStatusComponent : public UActorComponent
@@ -67,11 +70,6 @@ class  UCharacterStatusComponent : public UActorComponent
 public:
 
     void SetCharacterName(const FName& NewName);
-
-
-    DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FCharacterPropertyChangedEvent, ECharacterProperty,
-                                                  ChangedProperty, int, CurrentValue, int, TotalValue,
-                                                  int, DeltaValue);
 
     UPROPERTY(BlueprintAssignable)
     FCharacterPropertyChangedEvent OnCharacterPropertyChanged;
@@ -178,7 +176,7 @@ public:
     {
         const int Temp = CurrentSP;
         CurrentSP = NewCurrentSP;
-        OnCharacterPropertyChanged.Broadcast(ECharacterProperty::CurrentSP, CurrentSP, CurrentSP, CurrentSP - Temp);
+        OnCharacterPropertyChanged.Broadcast(ECharacterProperty::CurrentSP, CurrentSP, MaxSP, CurrentSP - Temp);
     }
 
     DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCharacterStaminaExhaustedEvent);
@@ -190,8 +188,8 @@ public:
     void UpdateCharacterSP(const int DeltaSP)
     {
         const int Temp = CurrentSP;
-        this->CurrentSP = FMath::Clamp(CurrentSP + DeltaSP, 0, MaxHP);
-        OnCharacterPropertyChanged.Broadcast(ECharacterProperty::CurrentSP, CurrentHP, MaxSP, CurrentSP - Temp);
+        this->CurrentSP = FMath::Clamp(CurrentSP + DeltaSP, 0, MaxSP);
+        OnCharacterPropertyChanged.Broadcast(ECharacterProperty::CurrentSP, CurrentSP, MaxSP, CurrentSP - Temp);
         if (this->CurrentSP <= 0)
         {
             OnCharacterStaminaExhausted.Broadcast();

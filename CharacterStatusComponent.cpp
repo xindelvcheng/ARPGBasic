@@ -27,7 +27,7 @@ void UCharacterStatusComponent::ReInitCharacterProperties(bool bInitFromDataTabl
             }
             return;
         }
-        FCharacterConfigStruct* CharacterArchiveStruct = CharactersConfigDataTable->FindRow<FCharacterConfigStruct>(
+        FCharacterInitConfigStruct* CharacterArchiveStruct = CharactersConfigDataTable->FindRow<FCharacterInitConfigStruct>(
             CharacterName,TEXT("PostEditChangeProperty"));
         if (CharacterArchiveStruct)
         {

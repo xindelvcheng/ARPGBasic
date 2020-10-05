@@ -5,18 +5,19 @@
 #include "CoreMinimal.h"
 
 
+#include "CharacterStatusComponent.h"
 #include "ArchiveStructs.h"
 #include "GameFramework/Character.h"
 #include "ARPGCharacter.generated.h"
 
 UCLASS()
-class  AARPGCharacter : public ACharacter
+class AARPGCharacter : public ACharacter
 {
     GENERATED_BODY()
     UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGBASIC",meta=(AllowPrivateAccess))
     FName CharacterName = "DefaultCharacter";
 
-    public:
+public:
     // Sets default values for this character's properties
     AARPGCharacter();
 
@@ -32,7 +33,7 @@ class  AARPGCharacter : public ACharacter
         CharacterStatusComponent->SetCharacterName(CharacterName);
     }
 
-    
+
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
@@ -57,6 +58,9 @@ public:
 private:
 
 public:
+
+    // 转发常用属性到CharacterStatusComponent
+
     UFUNCTION(BlueprintPure,Category="ARPGBASIC")
     int GetCharacterLevel() const
     {
@@ -69,7 +73,7 @@ public:
         return CharacterStatusComponent->GetMaxHP();
     }
 
-    
+
     UFUNCTION(BlueprintPure,Category="ARPGBASIC")
     int GetCurrentHP() const
     {
@@ -83,11 +87,11 @@ public:
     }
 
     UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
-    void UpdateCurrentHP(const int DeltaHP)const
+    void UpdateCurrentHP(const int DeltaHP) const
     {
         CharacterStatusComponent->UpdateCharacterHP(DeltaHP);
     }
-    
+
     UFUNCTION(BlueprintPure,Category="ARPGBASIC")
     int GetMaxSP() const
     {
@@ -107,20 +111,25 @@ public:
     }
 
     UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
-    void UpdateCurrentSP(const int DeltaSP)const
+    void UpdateCurrentSP(const int DeltaSP) const
     {
         CharacterStatusComponent->UpdateCharacterSP(DeltaSP);
     }
 
     UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
-    int GetCoins()const
+    int GetCoins() const
     {
         return CharacterStatusComponent->GetCoins();
     }
 
     UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
-    void UpdateCoins(const int DeltaCoins)const
+    void UpdateCoins(const int DeltaCoins) const
     {
         CharacterStatusComponent->UpdateCharacterCoins(DeltaCoins);
+    }
+
+    FCharacterPropertyChangedEvent& OnCharacterPropertyChanged() const
+    {
+        return CharacterStatusComponent->OnCharacterPropertyChanged;
     }
 };

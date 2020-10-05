@@ -68,7 +68,7 @@ struct FCharacterArchiveStruct
 };
 
 USTRUCT(BlueprintType)
-struct FCharacterConfigStruct : public FTableRowBase
+struct FCharacterInitConfigStruct : public FTableRowBase
 {
     GENERATED_BODY()
 

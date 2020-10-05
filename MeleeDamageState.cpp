@@ -26,6 +26,7 @@ void UMeleeDamageState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSeque
         StatusComponent = Cast<UCharacterStatusComponent>(
             Player->FindComponentByClass(UCharacterStatusComponent::StaticClass()));
     }
+    ObjectTypes.AddUnique(EObjectTypeQuery::ObjectTypeQuery2);
     ObjectTypes.AddUnique(EObjectTypeQuery::ObjectTypeQuery3);
 
     HitActors.Empty();
