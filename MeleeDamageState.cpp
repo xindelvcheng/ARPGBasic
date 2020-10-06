@@ -26,6 +26,7 @@ void UMeleeDamageState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSeque
         StatusComponent = Cast<UCharacterStatusComponent>(
             Player->FindComponentByClass(UCharacterStatusComponent::StaticClass()));
     }
+    ObjectTypes.AddUnique(EObjectTypeQuery::ObjectTypeQuery1);
     ObjectTypes.AddUnique(EObjectTypeQuery::ObjectTypeQuery2);
     ObjectTypes.AddUnique(EObjectTypeQuery::ObjectTypeQuery3);
 
@@ -72,13 +73,16 @@ void UMeleeDamageState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequen
             if (!HitActors.Contains(HitActor))
             {
                 HitActors.Add(HitActor);
-                UGameplayStatics::ApplyPointDamage(
+                if (CauseDamage)
+                {
+                    UGameplayStatics::ApplyPointDamage(
                     HitActor, BaseDamage,
                     HitResult[i].Location, HitResult[i],
                     EventInstigator,
                     Player, DamageTypeClass
                                 ? DamageTypeClass
                                 : StatusComponent->GetMeleeDamageType());
+                }
                 if (StatusComponent)
                 {
                     StatusComponent->OnAttackHitActor.Broadcast(HitResult[i]);

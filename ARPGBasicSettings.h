@@ -31,11 +31,13 @@ public:
     
 	UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
 	TSoftClassPtr<UARPGStatusWidget> StatusWidgetClass;
-
+	
 	UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
 	TSoftClassPtr<UARPGNotifyWidget> NotifyWidgetClass;
 
 	UPROPERTY(Config=Game,EditAnywhere,BlueprintReadWrite,Category="Data Config")
 	TSoftObjectPtr<UDataTable> CharactersConfig;
 
+	UPROPERTY(Config=Game,EditAnywhere,BlueprintReadWrite,Category="Transcendental Laws Constructor Config")
+	TSoftObjectPtr<UDataTable> LevelToRealmConfig;
 };

@@ -4,11 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Components/CanvasPanel.h"
-#include "Components/ProgressBar.h"
-#include "Components/SizeBox.h"
-
-
 #include "ARPGWidgetsLab.generated.h"
 
 /**
@@ -51,7 +46,7 @@ class UARPGProgressBar : public UUserWidget
     float DummyValue;
     
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGProgressBar",meta=(BindWidget,AllowPrivateAccess))
-    UProgressBar* ProgressBar;
+    class UProgressBar* ProgressBar;
 
 protected:
     virtual bool Initialize() override;

@@ -8,9 +8,8 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
-#include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
-#include "Kismet/GameplayStatics.h"
+#include "Components/ProgressBar.h"
 
 
 bool UARPGNotifyWidget::Initialize()
@@ -42,7 +41,7 @@ void UARPGProgressBar::SetPercent(int Current, int Total)
     TrueValue = static_cast<float>(Current);
     TotalValue = static_cast<float>(Total);
 
-    int Length = static_cast<int>(300*(1 + TotalValue/((TotalValue/2)+300)));
+    int Length = static_cast<int>(300*(1 + TotalValue/((TotalValue/3)+300)));
     if (GEngine)
     {
         UCanvasPanelSlot* CanvasPanelSlot = Cast<UCanvasPanelSlot>(ProgressBar->Slot);

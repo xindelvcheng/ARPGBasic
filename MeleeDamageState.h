@@ -38,12 +38,14 @@ class  UMeleeDamageState : public UAnimNotifyState
     float BaseAttack;
 
 protected:
-    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPG Basic")
+    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Melee Damage Trace")
     TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
 
-    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPG Basic")
-    bool bDrawDebug;
-
+    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Melee Damage Trace")
+    bool bDrawDebug = false;
+ 
+    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Melee Damage Trace")
+    bool CauseDamage = true;
     
 public:
 

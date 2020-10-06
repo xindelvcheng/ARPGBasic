@@ -7,6 +7,8 @@
 #include "Engine/DataTable.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "math.h"
+#include "Kismet/KismetStringLibrary.h"
+
 
 #include "CharacterStatusComponent.generated.h"
 
@@ -58,14 +60,19 @@ const float SPCostPerNormalAttackFactor = 0.25;
 const float SPResumeTime = 1.f;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FCharacterPropertyChangedEvent, ECharacterProperty,
-                                                  ChangedProperty, int, CurrentValue, int, TotalValue,
-                                                  int, DeltaValue);
+                                              ChangedProperty, int, CurrentValue, int, TotalValue,
+                                              int, DeltaValue);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class  UCharacterStatusComponent : public UActorComponent
+class UCharacterStatusComponent : public UActorComponent
 
 {
     GENERATED_BODY()
+
+    FTimerHandle SPResumeTimerHandle;
+    FTimerHandle SPGrowingTimerHandle;
+    FTimerDelegate SPResumeTimerDelegate;
+    FTimerDelegate SPGrowingTimerDelegate;
 
 public:
 
@@ -136,8 +143,12 @@ public:
     void SetCurrentHP(const int NewCurrentHP)
     {
         const int Temp = CurrentHP;
-        CurrentHP = NewCurrentHP;
-        OnCharacterPropertyChanged.Broadcast(ECharacterProperty::CurrentHP, CurrentHP, CurrentHP, CurrentHP - Temp);
+        CurrentHP = FMath::Clamp(NewCurrentHP, 0, MaxHP);
+        OnCharacterPropertyChanged.Broadcast(ECharacterProperty::CurrentHP, CurrentHP, MaxHP, CurrentHP - Temp);
+        if (this->CurrentHP <= 0)
+        {
+            OnCharacterDeath.Broadcast();
+        }
     }
 
     DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCharacterDeathEvent);
@@ -148,13 +159,8 @@ public:
     UFUNCTION(BlueprintCallable,Category="CharacterStatusComponent")
     void UpdateCharacterHP(const int DeltaHP)
     {
-        const int Temp = CurrentHP;
-        this->CurrentHP = FMath::Clamp(CurrentHP + DeltaHP, 0, MaxHP);
-        OnCharacterPropertyChanged.Broadcast(ECharacterProperty::CurrentHP, CurrentHP, MaxHP, CurrentHP - Temp);
-        if (this->CurrentHP <= 0)
-        {
-            OnCharacterDeath.Broadcast();
-        }
+        //Check value in set
+        SetCurrentHP(CurrentHP + DeltaHP);
     }
 
     UFUNCTION(BlueprintCallable,Category="CharacterStatusComponent")
@@ -171,29 +177,61 @@ public:
     UFUNCTION(BlueprintCallable,Category="CharacterStatusComponent")
     FORCEINLINE int GetCurrentSP() const { return CurrentSP; }
 
-    UFUNCTION(BlueprintCallable,Category="CharacterStatusComponent")
-    void SetCurrentSP(const int NewCurrentSP)
-    {
-        const int Temp = CurrentSP;
-        CurrentSP = NewCurrentSP;
-        OnCharacterPropertyChanged.Broadcast(ECharacterProperty::CurrentSP, CurrentSP, MaxSP, CurrentSP - Temp);
-    }
-
     DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCharacterStaminaExhaustedEvent);
 
     UPROPERTY(BlueprintAssignable)
     FCharacterStaminaExhaustedEvent OnCharacterStaminaExhausted;
 
     UFUNCTION(BlueprintCallable,Category="CharacterStatusComponent")
-    void UpdateCharacterSP(const int DeltaSP)
+    void SetCurrentSP(const int NewCurrentSP)
     {
         const int Temp = CurrentSP;
-        this->CurrentSP = FMath::Clamp(CurrentSP + DeltaSP, 0, MaxSP);
+        CurrentSP = FMath::Clamp(NewCurrentSP, 0, MaxSP);
         OnCharacterPropertyChanged.Broadcast(ECharacterProperty::CurrentSP, CurrentSP, MaxSP, CurrentSP - Temp);
         if (this->CurrentSP <= 0)
         {
             OnCharacterStaminaExhausted.Broadcast();
         }
+
+        GetWorld()->GetTimerManager().ClearTimer(SPResumeTimerHandle);
+        GetWorld()->GetTimerManager().ClearTimer(SPGrowingTimerHandle);
+
+        if (!SPResumeTimerDelegate.IsBound())
+        {
+            SPResumeTimerDelegate.BindLambda([&]()
+            {
+                GetWorld()->GetTimerManager().SetTimer(SPGrowingTimerHandle, SPGrowingTimerDelegate, 0.1, true);
+            });
+        }
+
+        if (!SPGrowingTimerDelegate.IsBound())
+        {
+            SPGrowingTimerDelegate.BindLambda([&]()
+            {
+                if (CurrentSP >= MaxSP)
+                {
+                    GetWorld()->GetTimerManager().ClearTimer(SPGrowingTimerHandle);
+                    return;
+                }
+                const float FloatMaxSP = static_cast<float>(MaxSP);
+                CurrentSP += static_cast<int>((FloatMaxSP / 20.f) * StaminaSpecialty) > 0
+                                 ? static_cast<int>((FloatMaxSP / 100.f) * StaminaSpecialty)
+                                 : 1;
+                CurrentSP = CurrentSP > MaxSP ? MaxSP : CurrentSP;
+                OnCharacterPropertyChanged.Broadcast(ECharacterProperty::CurrentSP, CurrentSP, MaxSP, CurrentSP - Temp);
+            });
+        }
+
+        if (CurrentSP < MaxSP)
+        {
+            GetWorld()->GetTimerManager().SetTimer(SPResumeTimerHandle, SPResumeTimerDelegate, 3, false);
+        }
+    }
+
+    UFUNCTION(BlueprintCallable,Category="CharacterStatusComponent")
+    void UpdateCharacterSP(const int DeltaSP)
+    {
+        SetCurrentSP(CurrentSP + DeltaSP);
     }
 
     UFUNCTION(BlueprintCallable,Category="CharacterStatusComponent")
@@ -235,7 +273,7 @@ public:
     UFUNCTION(BlueprintCallable,Category="CharacterStatusComponent")
     int CalculateValueBySpecialty(const int Specialty) const
     {
-        return  pow(1.414,Level)*(1 + 0.1 * Specialty);
+        return pow(1.414, Level) * (1 + 0.1 * Specialty);
     }
 
 
@@ -243,7 +281,7 @@ public:
     bool LevelUp(const ESpecialties Specialty);
 
     UFUNCTION(BlueprintCallable,Category="CharacterStatusComponent")
-    FORCEINLINE int GetLevelUpCost()const{return FMath::Pow(1.1, Level) * (10 + 0.1 * Level);};
+    FORCEINLINE int GetLevelUpCost() const { return FMath::Pow(1.1, Level) * (10 + 0.1 * Level); };
 
 
     UFUNCTION(BlueprintCallable,Category="CharacterStatusComponent")
@@ -255,13 +293,13 @@ public:
     UFUNCTION(BlueprintCallable,DisplayName="BeAttackedCalculateBaseDamage",Category="CharacterStatusComponent")
     int CalculateBaseDamage(float BaseDamage)
     {
-        return BaseDamage*BaseDamage/(BaseDamage + Defense);
+        return BaseDamage * BaseDamage / (BaseDamage + Defense);
     }
-    
+
 protected:
     // Called when the game starts
     virtual void BeginPlay() override;
-    
+
 
 public:
 
@@ -365,6 +403,3 @@ public:
         this->ToughnessSpecialty = NewToughnessSpecialty;
     }
 };
-
-
-
