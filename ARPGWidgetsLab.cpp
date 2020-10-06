@@ -4,12 +4,15 @@
 #include "ARPGWidgetsLab.h"
 
 
+
+#include "ARPGBasicSettings.h"
 #include "ARPGGameInstanceSubsystem.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/ProgressBar.h"
+#include "Kismet/GameplayStatics.h"
 
 
 bool UARPGNotifyWidget::Initialize()
@@ -50,6 +53,69 @@ void UARPGProgressBar::SetPercent(int Current, int Total)
             CanvasPanelSlot->SetSize(FVector2D(Length,15));
         }
     }
+}
+
+bool UARPGPromptWidget::Initialize()
+{
+    Super::Initialize();
+
+    if (!Button_Yes || !Button_No || !TextBlock_PromptText)
+    {
+        UARPGGameInstanceSubsystem::PrintLogToScreen(TEXT("ARPGPromptWidget未合理设置"));
+        return false;
+    }
+
+    Button_Yes->OnClicked.AddDynamic(this,&UARPGPromptWidget::OnClickButton_Yes);
+    Button_No->OnClicked.AddDynamic(this,&UARPGPromptWidget::OnClickButton_No);
+    return true;
+}
+
+void UARPGPromptWidget::OnClickButton_Yes()
+{
+    OnChooseYes.ExecuteIfBound();
+    RemoveFromParent();
+}
+
+void UARPGPromptWidget::OnClickButton_No()
+{
+    OnChooseNo.ExecuteIfBound();
+    RemoveFromParent();
+}
+
+void UARPGPromptWidget::SetPromptText(FText PromptText)
+{
+    TextBlock_PromptText->SetText(PromptText);
+}
+
+UShowPromptWidgetBlueprintNode* UShowPromptWidgetBlueprintNode::ShowPromptWidget(const UObject* WorldContextObject,FText PromptText)
+{
+    UShowPromptWidgetBlueprintNode* Node = NewObject<UShowPromptWidgetBlueprintNode>();
+    Node->CreatePromptWidget(WorldContextObject->GetWorld(), PromptText);
+    return Node;
+}
+
+void UShowPromptWidgetBlueprintNode::CreatePromptWidget(const UWorld* World, FText PromptText)
+{
+    if (UARPGBasicSettings::Get())
+    {
+        PromptWidgetClass = LoadClass<UARPGPromptWidget>(
+            nullptr, *UARPGBasicSettings::Get()->PromptWidgetClass.ToSoftObjectPath().ToString());
+
+        verifyf(PromptWidgetClass, TEXT("没有设定PromptWidgetClass"))
+    }
+
+    UARPGPromptWidget* PromptWidget = Cast<UARPGPromptWidget>(CreateWidget(UGameplayStatics::GetPlayerController(World,0),PromptWidgetClass));
+    PromptWidget->SetPromptText(PromptText);
+    PromptWidget->OnChooseYes.BindLambda([&]()
+    {
+        Yes.Broadcast();
+    });
+    PromptWidget->OnChooseNo.BindLambda([&]()
+    {
+        No.Broadcast();
+        
+    });
+    PromptWidget->AddToViewport();
 }
 
 void UARPGProgressBar::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)

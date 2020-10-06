@@ -1,9 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+// ReSharper disable CppMemberFunctionMayBeConst
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Kismet/BlueprintAsyncActionBase.h"
+
 #include "ARPGWidgetsLab.generated.h"
 
 /**
@@ -44,7 +47,7 @@ class UARPGProgressBar : public UUserWidget
     float TotalValue;
     float TrueValue;
     float DummyValue;
-    
+
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGProgressBar",meta=(BindWidget,AllowPrivateAccess))
     class UProgressBar* ProgressBar;
 
@@ -54,6 +57,60 @@ protected:
 
 public:
     UFUNCTION(BlueprintCallable,Category="ARPGProgressBar")
-    void SetPercent(int Current,int Total);
+    void SetPercent(int Current, int Total);
+};
+
+
+UCLASS()
+class UARPGPromptWidget : public UUserWidget
+{
+    GENERATED_BODY()
+
+
+    UPROPERTY(BlueprintReadOnly,Category="ARPGWidgetsLab",meta=(BindWidget,AllowPrivateAccess))
+    class UButton* Button_Yes;
+
+    UPROPERTY(BlueprintReadOnly,Category="ARPGWidgetsLab",meta=(BindWidget,AllowPrivateAccess))
+    class UButton* Button_No;
+
+    UPROPERTY(BlueprintReadOnly,Category="ARPGWidgetsLab",meta=(BindWidget,AllowPrivateAccess))
+    class UTextBlock* TextBlock_PromptText;
+
+public:
+    virtual bool Initialize() override;
+
+    DECLARE_DELEGATE(FMakeDecisionEvent);
+    FMakeDecisionEvent OnChooseYes;
+    FMakeDecisionEvent OnChooseNo;
+
+    UFUNCTION()
+    void OnClickButton_Yes();
     
+    UFUNCTION()
+    void OnClickButton_No();
+
+    void SetPromptText(FText PromptText);
+};
+
+UCLASS()
+class UShowPromptWidgetBlueprintNode : public UBlueprintAsyncActionBase
+{
+    GENERATED_BODY()
+    TSubclassOf<UARPGPromptWidget> PromptWidgetClass;
+
+public:
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMakeDecisionEvent);
+
+    UPROPERTY(BlueprintAssignable)
+    FMakeDecisionEvent Yes;
+
+    UPROPERTY(BlueprintAssignable)
+    FMakeDecisionEvent No;
+
+
+    UFUNCTION(BlueprintCallable,Category="ARPGWidgetsLab",meta=(BlueprintInternalUseOnly="true",WorldContext=
+        "WorldContextObject"))
+    static UShowPromptWidgetBlueprintNode* ShowPromptWidget(const UObject* WorldContextObject,FText PromptText);
+
+    void CreatePromptWidget(const UWorld* World, FText PromptMessage);
 };

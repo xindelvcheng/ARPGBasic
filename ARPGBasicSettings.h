@@ -35,6 +35,10 @@ public:
 	UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
 	TSoftClassPtr<UARPGNotifyWidget> NotifyWidgetClass;
 
+		
+	UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
+	TSoftClassPtr<UARPGPromptWidget> PromptWidgetClass;
+	
 	UPROPERTY(Config=Game,EditAnywhere,BlueprintReadWrite,Category="Data Config")
 	TSoftObjectPtr<UDataTable> CharactersConfig;
 
