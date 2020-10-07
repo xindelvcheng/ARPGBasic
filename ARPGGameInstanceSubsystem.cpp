@@ -114,18 +114,8 @@ bool UARPGGameInstanceSubsystem::SaveArchive(FString ArchiveName)
         FArchiveInfoStruct& ArchiveInfoStruct = ArchiveManager->ArchiveInfos[i];
         if (ArchiveInfoStruct.SlotName == ArchiveName)
         {
-            // //保存背包数据
-            // const auto GameItemsManagerComponent = MainCharacter->GetGameItemsManagerComponent();
-            // for (auto GameItem : GameItemsManagerComponent->GetAllGameItemsInBag())
-            // {
-            //     TSharedPtr<FGameItemArchiveStruct> GameItemArchiveStruct(new FGameItemArchiveStruct());
-            //     GameItemArchiveStruct->GameItemClass = GetPathNameSafe(GameItem->GetClass());
-            //
-            //     GameItemArchiveStruct->Number = GameItem->Number;
-            //     GameSaver->GameItemsInBag.Emplace(*GameItemArchiveStruct);
-            // }
 
-            //保存所有道具
+            //保存道具
             TArray<AActor*> GameItems;
             UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGameItem::StaticClass(), GameItems);
             for (AActor* Actor : GameItems)
@@ -142,7 +132,7 @@ bool UARPGGameInstanceSubsystem::SaveArchive(FString ArchiveName)
                 }
             }
 
-            //保存所有角色
+            //保存角色
             TArray<AActor*> OutActors;
             UGameplayStatics::GetAllActorsOfClass(GetWorld(), AARPGCharacter::StaticClass(), OutActors);
             for (auto Actor : OutActors)
@@ -279,18 +269,9 @@ void UARPGGameInstanceSubsystem::OnLevelLoaded()
         UE_LOG(LogTemp, Warning, TEXT("%s角色已重新生成"), *Character->GetCharacterName().ToString());
     }
 
-    //还原背包数据
-    // TArray<AGameItem*> Bag;
-    // for (auto ItemArchiveStruct : GameSaver->GameItemsInBag)
-    // {
-    //     AGameItem* GameItem = Cast<AGameItem>(
-    //         GetWorld()->SpawnActor(LoadClass<AGameItem>(nullptr, *ItemArchiveStruct.GameItemClass.ToString())));
-    //     GameItem->Number = ItemArchiveStruct.Number;
-    //     Bag.Emplace(GameItem->BeTaken());
-    //     
-    //     UE_LOG(LogTemp, Warning, TEXT("%s物品已重新生成"), *GameItem->ItemName.ToString());
-    // }
 
+    
+    //还原道具
     TArray<AGameItem*> Bag;
     for (auto GameItemArchiveStruct : GameSaver->GameItems)
     {
