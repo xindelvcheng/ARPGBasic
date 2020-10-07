@@ -19,7 +19,9 @@ class  AARPGPlayerController : public APlayerController
 	virtual void OnPossess(APawn* InPawn) override;
 
 public:
+	AARPGPlayerController();
+	
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerControllerPossesEvent,ACharacter*,PossedCharacter);
 	FPlayerControllerPossesEvent OnPlayerControllerPosses;
-	
+	TSubclassOf<UARPGStatusWidget> StatusWidgetClass;
 };

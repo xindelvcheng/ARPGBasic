@@ -55,4 +55,7 @@ public:
 
 	UPROPERTY(BlueprintReadWrite)
 	bool IsInBag;
+
+	UPROPERTY(BlueprintReadWrite)
+	bool IsUnique;
 };

@@ -12,6 +12,7 @@
 #include "ARPGPlayerController.h"
 #include "ARPGGameItemsManagerComponent.h"
 #include "Engine/LevelStreamingDynamic.h"
+#include "Kismet/KismetTextLibrary.h"
 
 void UARPGGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -24,7 +25,7 @@ void UARPGGameInstanceSubsystem::Deinitialize()
 }
 
 
-UAPRGArchiveManager* UARPGGameInstanceSubsystem::GetArchiveManager()
+TArray<FArchiveInfoStruct> UARPGGameInstanceSubsystem::GetArchiveInfos()
 {
     if (!ArchiveManager)
     {
@@ -47,14 +48,55 @@ UAPRGArchiveManager* UARPGGameInstanceSubsystem::GetArchiveManager()
         }
     }
 
-    return ArchiveManager;
+    return ArchiveManager->ArchiveInfos;
 }
 
-void UARPGGameInstanceSubsystem::ShowNotify(UTexture2D* Icon, FText Title, FText Content) const
+AARPGMainCharacter* UARPGGameInstanceSubsystem::GetMainCharacter(const UObject* WorldContextObject)
 {
-    if (StatusWidget)
+    UWorld* World = GEngine->GetWorldFromContextObjectChecked(WorldContextObject);
+    if (UARPGGameInstanceSubsystem::Get(World))
     {
-        StatusWidget->ShowNotify(Icon, Title, Content);
+        return World->GetGameInstance()->GetSubsystem<UARPGGameInstanceSubsystem>()->MainCharacter.Get();
+    }
+    return nullptr;
+}
+
+
+AARPGPlayerController* UARPGGameInstanceSubsystem::GetMainCharacterController(const UObject* WorldContextObject)
+{
+    UWorld* World = GEngine->GetWorldFromContextObjectChecked(WorldContextObject);
+    if (UARPGGameInstanceSubsystem::Get(World))
+    {
+        return UARPGGameInstanceSubsystem::Get(World)->MainCharacterController.Get();
+    }
+    return nullptr;
+}
+
+UARPGStatusWidget* UARPGGameInstanceSubsystem::GetMainCharacterStatusWidget(const UObject* WorldContextObject)
+{
+    UWorld* World = GEngine->GetWorldFromContextObjectChecked(WorldContextObject);
+    if (UARPGGameInstanceSubsystem::Get(World))
+    {
+        return UARPGGameInstanceSubsystem::Get(World)->StatusWidget.Get();
+    }
+    return nullptr;
+}
+
+void UARPGGameInstanceSubsystem::ShowNotify(const UObject* WorldContextObject, UTexture2D* Icon, FText Title,
+                                            FText Content)
+{
+    UWorld* World = GEngine->GetWorldFromContextObjectChecked(WorldContextObject);
+    if (UARPGGameInstanceSubsystem::Get(World))
+    {
+        const auto StatusWidget = UARPGGameInstanceSubsystem::Get(World)->GetMainCharacterStatusWidget(World);
+        if (StatusWidget)
+        {
+            StatusWidget->ShowNotify(Icon, Title, Content);
+        }
+        else
+        {
+            PrintLogToScreen(UKismetTextLibrary::Conv_TextToString(Title));
+        }
     }
 }
 
@@ -72,15 +114,32 @@ bool UARPGGameInstanceSubsystem::SaveArchive(FString ArchiveName)
         FArchiveInfoStruct& ArchiveInfoStruct = ArchiveManager->ArchiveInfos[i];
         if (ArchiveInfoStruct.SlotName == ArchiveName)
         {
-            //保存背包数据
-            const auto GameItemsManagerComponent = MainCharacter->GetGameItemsManagerComponent();
-            for (auto GameItem : GameItemsManagerComponent->GetAllGameItemsInBag())
+            // //保存背包数据
+            // const auto GameItemsManagerComponent = MainCharacter->GetGameItemsManagerComponent();
+            // for (auto GameItem : GameItemsManagerComponent->GetAllGameItemsInBag())
+            // {
+            //     TSharedPtr<FGameItemArchiveStruct> GameItemArchiveStruct(new FGameItemArchiveStruct());
+            //     GameItemArchiveStruct->GameItemClass = GetPathNameSafe(GameItem->GetClass());
+            //
+            //     GameItemArchiveStruct->Number = GameItem->Number;
+            //     GameSaver->GameItemsInBag.Emplace(*GameItemArchiveStruct);
+            // }
+
+            //保存所有道具
+            TArray<AActor*> GameItems;
+            UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGameItem::StaticClass(), GameItems);
+            for (AActor* Actor : GameItems)
             {
-                TSharedPtr<FGameItemArchiveStruct> GameItemArchiveStruct(new FGameItemArchiveStruct());
-                GameItemArchiveStruct->GameItemClass = GetPathNameSafe(GameItem->GetClass());
-                
-                GameItemArchiveStruct->Number = GameItem->Number;
-                GameSaver->GameItems.Emplace(*GameItemArchiveStruct);
+                AGameItem* GameItem = Cast<AGameItem>(Actor);
+                if (GameItem)
+                {
+                    FGameItemArchiveStruct GameItemArchiveStruct;
+                    GameItemArchiveStruct.GameItemClass = GetPathNameSafe(GameItem->GetClass());
+                    GameItemArchiveStruct.Number = GameItem->Number;
+                    GameItemArchiveStruct.IsInBag = GameItem->IsInBag;
+                    GameItemArchiveStruct.Transform = GameItem->GetActorTransform();
+                    GameSaver->GameItems.Add(GameItemArchiveStruct);
+                }
             }
 
             //保存所有角色
@@ -167,18 +226,6 @@ void UARPGGameInstanceSubsystem::OnLevelLoaded()
     MainCharacter->SetActorTransform(GameSaver->MainCharacterTransform);
 
 
-    //还原背包数据
-    TArray<AGameItem*> Bag;
-    for (auto ItemArchiveStruct : GameSaver->GameItems)
-    {
-        AGameItem* GameItem = Cast<AGameItem>(
-            GetWorld()->SpawnActor(LoadClass<AGameItem>(nullptr, *ItemArchiveStruct.GameItemClass.ToString())));
-        Bag.Emplace(GameItem->BeTaken());
-        UE_LOG(LogTemp, Warning, TEXT("%s物品已重新生成"), *GameItem->ItemName.ToString());
-    }
-    MainCharacter->GetGameItemsManagerComponent()->SetBag(Bag);
-    UE_LOG(LogTemp, Warning, TEXT("刷新背包"));
-
     //销毁所有角色
     TArray<AActor*> OutActors;
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), AARPGCharacter::StaticClass(), OutActors);
@@ -187,6 +234,13 @@ void UARPGGameInstanceSubsystem::OnLevelLoaded()
         Actor->Destroy();
     }
 
+    //销毁所有道具
+    TArray<AActor*> GameItems;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGameItem::StaticClass(), GameItems);
+    for (AActor* Actor : GameItems)
+    {
+        Actor->Destroy();
+    }
 
     //还原角色
     for (auto CharacterArchiveStruct : GameSaver->Characters)
@@ -198,16 +252,13 @@ void UARPGGameInstanceSubsystem::OnLevelLoaded()
         if (Character->GetCharacterName() == "MainCharacter")
         {
             MainCharacter = Cast<AARPGMainCharacter>(Character);
-            if (MainCharacter)
+            if (MainCharacter.Get())
             {
                 UGameplayStatics::GetPlayerController(GetWorld(), 0)->Possess(Character);
             }
             else
             {
-                if (GEngine)
-                {
-                    GEngine->AddOnScreenDebugMessage(-1, 15, FColor::Red,TEXT("错误，主角不是AARPGMainCharacter子类"));
-                }
+                PrintLogToScreen(TEXT("错误，主角不是AARPGMainCharacter子类"));
             }
         }
         else
@@ -227,6 +278,39 @@ void UARPGGameInstanceSubsystem::OnLevelLoaded()
         Character->GetCharacterStatusComponent()->SetCharacterState(CharacterArchiveStruct.CharacterState);
         UE_LOG(LogTemp, Warning, TEXT("%s角色已重新生成"), *Character->GetCharacterName().ToString());
     }
+
+    //还原背包数据
+    // TArray<AGameItem*> Bag;
+    // for (auto ItemArchiveStruct : GameSaver->GameItemsInBag)
+    // {
+    //     AGameItem* GameItem = Cast<AGameItem>(
+    //         GetWorld()->SpawnActor(LoadClass<AGameItem>(nullptr, *ItemArchiveStruct.GameItemClass.ToString())));
+    //     GameItem->Number = ItemArchiveStruct.Number;
+    //     Bag.Emplace(GameItem->BeTaken());
+    //     
+    //     UE_LOG(LogTemp, Warning, TEXT("%s物品已重新生成"), *GameItem->ItemName.ToString());
+    // }
+
+    TArray<AGameItem*> Bag;
+    for (auto GameItemArchiveStruct : GameSaver->GameItems)
+    {
+        AGameItem* GameItem = Cast<AGameItem>(
+            GetWorld()->SpawnActor(LoadClass<AGameItem>(nullptr, *GameItemArchiveStruct.GameItemClass.ToString()),
+                                   &GameItemArchiveStruct.Transform));
+        if (GameItem)
+        {
+            if (GameItemArchiveStruct.IsInBag)
+            {
+                GameItem->Number = GameItemArchiveStruct.Number;
+                Bag.Emplace(GameItem->BeTaken());
+            }
+        }
+    }
+
+
+    MainCharacter->GetGameItemsManagerComponent()->SetBag(Bag);
+    UE_LOG(LogTemp, Warning, TEXT("刷新物品和背包"));
+
     UE_LOG(LogTemp, Warning, TEXT("存档加载完成"));
     OnGameLoadSuccess.Broadcast();
 }
@@ -243,11 +327,20 @@ void UARPGGameInstanceSubsystem::RandomChoice(float chance, EChoice& Choice)
     }
 }
 
-void UARPGGameInstanceSubsystem::PrintLogToScreen(FString Message,float Time, FColor Color)
+void UARPGGameInstanceSubsystem::PrintLogToScreen(FString Message, float Time, FColor Color)
 {
     if (GEngine)
     {
-        GEngine->AddOnScreenDebugMessage(-1, Time, Color,Message);
+        GEngine->AddOnScreenDebugMessage(-1, Time, Color, Message);
     }
 }
 
+UARPGGameInstanceSubsystem* UARPGGameInstanceSubsystem::Get(UWorld* World)
+{
+    if (World && World->GetGameInstance() && World->GetGameInstance()->GetSubsystem<UARPGGameInstanceSubsystem>())
+    {
+        return World->GetGameInstance()->GetSubsystem<UARPGGameInstanceSubsystem>();
+    }
+
+    return nullptr;
+}

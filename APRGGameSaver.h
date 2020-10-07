@@ -41,7 +41,10 @@ public:
     TArray<FCharacterArchiveStruct> Characters;
 
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Basic")
-    TArray<FGameItemArchiveStruct> GameItems; 
+    TArray<FGameItemArchiveStruct> GameItemsInBag;
+
+    UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Basic")
+    TArray<FGameItemArchiveStruct> GameItems;
     
     UPROPERTY()
     FName CurrentMap="MainMenu";

@@ -5,6 +5,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/ScrollBox.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
 
 #include "ARPGWidgetsLab.generated.h"
@@ -114,3 +115,27 @@ public:
 
     void CreatePromptWidget(const UWorld* World, FText PromptMessage);
 };
+
+//TODO 考虑是否需要存档读档界面
+//
+// UCLASS()
+// class UARPGArchiveWidget : public UUserWidget
+// {
+//     GENERATED_BODY()
+//
+//     UPROPERTY(BlueprintReadOnly,Category="ARPGWidgetsLab",meta=(BindWidget,AllowPrivateAccess))
+//     class UScrollBox* ScrollBox_Archives;
+// };
+//
+//
+// UCLASS()
+// class UARPGArchiveItemWidget : public UUserWidget
+// {
+//     GENERATED_BODY()
+//
+//     UPROPERTY(BlueprintReadOnly,Category="ARPGWidgetsLab",meta=(BindWidget,AllowPrivateAccess))
+//     class UTextBlock* TextBlock_ArchiveName;
+//
+//     UPROPERTY(BlueprintReadOnly,Category="ARPGWidgetsLab",meta=(BindWidget,AllowPrivateAccess))
+//     class UTextBlock* TextBlock_ArchiveTimestamp;
+// };

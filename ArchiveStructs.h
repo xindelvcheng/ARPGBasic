@@ -108,4 +108,10 @@ struct FGameItemArchiveStruct
 
     UPROPERTY()
     int Number;
+
+    UPROPERTY()
+    bool IsInBag;
+    
+    UPROPERTY()
+    FTransform Transform;
 };

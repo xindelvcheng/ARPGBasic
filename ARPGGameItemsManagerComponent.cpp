@@ -35,8 +35,7 @@ void UARPGGameItemsManagerComponent::TickComponent(float DeltaTime, ELevelTick T
 	// ...
 }
 
-bool UARPGGameItemsManagerComponent::AddItemToBag(AGameItem* GameItem)
-{
+bool UARPGGameItemsManagerComponent::AddItemToBag(AGameItem* GameItem){
     if (!GameItem)
     {
         return false;
@@ -64,6 +63,7 @@ bool UARPGGameItemsManagerComponent::AddItemToBag(AGameItem* GameItem)
     {
         SelectNextItemInBag();
     }
+    
     return true;
 }
 

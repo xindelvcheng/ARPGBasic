@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 
 
+
+#include "ARPGGameItemsManagerComponent.h"
 #include "ARPGWidgetsLab.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/Button.h"
@@ -21,8 +23,9 @@
  * 
  */
 
+class AGameItem;
+enum class EBagEvent : unsigned char;
 enum class ECharacterProperty : unsigned char;
-class UMessageWidget;
 
 UCLASS()
 class  UARPGStatusWidget   : public UUserWidget
@@ -32,6 +35,11 @@ class  UARPGStatusWidget   : public UUserWidget
 	FTimerHandle ClearNotifiesTimerHandle;
 	FTimerDelegate ClearNotifiesTimerDelegate;
 
+	UPROPERTY()
+	UARPGGameItemsManagerComponent* ItemsManagerComponent;
+
+	int BagItemsNum;
+
 protected:
 	virtual bool Initialize() override;
 
@@ -39,6 +47,7 @@ protected:
 	virtual void BeginDestroy() override;
 
 	TSubclassOf<class UARPGNotifyWidget> NotifyWidgetClass;
+	TSubclassOf<class UGameItemWidget> GameItemWidgetClass;
 
 	UPROPERTY(BlueprintReadOnly,Category="ARPGStatusWidget",meta=(BindWidget))
 	class UARPGProgressBar* SmoothProgressBar_HP;
@@ -55,9 +64,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly,Category="ARPGStatusWidget",meta=(BindWidget))
 	UUniformGridPanel* UniformGridPanel_Bag;
 	
-
-	UFUNCTION(BlueprintImplementableEvent,Category="ARPGStatusWidget")
-	void UpdateBagWidget();
+	UFUNCTION(Category="ARPGStatusWidget")
+	void UpdateBagWidget(EBagEvent BagEvent, AGameItem* GameItem);
 
 public:
 	

@@ -7,6 +7,7 @@
 #include "CoreMinimal.h"
 
 #include "ARPGMainCharacter.h"
+#include "ARPGPlayerController.h"
 
 #include "ARPGStatusWidget.h"
 #include "GameItem.h"
@@ -36,38 +37,53 @@ class UARPGGameInstanceSubsystem : public UGameInstanceSubsystem
 
     UPROPERTY()
     UAPRGGameSaver* GameSaver;
-    
+
     UFUNCTION()
     void OnArchiveLoaded(const FString& SlotName, const int32 UserIndex, USaveGame* SaveGame);
 
     UFUNCTION()
     void OnLevelLoaded();
 
+    UPROPERTY()
+    TArray<FArchiveInfoStruct> ArchiveInfos;
     
-
 protected:
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
     virtual void Deinitialize() override;
 
 
 public:
-    UPROPERTY(BlueprintReadWrite,Category="ARPGBASIC")
-    AARPGMainCharacter* MainCharacter;
-
-    UPROPERTY(BlueprintReadWrite,Category="ARPGBASIC")
-    class AARPGPlayerController* MainCharacterController;
-
     FString ArchiveManageSlot = TEXT("ArchiveManageSlot");
     int UserIndexInt32;
 
     UFUNCTION(BlueprintCallable)
-    UAPRGArchiveManager* GetArchiveManager();
+    TArray<FArchiveInfoStruct> GetArchiveInfos();
 
-    UPROPERTY(BlueprintReadWrite,Category="ARPGBASIC")
-    UARPGStatusWidget* StatusWidget;
+private:
+    /*此三个变量在ARPG Player Controller的OnPosses回调中赋值，蓝图中可以获得*/
+    TWeakObjectPtr<AARPGMainCharacter> MainCharacter;
+    TWeakObjectPtr<AARPGPlayerController> MainCharacterController;
+    TWeakObjectPtr<UARPGStatusWidget> StatusWidget;
 
-    UFUNCTION(BlueprintCallable)
-    void ShowNotify(UTexture2D* Icon, FText Title, FText Content) const;
+public:
+    
+    UFUNCTION(BlueprintCallable,BlueprintPure,Category="ARPGGameInstanceSubsystem",meta=(WorldContext=WorldContextObject))
+    static AARPGMainCharacter* GetMainCharacter(const UObject* WorldContextObject) ;
+
+    UFUNCTION(BlueprintCallable,BlueprintPure,Category="ARPGGameInstanceSubsystem",meta=(WorldContext=WorldContextObject))
+    static AARPGPlayerController* GetMainCharacterController(const UObject* WorldContextObject) ;
+
+    UFUNCTION(BlueprintCallable,BlueprintPure,Category="ARPGGameInstanceSubsystem",meta=(WorldContext=WorldContextObject))
+    static UARPGStatusWidget* GetMainCharacterStatusWidget(const UObject* WorldContextObject);
+
+    void SetMainCharacter(AARPGMainCharacter* NewMainCharacter){MainCharacter = NewMainCharacter;}
+    void SetMainCharacterController(AARPGPlayerController* NewMainCharacterController){MainCharacterController = NewMainCharacterController;}
+    void SetMainCharacterStatusWidget(UARPGStatusWidget* NewARPGStatusWidget){StatusWidget = NewARPGStatusWidget;}
+    
+public:
+
+    UFUNCTION(BlueprintCallable,meta=(WorldContext=WorldContextObject))
+    static void ShowNotify(const UObject* WorldContextObject, UTexture2D* Icon, FText Title, FText Content);
 
     UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGBASIC")
     FName CurrentStreamingLevelName = "";
@@ -91,7 +107,6 @@ public:
     void LoadArchive(FString ArchiveName);
 
 
-
     DECLARE_DYNAMIC_MULTICAST_DELEGATE(FLoadLevelEvent);
 
     UPROPERTY(BlueprintAssignable)
@@ -102,5 +117,10 @@ public:
     UFUNCTION(BlueprintCallable,Category="ARPGBASIC",meta=(ExpandEnumAsExecs="Choice"))
     static void RandomChoice(float ChanceA, EChoice& Choice);
 
-    static void PrintLogToScreen(FString Message,float Time = 5, FColor Color = FColor::Yellow);
+    static void PrintLogToScreen(FString Message, float Time = 5, FColor Color = FColor::Yellow);
+
+
+    static UARPGGameInstanceSubsystem* Get(UWorld* World);
 };
+
+

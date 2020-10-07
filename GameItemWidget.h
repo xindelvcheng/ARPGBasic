@@ -27,10 +27,7 @@ protected:
 	class UImage* Image_BeSelectedIcon;
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadWrite,Category="GameItemWidget",meta=(BindWidget))
-	class UTextBlock* Text_Number;
-
-	UPROPERTY(EditDefaultsOnly,Category="GameItemWidget")
-	class UTexture2D* BeSelectedIcon;
+	class UTextBlock* TextBlock_Number;
 
 public:
 	UFUNCTION(BlueprintCallable)

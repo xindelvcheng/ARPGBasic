@@ -6,6 +6,7 @@
 
 #include "ARPGStatusWidget.h"
 #include "ARPGWidgetsLab.h"
+#include "GameItemWidget.h"
 #include "Engine/DataTable.h"
 #include "Engine/DeveloperSettings.h"
 #include "ARPGBasicSettings.generated.h"
@@ -35,6 +36,8 @@ public:
 	UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
 	TSoftClassPtr<UARPGNotifyWidget> NotifyWidgetClass;
 
+	UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
+	TSoftClassPtr<UGameItemWidget> GameItemWidgetClass;
 		
 	UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
 	TSoftClassPtr<UARPGPromptWidget> PromptWidgetClass;

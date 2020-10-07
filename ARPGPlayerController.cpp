@@ -10,6 +10,16 @@
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 
+
+AARPGPlayerController::AARPGPlayerController()
+{
+    if (UARPGBasicSettings::Get())
+    {
+        StatusWidgetClass = LoadClass<UARPGStatusWidget>(
+                    this, *(UARPGBasicSettings::Get()->StatusWidgetClass.ToString()));
+    }
+}
+
 void AARPGPlayerController::OnPossess(APawn* InPawn)
 {
     Super::OnPossess(InPawn);
@@ -21,27 +31,26 @@ void AARPGPlayerController::OnPossess(APawn* InPawn)
     {
         UARPGGameInstanceSubsystem* ARPGGameInstanceSubsystem = GetGameInstance()->GetSubsystem<
             UARPGGameInstanceSubsystem>();
-        ARPGGameInstanceSubsystem->MainCharacter = MainCharacter;
-        ARPGGameInstanceSubsystem->MainCharacter->MainPlayerController = this;
-        ARPGGameInstanceSubsystem->MainCharacterController = this;
-        
+        ARPGGameInstanceSubsystem->SetMainCharacter(MainCharacter);
+        MainCharacter->MainPlayerController = this;
+        ARPGGameInstanceSubsystem->SetMainCharacterController(this);
+
         if (ARPGGameInstanceSubsystem->CurrentStreamingLevelName != "MainMenu")
         {
-            if (UARPGBasicSettings::Get())
+            UARPGStatusWidget* MainCharacterStatusWidget = UARPGGameInstanceSubsystem::GetMainCharacterStatusWidget(GetWorld());
+            if (MainCharacterStatusWidget)
             {
-                const auto StatusWidgetClass = LoadClass<UARPGStatusWidget>(
-                    this, *(UARPGBasicSettings::Get()->StatusWidgetClass.ToString()));
-                if (StatusWidgetClass)
+                MainCharacterStatusWidget->BindToMainCharacter(MainCharacter);
+            }
+            else 
+            {
+                MainCharacterStatusWidget = Cast<UARPGStatusWidget>(
+                    CreateWidget(this, StatusWidgetClass));
+                if (StatusWidgetClass && MainCharacterStatusWidget)
                 {
-                    ARPGGameInstanceSubsystem->StatusWidget = Cast<UARPGStatusWidget>(
-                        CreateWidget(this, StatusWidgetClass));
-                    ARPGGameInstanceSubsystem->StatusWidget->AddToViewport();
-                    ARPGGameInstanceSubsystem->StatusWidget->BindToMainCharacter(MainCharacter);
-                }
-                else
-                {
-                    UARPGGameInstanceSubsystem::PrintLogToScreen(
-                        TEXT("错误，未指定StatusWidgetClass或StatusWidgetClass无效"), 15, FColor::Red);
+                    ARPGGameInstanceSubsystem->SetMainCharacterStatusWidget(MainCharacterStatusWidget);
+                    MainCharacterStatusWidget->AddToViewport();
+                    MainCharacterStatusWidget->BindToMainCharacter(MainCharacter);
                 }
             }
         }
@@ -53,3 +62,4 @@ void AARPGPlayerController::OnPossess(APawn* InPawn)
     }
 #endif
 }
+

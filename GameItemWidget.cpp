@@ -10,25 +10,21 @@
 bool UGameItemWidget::Initialize()
 {
     Super::Initialize();
-    if (!Image_Icon||!Text_Number)
+    if (!Image_Icon||!TextBlock_Number||!Image_BeSelectedIcon)
     {
         if (GEngine){GEngine->AddOnScreenDebugMessage(-1,5,FColor::Yellow,TEXT("GameItemWidget蓝图类控件与C++类不对应"));}
         
         return false;
     }
-    if (!BeSelectedIcon)
-    {
-        if (GEngine) { GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow,TEXT("GameItemWidget未指定美术资源")); }
-    }
-    Image_BeSelectedIcon->SetBrushFromTexture(BeSelectedIcon,true);
 
+    Image_BeSelectedIcon->SetVisibility(ESlateVisibility::Hidden);
     return true;
 }
 
 void UGameItemWidget::SetupGameItemWidget(AGameItem* GameItem)
 {
     Image_Icon->SetBrushFromTexture(GameItem->ItemIcon);
-    Text_Number->SetText(FText::AsNumber(GameItem->Number));
+    TextBlock_Number->SetText(FText::AsNumber(GameItem->Number));
 
     GameItem->ItemWidget = this;
 }
