@@ -55,8 +55,6 @@ public:
     }
 
 
-private:
-
 public:
 
     // 转发常用属性到CharacterStatusComponent
