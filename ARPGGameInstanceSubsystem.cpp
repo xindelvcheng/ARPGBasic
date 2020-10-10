@@ -106,7 +106,15 @@ bool UARPGGameInstanceSubsystem::SaveArchive(FString ArchiveName)
     OnGameSaving.Broadcast();
     GameSaver = Cast<UAPRGGameSaver>(UGameplayStatics::CreateSaveGameObject(UAPRGGameSaver::StaticClass()));
     GameSaver->CurrentMap = CurrentStreamingLevelName;
-    GameSaver->MainCharacterTransform = MainCharacter->GetTransform();
+
+    if (MainCharacter.IsValid())
+    {
+        GameSaver->MainCharacterTransform = MainCharacter->GetTransform();
+    }else
+    {
+        GameSaver->MainCharacterTransform = UGameplayStatics::GetPlayerCharacter(GetWorld(),0)->GetTransform();
+    }
+    
     GameSaver->Time = FDateTime::Now();
 
     for (int i = 0; i < ArchiveManager->ArchiveInfos.Num(); ++i)
@@ -289,7 +297,10 @@ void UARPGGameInstanceSubsystem::OnLevelLoaded()
     }
 
 
-    MainCharacter->GetGameItemsManagerComponent()->SetBag(Bag);
+    if (MainCharacter.Get())
+    {
+        MainCharacter->GetGameItemsManagerComponent()->SetBag(Bag);
+    }
     UE_LOG(LogTemp, Warning, TEXT("刷新物品和背包"));
 
     UE_LOG(LogTemp, Warning, TEXT("存档加载完成"));

@@ -50,7 +50,6 @@ void UMeleeDamageState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequen
         }
 
 
-        DamageBoxHalfSizeInTrace = FVector(10, 10, 100);
         UKismetSystemLibrary::BoxTraceMultiForObjects(Player->GetWorld(), LastLocation1,
                                                       CurrentLocation1, DamageBoxHalfSizeInTrace,
                                                       CurrentRotation1, ObjectTypes,
