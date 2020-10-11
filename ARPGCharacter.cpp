@@ -7,22 +7,18 @@
 #include "ARPGGameItemsManagerComponent.h"
 #include "CharacterStatusComponent.h"
 
-// Sets default values
 AARPGCharacter::AARPGCharacter()
 {
-    // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = false;
 
     CharacterStatusComponent = CreateDefaultSubobject<UCharacterStatusComponent>("CharacterStatusComponent");
-    
+    CharacterCombatComponent = CreateDefaultSubobject<UARPGCharacterCombatComponent>("ARPGCharacterCombaComponent");
 }
  
-// Called when the game starts or when spawned
 void AARPGCharacter::BeginPlay()
 {
     Super::BeginPlay();
 
-    //检查角色是否设置了名称
     if (CharacterName.IsNone() || CharacterName.IsEqual("DefaultCharacter"))
     {
         if (GEngine)
@@ -35,7 +31,6 @@ void AARPGCharacter::BeginPlay()
 
 }
 
-// Called every frame
 void AARPGCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);

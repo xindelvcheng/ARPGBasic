@@ -6,7 +6,7 @@
 
 
 #include "CharacterStatusComponent.h"
-#include "ArchiveStructs.h"
+#include "ARPGCharacterCombatComponent.h"
 #include "GameFramework/Character.h"
 #include "ARPGCharacter.generated.h"
 
@@ -17,6 +17,9 @@ class AARPGCharacter : public ACharacter
     UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGBASIC",meta=(AllowPrivateAccess))
     FName CharacterName = "DefaultCharacter";
 
+
+
+    
 public:
     // Sets default values for this character's properties
     AARPGCharacter();
@@ -33,13 +36,18 @@ public:
         CharacterStatusComponent->SetCharacterName(CharacterName);
     }
 
+    
 
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
-    UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCharacterBasicComponent")
     class UCharacterStatusComponent* CharacterStatusComponent;
+
+    UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCharacterBasicComponent")
+    class UARPGCharacterCombatComponent* CharacterCombatComponent;
+    
 
 public:
     // Called every frame
@@ -55,9 +63,9 @@ public:
     }
 
 
-public:
 
-    // 转发常用属性到CharacterStatusComponent
+
+//   转发常用属性到CharacterStatusComponent
 
     UFUNCTION(BlueprintPure,Category="ARPGBASIC")
     int GetCharacterLevel() const
@@ -130,4 +138,30 @@ public:
     {
         return CharacterStatusComponent->OnCharacterPropertyChanged;
     }
+
+    //转发常用属性到ARPGCharacterCombatComponent
+    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    void TryToMeleeAttack(const int NormalAttackCollectionIndex)const
+    {
+        CharacterCombatComponent->TryToMeleeAttack(NormalAttackCollectionIndex);
+    };
+
+    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    void TryToRemoteAttack(const int RemoteAttackIndex)const
+    {
+        CharacterCombatComponent->TryToRemoteAttack(RemoteAttackIndex);
+    };
+
+    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    void TryToUseAbility(const int AbilityIndex) const
+    {
+        CharacterCombatComponent->TryToUseAbility(AbilityIndex);
+    };
+
+    UFUNCTION(BlueprintCallable,Category="ARPGNonPlayerCharacter")
+    void CauseRigid(const float Duration, AARPGCharacter* Causer)const
+    {
+        CharacterCombatComponent->CauseRigid(Duration,Causer);
+    };
+
 };
