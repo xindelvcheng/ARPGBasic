@@ -81,7 +81,7 @@ public:
     virtual void TryToRangeAttack();
 
     UFUNCTION(BlueprintCallable,Category="ARPGNonPlayerCharacter")
-    virtual void TryToUseAbility();
+    virtual void TryToUseAbility(int Index);
 
     DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAttackEvent);
 
@@ -109,6 +109,12 @@ public:
     FTimerDelegate MovingTimerDelegate;
     bool IsMoving;
 
+#if WITH_EDITOR
+    bool bDebug;
+
+    UFUNCTION(CallInEditor,Category="ARPG NPC AI")
+    void Debug() { bDebug = bDebug ? false : true; }
+# endif
 
     
     void ResetMovingTimer()

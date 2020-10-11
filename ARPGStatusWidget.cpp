@@ -51,7 +51,8 @@ void UARPGStatusWidget::BeginDestroy()
 
 void UARPGStatusWidget::ShowNotify(UTexture2D* Icon, FText Title, FText Content)
 {
-    UARPGNotifyWidget* NotifyWidget = Cast<UARPGNotifyWidget>(CreateWidget(GetOwningPlayer(), NotifyWidgetClass));
+    UARPGNotifyWidget* NotifyWidget = Cast<UARPGNotifyWidget>(
+        CreateWidget(UARPGGameInstanceSubsystem::GetMainCharacterController(GetWorld()), NotifyWidgetClass));
 
     verifyf(NotifyWidget, TEXT("未指定NotifyWidgetClass"))
 
@@ -112,7 +113,7 @@ void UARPGStatusWidget::BindToMainCharacter(AARPGMainCharacter* MainCharacter)
 
 void UARPGStatusWidget::UpdateBagWidget(EBagEvent BagEvent, AGameItem* GameItem)
 {
-    if (!GameItem && BagEvent!=EBagEvent::ReFlush)
+    if (!GameItem && BagEvent != EBagEvent::ReFlush)
     {
         UARPGGameInstanceSubsystem::PrintLogToScreen(TEXT("背包更新的GameItem为空"));
         return;
@@ -146,25 +147,25 @@ void UARPGStatusWidget::UpdateBagWidget(EBagEvent BagEvent, AGameItem* GameItem)
         }
         break;
     case EBagEvent::ChangeItemNumbers:
-        if(GameItem->ItemWidget)
+        if (GameItem->ItemWidget)
         {
             GameItem->ItemWidget->SetupGameItemWidget(GameItem);
         }
         break;
     case EBagEvent::SelectItemInBag:
-        if(GameItem->ItemWidget)
+        if (GameItem->ItemWidget)
         {
             GameItem->ItemWidget->BeSelected();
         }
         break;
     case EBagEvent::DeselectItemInBag:
-        if(GameItem->ItemWidget)
+        if (GameItem->ItemWidget)
         {
             GameItem->ItemWidget->NotSelected();
         }
         break;
     case EBagEvent::UseItemInBag:
-        if(GameItem->ItemWidget)
+        if (GameItem->ItemWidget)
         {
             GameItem->ItemWidget->SetupGameItemWidget(GameItem);
         }

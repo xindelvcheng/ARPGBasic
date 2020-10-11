@@ -8,6 +8,7 @@
 #include "AIModule/Classes/AIController.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 // Sets default values
@@ -45,7 +46,7 @@ void AARPGNonPlayerCharacter::BeginPlay()
     });
     PreparatoryTimerDelegate = FTimerDelegate::CreateLambda([&]()
     {
-        AnimInstance->Montage_SetPlayRate(GetCurrentMontage(),1);
+        AnimInstance->Montage_SetPlayRate(GetCurrentMontage(), 1);
     });
 
 
@@ -67,36 +68,49 @@ void AARPGNonPlayerCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    
-    
-    AARPGMainCharacter* MainCharacter = UARPGGameInstanceSubsystem::GetMainCharacter(GetWorld());
-    float Distance = FVector::Distance(MainCharacter->GetActorLocation(), this->GetActorLocation());
 
-    
+    AARPGMainCharacter* MainCharacter = UARPGGameInstanceSubsystem::GetMainCharacter(GetWorld());
+    const float Distance = FVector::Distance(MainCharacter->GetActorLocation(), this->GetActorLocation());
+
+#if WITH_EDITOR
+     if (GEngine && bDebug)
+     {
+         GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow, FString::SanitizeFloat(Distance));
+     }
+#endif
+
+
     if (IsRigid || !MainCharacter)
     {
         return;
     }
-    if (IsMoving && Distance>500)
+
+    GetMovementComponent()->AddInputVector(MainCharacter->GetActorLocation() - GetActorLocation());
+    const FVector Direction = MainCharacter->GetActorLocation() - GetActorLocation();
+    FRotator NewControlRotation = Direction.Rotation();
+
+    NewControlRotation.Yaw = FRotator::ClampAxis(NewControlRotation.Yaw);
+    SetActorRotation(NewControlRotation);
+
+
+    if (IsMoving && Distance > 500)
     {
-        GetMovementComponent()->AddInputVector(MainCharacter->GetActorLocation()-GetActorLocation());
+        GetMovementComponent()->AddInputVector(MainCharacter->GetActorLocation() - GetActorLocation());
         return;
-    }else
+    }
+    else
     {
         IsMoving = false;
         GetWorldTimerManager().ClearTimer(MovingTimerHandle);
     }
 
-    
+
     if (Distance >= 3000)
     {
-        // UAIBlueprintHelperLibrary::SimpleMoveToActor(GetController(), MainCharacter);
-
         ResetMovingTimer();
     }
     else if (Distance >= 1500)
     {
-        
         if (FMath::FRand() > 0.2)
         {
             ResetMovingTimer();
@@ -108,25 +122,27 @@ void AARPGNonPlayerCharacter::Tick(float DeltaTime)
     }
     else if (Distance >= 500)
     {
-        if (FMath::FRand() > 0.2)
+        if (FMath::FRand() > 0.7)
         {
-            // UAIBlueprintHelperLibrary::SimpleMoveToActor(GetController(), MainCharacter);
             ResetMovingTimer();
         }
-        else
+        else if(FMath::FRand() > 0.3)
         {
             TryToRangeAttack();
+        }else
+        {
+            TryToUseAbility(0);
         }
     }
     else
     {
-        if (FMath::FRand() > 0.3)
+        if (FMath::FRand() > 0.2)
         {
             TryToNormalAttack();
         }
         else
         {
-            TryToUseAbility();
+            TryToUseAbility(1);
         }
     }
 }
@@ -138,9 +154,9 @@ void AARPGNonPlayerCharacter::TryToNormalAttack()
         PlayAnimMontage(NormalAttackMontages[NormalAttackIndex]);
 
         IsRigid = true;
-        AnimInstance->Montage_SetPlayRate(GetCurrentMontage(),0.3);
+        AnimInstance->Montage_SetPlayRate(GetCurrentMontage(), 0.3);
         GetWorldTimerManager().ClearTimer(PreparatoryTimerHandle);
-        GetWorldTimerManager().SetTimer(PreparatoryTimerHandle,PreparatoryTimerDelegate,0.5,false);
+        GetWorldTimerManager().SetTimer(PreparatoryTimerHandle, PreparatoryTimerDelegate, 0.5, false);
     }
 }
 
@@ -149,9 +165,9 @@ void AARPGNonPlayerCharacter::TryToRangeAttack()
     RemoteAttackAbilities[0]->Active(this);
 }
 
-void AARPGNonPlayerCharacter::TryToUseAbility()
+void AARPGNonPlayerCharacter::TryToUseAbility(int Index = 0)
 {
-    UltimateAbilities[0]->Active(this);
+    UltimateAbilities[Index]->Active(this);
 }
 
 void AARPGNonPlayerCharacter::CauseRigid(float Duration)
@@ -177,7 +193,6 @@ void AARPGNonPlayerCharacter::OnMontageBegin(UAnimMontage* Montage)
 {
     IsRigid = true;
     GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-
 }
 
 void AARPGNonPlayerCharacter::OnMontageNotify(FName NotifyName,

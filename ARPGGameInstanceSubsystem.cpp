@@ -240,12 +240,15 @@ void UARPGGameInstanceSubsystem::OnLevelLoaded()
         Actor->Destroy();
     }
 
+    FActorSpawnParameters ActorSpawnParameters;
+    ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+    
     //还原角色
     for (auto CharacterArchiveStruct : GameSaver->Characters)
     {
-        auto Character = Cast<AARPGCharacter>(GetWorld()->SpawnActor(
-            LoadClass<AARPGCharacter>(nullptr, *CharacterArchiveStruct.CharacterClassPath.ToString()),
-            &CharacterArchiveStruct.CharacterTransform));
+        auto&& CharacterClass = LoadClass<AARPGCharacter>(nullptr, *CharacterArchiveStruct.CharacterClassPath.ToString());
+        auto&& Actor = GetWorld()->SpawnActor(CharacterClass,&CharacterArchiveStruct.CharacterTransform,ActorSpawnParameters);
+        auto Character = Cast<AARPGCharacter>(Actor);
         Character->SetCharacterName(CharacterArchiveStruct.CharacterName);
         if (Character->GetCharacterName() == "MainCharacter")
         {
@@ -281,11 +284,13 @@ void UARPGGameInstanceSubsystem::OnLevelLoaded()
     
     //还原道具
     TArray<AGameItem*> Bag;
+    
     for (auto GameItemArchiveStruct : GameSaver->GameItems)
     {
+        
         AGameItem* GameItem = Cast<AGameItem>(
             GetWorld()->SpawnActor(LoadClass<AGameItem>(nullptr, *GameItemArchiveStruct.GameItemClass.ToString()),
-                                   &GameItemArchiveStruct.Transform));
+                                   &GameItemArchiveStruct.Transform,ActorSpawnParameters));
         if (GameItem)
         {
             if (GameItemArchiveStruct.IsInBag)
@@ -296,11 +301,7 @@ void UARPGGameInstanceSubsystem::OnLevelLoaded()
         }
     }
 
-
-    if (MainCharacter.Get())
-    {
-        MainCharacter->GetGameItemsManagerComponent()->SetBag(Bag);
-    }
+    MainCharacter->GetGameItemsManagerComponent()->SetBag(Bag);
     UE_LOG(LogTemp, Warning, TEXT("刷新物品和背包"));
 
     UE_LOG(LogTemp, Warning, TEXT("存档加载完成"));
