@@ -19,17 +19,22 @@ void UARPGGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collection
 {
     Super::Initialize(Collection);
 
-    UARPGBasicSettings* BasicSettings = UARPGBasicSettings::Get();
-    if (BasicSettings)
+    // 初始化存档列表
+    ArchiveManager = Cast<UAPRGArchiveManager>(UGameplayStatics::LoadGameFromSlot(ArchiveManageSlot, 0));
+    if (!ArchiveManager)
     {
-        const bool bNotConfig = BasicSettings->StatusWidgetClass.ToString().IsEmpty()
-            || BasicSettings-> NotifyWidgetClass.ToString().IsEmpty()
-            || BasicSettings->GameItemWidgetClass.ToString().IsEmpty()
-            || BasicSettings->PromptWidgetClass.ToString().IsEmpty() || BasicSettings->LockTargetWidgetClass.ToString().IsEmpty()
-            || BasicSettings->CharactersConfig.ToString().IsEmpty();
-        if (bNotConfig)
+        ArchiveManager = Cast<UAPRGArchiveManager>(
+            UGameplayStatics::CreateSaveGameObject(UAPRGArchiveManager::StaticClass()));
+        if (ArchiveManager)
         {
-            PrintLogToScreen(TEXT("错误，ARPG未完成基本项目设置"), 15, FColor::Red);
+            for (int i = 0; i < 128; ++i)
+            {
+                FArchiveInfoStruct ArchiveInfoStruct;
+                ArchiveInfoStruct.SlotName = FString(TEXT("Save")).Append(FString::FromInt(i));
+                ArchiveInfoStruct.IsArchiveValid = false;
+                ArchiveManager->ArchiveInfos.Emplace(ArchiveInfoStruct);
+            }
+            UGameplayStatics::SaveGameToSlot(ArchiveManager, ArchiveManageSlot, 0);
         }
     }
 }
@@ -40,29 +45,8 @@ void UARPGGameInstanceSubsystem::Deinitialize()
 }
 
 
-TArray<FArchiveInfoStruct> UARPGGameInstanceSubsystem::GetArchiveInfos()
+TArray<FArchiveInfoStruct> UARPGGameInstanceSubsystem::GetArchiveInfos() const
 {
-    if (!ArchiveManager)
-    {
-        ArchiveManager = Cast<UAPRGArchiveManager>(UGameplayStatics::LoadGameFromSlot(ArchiveManageSlot, 0));
-        if (!ArchiveManager)
-        {
-            ArchiveManager = Cast<UAPRGArchiveManager>(
-                UGameplayStatics::CreateSaveGameObject(UAPRGArchiveManager::StaticClass()));
-            if (ArchiveManager)
-            {
-                for (int i = 0; i < 128; ++i)
-                {
-                    FArchiveInfoStruct ArchiveInfoStruct;
-                    ArchiveInfoStruct.SlotName = FString(TEXT("Save")).Append(FString::FromInt(i));
-                    ArchiveInfoStruct.IsArchiveValid = false;
-                    ArchiveManager->ArchiveInfos.Emplace(ArchiveInfoStruct);
-                }
-                UGameplayStatics::SaveGameToSlot(ArchiveManager, ArchiveManageSlot, 0);
-            }
-        }
-    }
-
     return ArchiveManager->ArchiveInfos;
 }
 

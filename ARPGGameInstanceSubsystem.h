@@ -57,7 +57,7 @@ public:
     int UserIndexInt32;
 
     UFUNCTION(BlueprintCallable)
-    TArray<FArchiveInfoStruct> GetArchiveInfos();
+    TArray<FArchiveInfoStruct> GetArchiveInfos() const;
 
 private:
     /*此三个变量在ARPG Player Controller的OnPosses回调中赋值，蓝图中可以获得*/

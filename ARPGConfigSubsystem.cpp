@@ -5,6 +5,7 @@
 
 
 #include "ARPGBasicSettings.h"
+#include "ARPGGameInstanceSubsystem.h"
 #include "AssetRegistryModule.h"
 #include "Engine/DataTable.h"
 
@@ -12,18 +13,18 @@ void UARPGConfigSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
 
-    FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-    
-    TArray<FAssetData> AssetDatas;
-    
-    AssetRegistryModule.Get().GetAssetsByClass(FName(UDataTable::StaticClass()->GetName()),AssetDatas);
-    UE_LOG(LogTemp,Warning,TEXT("加载配置文件"))
-    
-    for (FAssetData AssetData : AssetDatas)
+    // 检查是否完成基本项目设置
+    UARPGBasicSettings* BasicSettings = UARPGBasicSettings::Get();
+    if (BasicSettings)
     {
-        if (AssetData.AssetName == "DT_CharactersConfig")
+        const bool bNotConfig = BasicSettings->StatusWidgetClass.ToString().IsEmpty()
+            || BasicSettings-> NotifyWidgetClass.ToString().IsEmpty()
+            || BasicSettings->GameItemWidgetClass.ToString().IsEmpty()
+            || BasicSettings->PromptWidgetClass.ToString().IsEmpty() || BasicSettings->LockTargetWidgetClass.ToString().IsEmpty()
+            || BasicSettings->CharactersConfig.ToString().IsEmpty();
+        if (bNotConfig)
         {
-            CharactersConfigDataTable = LoadObject<UDataTable>(this,*AssetData.ToSoftObjectPath().ToString());
+            UARPGGameInstanceSubsystem::PrintLogToScreen(TEXT("错误，ARPG未完成基本项目设置"), 15, FColor::Red);
         }
     }
 }
