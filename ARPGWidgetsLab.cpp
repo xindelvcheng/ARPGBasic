@@ -8,6 +8,7 @@
 #include "ARPGBasicSettings.h"
 #include "ARPGGameInstanceSubsystem.h"
 #include "Blueprint/WidgetTree.h"
+#include "Components/CanvasPanel.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/CanvasPanelSlot.h"
@@ -126,6 +127,25 @@ void UARPGProgressBar::NativeTick(const FGeometry& MyGeometry, float InDeltaTime
         if (ProgressBar)
         {
             ProgressBar->SetPercent(DummyValue / TotalValue);
+        }
+    }
+}
+
+bool UARPGLockTargetWidget::Initialize()
+{
+    Super::Initialize();
+
+    return true;
+}
+
+void UARPGLockTargetWidget::SetLockIconScreenPosition(FVector2D ScreenPosition)
+{
+    if (Image_LockIcon)
+    {
+        UCanvasPanelSlot* CanvasPanel = Cast<UCanvasPanelSlot>(Image_LockIcon->Slot);
+        if (CanvasPanel)
+        {
+            CanvasPanel->SetPosition(ScreenPosition);
         }
     }
 }

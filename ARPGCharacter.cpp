@@ -7,6 +7,7 @@
 #include "ARPGGameItemsManagerComponent.h"
 #include "CharacterStatusComponent.h"
 #include "TranscendentalCombatComponent.h"
+#include "ARPGLockTargetComponent.h"
 
 AARPGCharacter::AARPGCharacter()
 {
@@ -14,6 +15,7 @@ AARPGCharacter::AARPGCharacter()
 
     CharacterStatusComponent = CreateDefaultSubobject<UCharacterStatusComponent>("CharacterStatusComponent");
     CharacterCombatComponent = CreateDefaultSubobject<UTranscendentalCombatComponent>("ARPGCharacterCombaComponent");
+    CharacterLockTargetComponent = CreateDefaultSubobject<UARPGLockTargetComponent>("ARPGLockTargetComponent");
 }
  
 void AARPGCharacter::BeginPlay()

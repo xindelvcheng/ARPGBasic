@@ -8,7 +8,6 @@ void UTranscendentalCombatComponent::BeginPlay()
 {
     Super::BeginPlay();
 
-
     if (TranscendentalLawsSystemClasses.Num()>0)
     {
         FActorSpawnParameters ActorSpawnParameters;

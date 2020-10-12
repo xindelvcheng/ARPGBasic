@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameItemWidget.h"
 #include "APRGGameSaver.h"
+#include "ARPGBasicSettings.h"
 #include "ARPGPlayerController.h"
 #include "ARPGGameItemsManagerComponent.h"
 #include "Engine/LevelStreamingDynamic.h"
@@ -17,6 +18,20 @@
 void UARPGGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
+
+    UARPGBasicSettings* BasicSettings = UARPGBasicSettings::Get();
+    if (BasicSettings)
+    {
+        const bool bNotConfig = BasicSettings->StatusWidgetClass.ToString().IsEmpty()
+            || BasicSettings-> NotifyWidgetClass.ToString().IsEmpty()
+            || BasicSettings->GameItemWidgetClass.ToString().IsEmpty()
+            || BasicSettings->PromptWidgetClass.ToString().IsEmpty() || BasicSettings->LockTargetWidgetClass.ToString().IsEmpty()
+            || BasicSettings->CharactersConfig.ToString().IsEmpty();
+        if (bNotConfig)
+        {
+            PrintLogToScreen(TEXT("错误，ARPG未完成基本项目设置"), 15, FColor::Red);
+        }
+    }
 }
 
 void UARPGGameInstanceSubsystem::Deinitialize()
@@ -110,11 +125,12 @@ bool UARPGGameInstanceSubsystem::SaveArchive(FString ArchiveName)
     if (MainCharacter.IsValid())
     {
         GameSaver->MainCharacterTransform = MainCharacter->GetTransform();
-    }else
-    {
-        GameSaver->MainCharacterTransform = UGameplayStatics::GetPlayerCharacter(GetWorld(),0)->GetTransform();
     }
-    
+    else
+    {
+        GameSaver->MainCharacterTransform = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)->GetTransform();
+    }
+
     GameSaver->Time = FDateTime::Now();
 
     for (int i = 0; i < ArchiveManager->ArchiveInfos.Num(); ++i)
@@ -122,7 +138,6 @@ bool UARPGGameInstanceSubsystem::SaveArchive(FString ArchiveName)
         FArchiveInfoStruct& ArchiveInfoStruct = ArchiveManager->ArchiveInfos[i];
         if (ArchiveInfoStruct.SlotName == ArchiveName)
         {
-
             //保存道具
             TArray<AActor*> GameItems;
             UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGameItem::StaticClass(), GameItems);
@@ -241,13 +256,15 @@ void UARPGGameInstanceSubsystem::OnLevelLoaded()
     }
 
     FActorSpawnParameters ActorSpawnParameters;
-    ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-    
+    ActorSpawnParameters.SpawnCollisionHandlingOverride =
+        ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
     //还原角色
     for (auto CharacterArchiveStruct : GameSaver->Characters)
     {
-        auto&& CharacterClass = LoadClass<AARPGCharacter>(nullptr, *CharacterArchiveStruct.CharacterClassPath.ToString());
-        auto&& Actor = GetWorld()->SpawnActor(CharacterClass,&CharacterArchiveStruct.CharacterTransform,ActorSpawnParameters);
+        auto CharacterClass = LoadClass<AARPGCharacter>(nullptr, *CharacterArchiveStruct.CharacterClassPath.ToString());
+        auto Actor = GetWorld()->SpawnActor(CharacterClass, &CharacterArchiveStruct.CharacterTransform,
+                                            ActorSpawnParameters);
         auto Character = Cast<AARPGCharacter>(Actor);
         Character->SetCharacterName(CharacterArchiveStruct.CharacterName);
         if (Character->GetCharacterName() == "MainCharacter")
@@ -281,16 +298,14 @@ void UARPGGameInstanceSubsystem::OnLevelLoaded()
     }
 
 
-    
     //还原道具
     TArray<AGameItem*> Bag;
-    
+
     for (auto GameItemArchiveStruct : GameSaver->GameItems)
     {
-        
         AGameItem* GameItem = Cast<AGameItem>(
             GetWorld()->SpawnActor(LoadClass<AGameItem>(nullptr, *GameItemArchiveStruct.GameItemClass.ToString()),
-                                   &GameItemArchiveStruct.Transform,ActorSpawnParameters));
+                                   &GameItemArchiveStruct.Transform, ActorSpawnParameters));
         if (GameItem)
         {
             if (GameItemArchiveStruct.IsInBag)

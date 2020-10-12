@@ -139,3 +139,18 @@ public:
 //     UPROPERTY(BlueprintReadOnly,Category="ARPGWidgetsLab",meta=(BindWidget,AllowPrivateAccess))
 //     class UTextBlock* TextBlock_ArchiveTimestamp;
 // };
+
+UCLASS()
+class UARPGLockTargetWidget : public UUserWidget
+{
+    GENERATED_BODY()
+
+    //锚点需选在左上角，x=0.5、y=0.5对其
+    UPROPERTY(BlueprintReadOnly,Category="ARPGWidgetsLab",meta=(BindWidget,AllowPrivateAccess))
+    UImage* Image_LockIcon;
+    
+public:
+    virtual bool Initialize() override;
+
+    void SetLockIconScreenPosition(FVector2D ScreenPosition);
+};

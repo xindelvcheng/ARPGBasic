@@ -20,10 +20,10 @@ class  UARPGBasicSettings : public UDeveloperSettings
 	GENERATED_BODY()
     
 	virtual FName GetContainerName() const override{return TEXT("Project");}
-	virtual FName GetCategoryName() const override{return TEXT("UARPGBasicSettings");}
+	virtual FName GetCategoryName() const override{return TEXT("ARPGBasicSettings");}
 
 public:
-    
+	
 	UFUNCTION(BlueprintPure,DisplayName="ARPGBasicSettings")
     static UARPGBasicSettings* Get()
 	{
@@ -41,6 +41,9 @@ public:
 		
 	UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
 	TSoftClassPtr<UARPGPromptWidget> PromptWidgetClass;
+
+	UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
+	TSoftClassPtr<UARPGLockTargetWidget> LockTargetWidgetClass;
 	
 	UPROPERTY(Config=Game,EditAnywhere,BlueprintReadWrite,Category="Data Config")
 	TSoftObjectPtr<UDataTable> CharactersConfig;

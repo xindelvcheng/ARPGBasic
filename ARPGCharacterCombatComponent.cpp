@@ -43,6 +43,7 @@ void UARPGCharacterCombatComponent::BeginPlay()
 
     // ...
     AttachedCharacter = Cast<AARPGCharacter>(GetOwner());
+    
     check(AttachedCharacter);
 
     RigidTimerDelegate.BindLambda([&]()

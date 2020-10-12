@@ -37,7 +37,6 @@ public:
     }
 
     
-
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
@@ -48,7 +47,9 @@ protected:
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCharacterBasicComponent")
     class UTranscendentalCombatComponent* CharacterCombatComponent;
     
-
+    UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCharacterBasicComponent")
+    class UARPGLockTargetComponent* CharacterLockTargetComponent;
+    
 public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
