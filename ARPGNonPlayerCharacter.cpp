@@ -29,41 +29,4 @@ void AARPGNonPlayerCharacter::BeginPlay()
 void AARPGNonPlayerCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-
-
-    AARPGMainCharacter* MainCharacter = UARPGGameInstanceSubsystem::GetMainCharacter(GetWorld());
-    const float Distance = FVector::Distance(MainCharacter->GetActorLocation(), this->GetActorLocation());
-
-#if WITH_EDITOR
-     if (GEngine && bDebug)
-     {
-         GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow, FString::SanitizeFloat(Distance));
-     }
-#endif
-
-
-    if (!MainCharacter)
-    {
-        return;
-    }
-
-    GetMovementComponent()->AddInputVector(MainCharacter->GetActorLocation() - GetActorLocation());
-    const FVector Direction = MainCharacter->GetActorLocation() - GetActorLocation();
-    FRotator NewControlRotation = Direction.Rotation();
-
-    NewControlRotation.Yaw = FRotator::ClampAxis(NewControlRotation.Yaw);
-    SetActorRotation(NewControlRotation);
-
-
-    if (IsMoving && Distance > 500)
-    {
-        GetMovementComponent()->AddInputVector(MainCharacter->GetActorLocation() - GetActorLocation());
-        return;
-    }
-    else
-    {
-        IsMoving = false;
-        GetWorldTimerManager().ClearTimer(MovingTimerHandle);
-    }
-
 }

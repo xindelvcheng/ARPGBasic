@@ -79,6 +79,17 @@ public:
     void SetMainCharacter(AARPGMainCharacter* NewMainCharacter){MainCharacter = NewMainCharacter;}
     void SetMainCharacterController(AARPGPlayerController* NewMainCharacterController){MainCharacterController = NewMainCharacterController;}
     void SetMainCharacterStatusWidget(UARPGStatusWidget* NewARPGStatusWidget){StatusWidget = NewARPGStatusWidget;}
+
+    DECLARE_MULTICAST_DELEGATE(FSetupPlayerEvent)
+    FSetupPlayerEvent OnPlayerSetupEnd;
+    
+    void SetupPlayer(AARPGMainCharacter* NewMainCharacter,AARPGPlayerController* NewMainCharacterController,UARPGStatusWidget* NewARPGStatusWidget)
+    {
+        MainCharacter = NewMainCharacter;
+        MainCharacterController = NewMainCharacterController;
+        StatusWidget = NewARPGStatusWidget;
+        OnPlayerSetupEnd.Broadcast();
+    }
     
 public:
 

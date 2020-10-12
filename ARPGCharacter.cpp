@@ -6,13 +6,14 @@
 #include "ARPGConfigSubsystem.h"
 #include "ARPGGameItemsManagerComponent.h"
 #include "CharacterStatusComponent.h"
+#include "TranscendentalCombatComponent.h"
 
 AARPGCharacter::AARPGCharacter()
 {
     PrimaryActorTick.bCanEverTick = false;
 
     CharacterStatusComponent = CreateDefaultSubobject<UCharacterStatusComponent>("CharacterStatusComponent");
-    CharacterCombatComponent = CreateDefaultSubobject<UARPGCharacterCombatComponent>("ARPGCharacterCombaComponent");
+    CharacterCombatComponent = CreateDefaultSubobject<UTranscendentalCombatComponent>("ARPGCharacterCombaComponent");
 }
  
 void AARPGCharacter::BeginPlay()

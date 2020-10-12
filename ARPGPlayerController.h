@@ -21,7 +21,7 @@ class  AARPGPlayerController : public APlayerController
 public:
 	AARPGPlayerController();
 	
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerControllerPossesEvent,ACharacter*,PossedCharacter);
-	FPlayerControllerPossesEvent OnPlayerControllerPosses;
+	DECLARE_DELEGATE(FPlayerControllerPossesEvent);
+	FPlayerControllerPossesEvent OnPlayerControllerPossessed;
 	TSubclassOf<UARPGStatusWidget> StatusWidgetClass;
 };

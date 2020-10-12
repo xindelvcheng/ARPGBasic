@@ -3,27 +3,9 @@
 
 #include "ARPGCharacterCombatComponent.h"
 #include "ARPGCharacter.h"
+#include "ARPGAction.h"
 
 
-void AARPGAction::FinishAction()
-{
-    OnActionFinished.ExecuteIfBound();
-}
-
-void AARPGAction::InitWithOwningCharacter(AARPGCharacter* NewOwningCharacter)
-{
-    OwningCharacter = NewOwningCharacter;
-}
-
-void AARPGAction::ActivateAction(AARPGCharacter* Target)
-{
-    BPFunc_Active(Target);
-}
-
-void AARPGAction::Interrupt(AARPGCharacter* Causer)
-{
-    FinishAction();
-}
 
 
 // Sets default values for this component's properties
@@ -32,20 +14,22 @@ UARPGCharacterCombatComponent::UARPGCharacterCombatComponent()
     // Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
     // off to improve performance if you don't need them.
     PrimaryComponentTick.bCanEverTick = true;
-
-    // ...
 }
 
+
 void UARPGCharacterCombatComponent::SpawnActionActors(const TArray<TSubclassOf<AARPGAction>>& ActionClasses,
-    TArray<AARPGAction*>& ActionActors)
+                                                      TArray<AARPGAction*>& ActionActors)
 {
+    FActorSpawnParameters ActorSpawnParameters;
+    ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    FTransform Transform;
     for (auto ActionClass : ActionClasses)
     {
-        AARPGAction* Ability = Cast<AARPGAction>(GetWorld()->SpawnActor(ActionClass));
-        check(Ability);
-        Ability->InitWithOwningCharacter(AttachedCharacter);
-        ActionActors.Add(Ability);
-        Ability->OnActionFinished.BindUObject(this, &UARPGCharacterCombatComponent::BindToOnActionFinished);
+        AARPGAction* Action = Cast<AARPGAction>(GetWorld()->SpawnActor(ActionClass,&Transform,ActorSpawnParameters));
+        check(Action);
+        Action->InitWithOwningCharacter(AttachedCharacter);
+        ActionActors.Add(Action);
+        Action->OnActionFinished.BindUObject(this, &UARPGCharacterCombatComponent::BindToOnActionFinished);
     }
 }
 
@@ -55,7 +39,7 @@ void UARPGCharacterCombatComponent::BeginPlay()
 {
     Super::BeginPlay();
 
-    check(MeleeAttackClasses.Num()>0);
+    check(MeleeAttackCollectionClasses.Num()>0);
 
     // ...
     AttachedCharacter = Cast<AARPGCharacter>(GetOwner());
@@ -67,10 +51,12 @@ void UARPGCharacterCombatComponent::BeginPlay()
         OnResumeFromRigid.Broadcast(GetWorld()->GetTimerManager().GetTimerElapsed(RigidTimerHandle));
     });
 
-    SpawnActionActors(MeleeAttackClasses,MeleeAttackActions);
+    SpawnActionActors(MeleeAttackCollectionClasses,MeleeAttackCollectionActions);
     SpawnActionActors(RemoteAttackClasses,RemoteAttackActions);
     SpawnActionActors(AbilityClasses,AbilityActions);
     SpawnActionActors(BuffClasses,BuffActions);
+
+    CurrentMeleeAttackCollection = MeleeAttackCollectionActions[0];
 }
 
 void UARPGCharacterCombatComponent::BindToOnActionFinished()
@@ -89,20 +75,18 @@ void UARPGCharacterCombatComponent::TickComponent(float DeltaTime, ELevelTick Ti
 }
 
 
-void UARPGCharacterCombatComponent::TryToMeleeAttack(int NormalAttackCollectionIndex)
+void UARPGCharacterCombatComponent::TryToMeleeAttack()
 {
     if (IsActing || IsRigid)
     {
         return;
     }
     
-
-    if (MeleeAttackActions.IsValidIndex(NormalAttackCollectionIndex))
+    if (CurrentMeleeAttackCollection)
     {
-        AARPGAction* MeleeAttackAction = MeleeAttackActions[NormalAttackCollectionIndex];
-        MeleeAttackAction->ActivateAction(AttachedCharacter);
+        CurrentMeleeAttackCollection->ActivateAction(AttachedCharacter);
         IsActing = true;
-        CurrentActiveAction = MeleeAttackAction;
+        CurrentActiveAction = CurrentMeleeAttackCollection;
     }
 }
 
@@ -165,72 +149,3 @@ void UARPGCharacterCombatComponent::CauseRigid(float Duration, AARPGCharacter* C
 }
 
 
-void AARPGSimpleMontageAction::Interrupt(AARPGCharacter* Causer)
-{
-    AttachedCharacterAnimInstance->StopAllMontages(0.5);
-    Super::Interrupt(Causer);
-}
-
-
-void AARPGSimpleMontageAction::InitWithOwningCharacter(AARPGCharacter* NewOwningCharacter)
-{
-    Super::InitWithOwningCharacter(NewOwningCharacter);
-
-    if (OwningCharacter && OwningCharacter->GetMesh())
-    {
-        AttachedCharacterAnimInstance = OwningCharacter->GetMesh()->GetAnimInstance();
-        if (AttachedCharacterAnimInstance)
-        {
-            AttachedCharacterAnimInstance->OnMontageStarted.AddDynamic(
-                this, &AARPGSimpleMontageAction::OnMontageBegin);
-            AttachedCharacterAnimInstance->OnPlayMontageNotifyBegin.AddDynamic(
-                this, &AARPGSimpleMontageAction::OnMontageNotify);
-            AttachedCharacterAnimInstance->OnMontageEnded.AddDynamic(
-                this, &AARPGSimpleMontageAction::OnMontageStop);
-        }
-    }
-}
-
-
-void AARPGMeleeAttackAction::ActivateAction(AARPGCharacter* Target)
-{
-    Super::ActivateAction(Target);
-
-    if (IsMeleeAttacking)
-    {
-        FinishAction();
-        return;
-    }
-
-    OwningCharacter->PlayAnimMontage(MeleeAttackMontages[MeleeAttackIndex]);
-}
-
-void AARPGMeleeAttackAction::OnMontageBegin(UAnimMontage* Montage)
-{
-    IsMeleeAttacking = true;
-}
-
-void AARPGMeleeAttackAction::OnMontageNotify(FName NotifyName,
-                                             const FBranchingPointNotifyPayload& BranchingPointPayload)
-{
-    IsMeleeAttacking = false;
-    MeleeAttackIndex = (MeleeAttackIndex + 1) % MeleeAttackMontages.Num();
-    FinishAction();
-}
-
-void AARPGMeleeAttackAction::OnMontageStop(UAnimMontage* Montage, bool bInterrupted)
-{
-    if (!bInterrupted)
-    {
-        MeleeAttackIndex = 0;
-        IsMeleeAttacking = false;
-    }
-}
-
-void AARPGMeleeAttackAction::Interrupt(AARPGCharacter* Causer)
-{
-    MeleeAttackIndex = 0;
-    IsMeleeAttacking = false;
-
-    Super::Interrupt(Causer);
-}

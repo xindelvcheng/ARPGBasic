@@ -63,7 +63,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FCharacterPropertyChangedEvent, EC
                                               ChangedProperty, int, CurrentValue, int, TotalValue,
                                               int, DeltaValue);
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS( ClassGroup=(ARPGBasic), meta=(BlueprintSpawnableComponent) )
 class UCharacterStatusComponent : public UActorComponent
 
 {

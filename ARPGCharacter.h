@@ -6,7 +6,7 @@
 
 
 #include "CharacterStatusComponent.h"
-#include "ARPGCharacterCombatComponent.h"
+#include "TranscendentalCombatComponent.h"
 #include "GameFramework/Character.h"
 #include "ARPGCharacter.generated.h"
 
@@ -46,7 +46,7 @@ protected:
     class UCharacterStatusComponent* CharacterStatusComponent;
 
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCharacterBasicComponent")
-    class UARPGCharacterCombatComponent* CharacterCombatComponent;
+    class UTranscendentalCombatComponent* CharacterCombatComponent;
     
 
 public:
@@ -141,9 +141,15 @@ public:
 
     //转发常用属性到ARPGCharacterCombatComponent
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    void TryToMeleeAttack(const int NormalAttackCollectionIndex)const
+    UARPGCharacterCombatComponent* GetCharacterCombatComponent()const
     {
-        CharacterCombatComponent->TryToMeleeAttack(NormalAttackCollectionIndex);
+        return CharacterCombatComponent;
+    }
+    
+    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    void TryToMeleeAttack()const
+    {
+        CharacterCombatComponent->TryToMeleeAttack();
     };
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")

@@ -17,7 +17,7 @@ enum class EBagEvent:uint8
     ReFlush
 };
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS( ClassGroup=(ARPGBasic), meta=(BlueprintSpawnableComponent) )
 class  UARPGGameItemsManagerComponent : public UActorComponent
 {
     GENERATED_BODY()

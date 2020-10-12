@@ -27,33 +27,6 @@ public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
-    DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAttackEvent);
-
-    UPROPERTY(BlueprintCallable,BlueprintAssignable,Category="ARPGNonPlayerCharacter")
-    FAttackEvent OnAttackOrAbilityComplete;
-
-
-    FTimerHandle PreparatoryTimerHandle;
-    FTimerDelegate PreparatoryTimerDelegate;
-
-    FTimerHandle MovingTimerHandle;
-    FTimerDelegate MovingTimerDelegate;
-    bool IsMoving;
-
-#if WITH_EDITOR
-    bool bDebug;
-
-    UFUNCTION(CallInEditor,Category="ARPG NPC AI")
-    void Debug() { bDebug = bDebug ? false : true; }
-# endif
-
-    
-    void ResetMovingTimer()
-    {
-        IsMoving = true;
-        GetWorldTimerManager().ClearTimer(MovingTimerHandle);
-        GetWorldTimerManager().SetTimer(MovingTimerHandle, MovingTimerDelegate, 0.5, false);
-    };
 };
 
 UCLASS()
