@@ -77,54 +77,69 @@ void UARPGCharacterCombatComponent::TickComponent(float DeltaTime, ELevelTick Ti
 }
 
 
-void UARPGCharacterCombatComponent::TryToMeleeAttack()
+bool UARPGCharacterCombatComponent::TryToMeleeAttack()
 {
     if (CurrentActiveAction || IsRigid)
     {
-        return;
+        return false;
     }
     
     if (CurrentMeleeAttackCollection)
     {
-        CurrentMeleeAttackCollection->ActivateAction(AttachedCharacter);
-        IsActing = true;
-        CurrentActiveAction = CurrentMeleeAttackCollection;
+        if (CurrentMeleeAttackCollection->CheckConditionAndPayCost())
+        {
+            CurrentMeleeAttackCollection->ActivateAction(AttachedCharacter);
+            IsActing = true;
+            CurrentActiveAction = CurrentMeleeAttackCollection;
+            return true;
+        }
     }
+    return false;
 }
 
-void UARPGCharacterCombatComponent::TryToRemoteAttack(int RemoteAttackIndex = 0)
+bool UARPGCharacterCombatComponent::TryToRemoteAttack(int RemoteAttackIndex = 0)
 {
     if (CurrentActiveAction || IsRigid)
     {
-        return;
+        return false;
     }
 
     if (RemoteAttackActions.IsValidIndex(RemoteAttackIndex))
     {
         AARPGAction* RemoteAttackAction = RemoteAttackActions[RemoteAttackIndex];
-        RemoteAttackAction->ActivateAction(AttachedCharacter);
-        IsActing = true;
-        CurrentActiveAction = RemoteAttackAction;
+        if (RemoteAttackAction->CheckConditionAndPayCost())
+        {
+            RemoteAttackAction->ActivateAction(AttachedCharacter);
+            IsActing = true;
+            CurrentActiveAction = RemoteAttackAction;
+            return true;
+        }
     }
+    return false;
 }
 
-void UARPGCharacterCombatComponent::TryToUseAbility(int AbilityIndex = 0)
+bool UARPGCharacterCombatComponent::TryToUseAbility(int AbilityIndex = 0)
 {
     if (CurrentActiveAction || IsRigid)
     {
-        return;
+        return false;
     }
 
     if (AbilityActions.IsValidIndex(AbilityIndex))
     {
         AARPGAction* Ability = AbilityActions[AbilityIndex];
-        Ability->ActivateAction(AttachedCharacter);
-        IsActing = true;
-        CurrentActiveAction = Ability;
+        if (Ability->CheckConditionAndPayCost())
+        {
+            Ability->ActivateAction(AttachedCharacter);
+            IsActing = true;
+            CurrentActiveAction = Ability;
+            return true;
+        }
     }
+    return false;
 }
 
-void UARPGCharacterCombatComponent::CauseRigid(float Duration, AARPGCharacter* Causer = nullptr)
+bool UARPGCharacterCombatComponent::CauseRigid(float Duration, AARPGCharacter* Causer = nullptr)
 {
     //打断当前的攻击和技能
     IsActing = false;
@@ -148,6 +163,7 @@ void UARPGCharacterCombatComponent::CauseRigid(float Duration, AARPGCharacter* C
         OnRigid.Broadcast(TimerRemaining);
     }
     IsRigid = true;
+    return true;
 }
 
 void UARPGCharacterCombatComponent::ReInitCharacterActions(UCharacterConfigPrimaryDataAsset* CharacterConfigPrimaryDataAsset)

@@ -1,6 +1,20 @@
 ﻿#include "ARPGAction.h"
 #include "ARPGCharacter.h"
 
+
+
+bool AARPGAction::CheckConditionAndPayCost_Implementation()
+{
+    int SPCost = static_cast<int>(static_cast<float>(OwningCharacter->GetMaxSP()) / 4);
+    
+    if (OwningCharacter->GetCurrentSP()>SPCost)
+    {
+        OwningCharacter->UpdateCurrentSP(-SPCost);
+        return true;
+    }
+    return false;
+}
+
 void AARPGAction::FinishAction()
 {
     OnActionFinished.ExecuteIfBound();
@@ -69,7 +83,7 @@ void AARPGMeleeAttackAction::OnMontageNotify(FName NotifyName,
                                              const FBranchingPointNotifyPayload& BranchingPointPayload)
 {
     Super::OnMontageNotify(NotifyName, BranchingPointPayload);
-    
+
     MeleeAttackIndex = (MeleeAttackIndex + 1) % MeleeAttackMontages.Num();
     FinishAction();
 }

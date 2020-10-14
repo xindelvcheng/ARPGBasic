@@ -90,16 +90,16 @@ public:
     FCombatEvent ActionEnd;
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    virtual void TryToMeleeAttack();
+    virtual bool TryToMeleeAttack();
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    virtual void TryToRemoteAttack(int RemoteAttackIndex);
+    virtual bool TryToRemoteAttack(int RemoteAttackIndex);
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    virtual void TryToUseAbility(int AbilityIndex);
+    virtual bool TryToUseAbility(int AbilityIndex);
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    virtual void CauseRigid(float Duration, AARPGCharacter* Causer);
+    virtual bool CauseRigid(float Duration, AARPGCharacter* Causer);
 
 
     DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRigidEvent, float, Duration);

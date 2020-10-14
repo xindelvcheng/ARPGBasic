@@ -4,22 +4,27 @@
 
 #include "CoreMinimal.h"
 
-
-
-
 #include "CharacterStatusComponent.h"
 #include "TranscendentalCombatComponent.h"
 #include "GameFramework/Character.h"
 #include "ARPGCharacter.generated.h"
 
 class UCharacterConfigPrimaryDataAsset;
+
+UENUM()
+enum class EActionResult:uint8
+{
+    ActionSuccess,
+    ActionFail
+};
+
 UCLASS()
 class AARPGCharacter : public ACharacter
 {
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGBASIC",meta=(AllowPrivateAccess))
-    UCharacterConfigPrimaryDataAsset*  CharacterConfigPDataAsset;
+    UCharacterConfigPrimaryDataAsset* CharacterConfigPDataAsset;
 
 public:
     // Sets default values for this character's properties
@@ -36,7 +41,7 @@ protected:
 
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCharacterBasicComponent")
     class UTranscendentalCombatComponent* CharacterCombatComponent;
-    
+
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCharacterBasicComponent")
     class UARPGLockTargetComponent* CharacterLockTargetComponent;
 
@@ -61,7 +66,7 @@ public:
 
     FText GetCharacterDisplayName() const;
 
-//   转发常用属性到CharacterStatusComponent
+    //   转发常用属性到CharacterStatusComponent
 
     UFUNCTION(BlueprintPure,Category="ARPGBASIC")
     int GetCharacterLevel() const
@@ -137,40 +142,41 @@ public:
 
     //转发常用属性到ARPGCharacterCombatComponent
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    UARPGCharacterCombatComponent* GetCharacterCombatComponent()const
+    UARPGCharacterCombatComponent* GetCharacterCombatComponent() const
     {
         return CharacterCombatComponent;
     }
-    
+
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    void TryToMeleeAttack()const
+    bool TryToMeleeAttack()
     {
-        CharacterCombatComponent->TryToMeleeAttack();
+        return CharacterCombatComponent->TryToMeleeAttack();
     };
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    void TryToRemoteAttack(const int RemoteAttackIndex)const
+    bool TryToRemoteAttack(const int RemoteAttackIndex)
     {
-        CharacterCombatComponent->TryToRemoteAttack(RemoteAttackIndex);
+        return CharacterCombatComponent->TryToRemoteAttack(RemoteAttackIndex);
     };
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    void TryToUseAbility(const int AbilityIndex) const
+    bool TryToUseAbility(const int AbilityIndex)
     {
-        CharacterCombatComponent->TryToUseAbility(AbilityIndex);
-    };
-
-    UFUNCTION(BlueprintCallable,Category="ARPGNonPlayerCharacter")
-    void CauseRigid(const float Duration, AARPGCharacter* Causer)const
-    {
-        CharacterCombatComponent->CauseRigid(Duration,Causer);
+        return (CharacterCombatComponent->TryToUseAbility(AbilityIndex));
     };
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    bool GetIsRigid() const {return CharacterCombatComponent->GetIsRigid();}
-    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    bool GetIsActing() const {return CharacterCombatComponent->GetIsActing();}
+    bool CauseRigid(const float Duration, AARPGCharacter* Causer)
+    {
+        return CharacterCombatComponent->CauseRigid(Duration, Causer);
+    };
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    AARPGAction*  GetCurrentActiveAction() const{return CharacterCombatComponent->GetCurrentActiveAction();}
+    bool GetIsRigid() const { return CharacterCombatComponent->GetIsRigid(); }
+
+    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    bool GetIsActing() const { return CharacterCombatComponent->GetIsActing(); }
+
+    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    AARPGAction* GetCurrentActiveAction() const { return CharacterCombatComponent->GetCurrentActiveAction(); }
 };

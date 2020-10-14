@@ -47,6 +47,16 @@ void AARPGNonPlayerCharacter::HideHPBar()
     }
 }
 
+void AARPGNonPlayerCharacter::OnNPCDeath()
+{
+    AARPGMainCharacter* MainCharacter = UARPGGameInstanceSubsystem::GetMainCharacter(GetWorld());
+    if (MainCharacter)
+    {
+        MainCharacter->UpdateCoins(GetCoins());
+        UpdateCoins(0);
+    }
+}
+
 
 // Called when the game starts or when spawned
 void AARPGNonPlayerCharacter::BeginPlay()
@@ -62,6 +72,8 @@ void AARPGNonPlayerCharacter::BeginPlay()
             HPBarWidget->BindToCharacter(this);
         }
     }
+
+    CharacterStatusComponent->OnCharacterDeath.AddDynamic(this,&AARPGNonPlayerCharacter::OnNPCDeath);
 }
 
 // Called every frame

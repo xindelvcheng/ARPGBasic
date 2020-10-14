@@ -38,6 +38,9 @@ public:
     void ShowHPBar();
 
     void HideHPBar();
+
+    UFUNCTION()
+    void OnNPCDeath();
 };
 
 

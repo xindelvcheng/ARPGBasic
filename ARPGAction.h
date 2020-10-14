@@ -13,12 +13,15 @@ class AARPGAction : public AActor
 
 
 protected:
-    
+
     UPROPERTY(BlueprintReadOnly,Category="ARPGAction")
     AARPGCharacter* OwningCharacter;
 
     UFUNCTION(BlueprintImplementableEvent,DisplayName="ActionActive")
     void BPFunc_Active(AARPGCharacter* Target = nullptr);
+
+    
+
     UFUNCTION(BlueprintCallable,DisplayName="Action Finish")
     void FinishAction();
 
@@ -29,6 +32,9 @@ public:
     virtual void ActivateAction(AARPGCharacter* Target = nullptr);
     virtual void Interrupt(AARPGCharacter* Causer);
 
+    UFUNCTION(BlueprintNativeEvent)
+    bool CheckConditionAndPayCost();
+        
     DECLARE_DELEGATE(FActionFinishDelegate);
     FActionFinishDelegate OnActionFinished;
 };
@@ -44,7 +50,7 @@ class AARPGSimpleMontageAction : public AARPGAction
 protected:
 
     virtual void ActivateAction(AARPGCharacter* Target) override;
-    
+
     UFUNCTION()
     virtual void OnMontageBegin(UAnimMontage* Montage)
     {
