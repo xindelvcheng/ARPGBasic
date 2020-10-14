@@ -250,8 +250,7 @@ void UARPGGameInstanceSubsystem::OnLevelLoaded()
         auto Actor = GetWorld()->SpawnActor(CharacterClass, &CharacterArchiveStruct.CharacterTransform,
                                             ActorSpawnParameters);
         auto Character = Cast<AARPGCharacter>(Actor);
-        Character->SetCharacterName(CharacterArchiveStruct.CharacterName);
-        if (Character->GetCharacterName() == "MainCharacter")
+        if (Character->CharacterName == "MainCharacter")
         {
             MainCharacter = Cast<AARPGMainCharacter>(Character);
             if (MainCharacter.Get())
@@ -278,7 +277,7 @@ void UARPGGameInstanceSubsystem::OnLevelLoaded()
         Character->GetCharacterStatusComponent()->SetCurrentHP(CharacterArchiveStruct.CurrentHP);
         Character->GetCharacterStatusComponent()->SetCurrentSP(CharacterArchiveStruct.CurrentSP);
         Character->GetCharacterStatusComponent()->SetCharacterState(CharacterArchiveStruct.CharacterState);
-        UE_LOG(LogTemp, Warning, TEXT("%s角色已重新生成"), *Character->GetCharacterName().ToString());
+        UE_LOG(LogTemp, Warning, TEXT("%s角色已重新生成"), *Character->CharacterName.ToString());
     }
 
 

@@ -4,7 +4,7 @@
 #include "ARPGCharacterCombatComponent.h"
 #include "ARPGCharacter.h"
 #include "ARPGAction.h"
-
+#include "CharacterConfigPrimaryDataAsset.h"
 
 
 
@@ -26,10 +26,12 @@ void UARPGCharacterCombatComponent::SpawnActionActors(const TArray<TSubclassOf<A
     for (auto ActionClass : ActionClasses)
     {
         AARPGAction* Action = Cast<AARPGAction>(GetWorld()->SpawnActor(ActionClass,&Transform,ActorSpawnParameters));
-        check(Action);
-        Action->InitWithOwningCharacter(AttachedCharacter);
-        ActionActors.Add(Action);
-        Action->OnActionFinished.BindUObject(this, &UARPGCharacterCombatComponent::BindToOnActionFinished);
+        if (Action)
+        {
+            Action->InitWithOwningCharacter(AttachedCharacter);
+            ActionActors.Add(Action);
+            Action->OnActionFinished.BindUObject(this, &UARPGCharacterCombatComponent::BindToOnActionFinished);
+        }
     }
 }
 
@@ -52,17 +54,13 @@ void UARPGCharacterCombatComponent::BeginPlay()
         OnResumeFromRigid.Broadcast(GetWorld()->GetTimerManager().GetTimerElapsed(RigidTimerHandle));
     });
 
-    SpawnActionActors(MeleeAttackCollectionClasses,MeleeAttackCollectionActions);
-    SpawnActionActors(RemoteAttackClasses,RemoteAttackActions);
-    SpawnActionActors(AbilityClasses,AbilityActions);
-    SpawnActionActors(BuffClasses,BuffActions);
-
-    CurrentMeleeAttackCollection = MeleeAttackCollectionActions[0];
+    ReInitCharacterActions();
 }
 
 void UARPGCharacterCombatComponent::BindToOnActionFinished()
 {
     IsActing = false;
+    CurrentActiveAction = nullptr;
 }
 
 
@@ -73,12 +71,15 @@ void UARPGCharacterCombatComponent::TickComponent(float DeltaTime, ELevelTick Ti
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
     // ...
+
+
+
 }
 
 
 void UARPGCharacterCombatComponent::TryToMeleeAttack()
 {
-    if (IsActing || IsRigid)
+    if (CurrentActiveAction || IsRigid)
     {
         return;
     }
@@ -93,7 +94,7 @@ void UARPGCharacterCombatComponent::TryToMeleeAttack()
 
 void UARPGCharacterCombatComponent::TryToRemoteAttack(int RemoteAttackIndex = 0)
 {
-    if (IsActing || IsRigid)
+    if (CurrentActiveAction || IsRigid)
     {
         return;
     }
@@ -109,7 +110,7 @@ void UARPGCharacterCombatComponent::TryToRemoteAttack(int RemoteAttackIndex = 0)
 
 void UARPGCharacterCombatComponent::TryToUseAbility(int AbilityIndex = 0)
 {
-    if (IsActing || IsRigid)
+    if (CurrentActiveAction || IsRigid)
     {
         return;
     }
@@ -147,6 +148,29 @@ void UARPGCharacterCombatComponent::CauseRigid(float Duration, AARPGCharacter* C
         OnRigid.Broadcast(TimerRemaining);
     }
     IsRigid = true;
+}
+
+void UARPGCharacterCombatComponent::ReInitCharacterActions(UCharacterConfigPrimaryDataAsset* CharacterConfigPrimaryDataAsset)
+{
+    if (CharacterConfigPrimaryDataAsset)
+    {
+        MeleeAttackCollectionClasses = CharacterConfigPrimaryDataAsset->MeleeAttackCollectionClasses;
+        RemoteAttackClasses = CharacterConfigPrimaryDataAsset->RemoteAttackClasses;
+        AbilityClasses = CharacterConfigPrimaryDataAsset->AbilityClasses;
+        BuffClasses = CharacterConfigPrimaryDataAsset->BuffClasses;
+
+        MeleeAttackCollectionActions.Empty();
+        RemoteAttackActions.Empty();
+        AbilityActions.Empty();
+        BuffActions.Empty();
+    }
+    
+    SpawnActionActors(MeleeAttackCollectionClasses,MeleeAttackCollectionActions);
+    SpawnActionActors(RemoteAttackClasses,RemoteAttackActions);
+    SpawnActionActors(AbilityClasses,AbilityActions);
+    SpawnActionActors(BuffClasses,BuffActions);
+
+    CurrentMeleeAttackCollection = MeleeAttackCollectionActions[0];
 }
 
 

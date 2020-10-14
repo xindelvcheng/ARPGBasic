@@ -8,6 +8,7 @@
 
 #include "ARPGCharacterCombatComponent.generated.h"
 
+class UCharacterConfigPrimaryDataAsset;
 class AARPGAction;
 class AARPGCharacter;
 
@@ -16,7 +17,7 @@ UCLASS( ClassGroup=(ARPGBasic), meta=(BlueprintSpawnableComponent) )
 class UARPGCharacterCombatComponent : public UActorComponent
 {
     GENERATED_BODY()
-    
+
 
 public:
     // Sets default values for this component's properties
@@ -33,7 +34,7 @@ public:
 
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     TArray<TSubclassOf<AARPGAction>> BuffClasses;
-    
+
 protected:
     // Called when the game starts
     virtual void BeginPlay() override;
@@ -48,9 +49,8 @@ protected:
     bool AllowInterruptBackswing;
 
 
+    void SpawnActionActors(const TArray<TSubclassOf<AARPGAction>>& ActionClasses, TArray<AARPGAction*>& ActionActors);
 
-    void SpawnActionActors(const TArray<TSubclassOf<AARPGAction>>& ActionClasses,TArray<AARPGAction*>& ActionActors);
-    
 public:
     // Called every frame
     virtual void TickComponent(float DeltaTime, ELevelTick TickType,
@@ -59,9 +59,18 @@ public:
     UFUNCTION()
     void BindToOnActionFinished();
 
-    
+    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    bool GetIsRigid() const { return IsRigid; }
+
+    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    bool GetIsActing() const { return CurrentActiveAction?true:false; }
+
+    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    AARPGAction* GetCurrentActiveAction() const{return CurrentActiveAction;}
+
     UPROPERTY()
     TArray<AARPGAction*> MeleeAttackCollectionActions;
+    UPROPERTY()
     AARPGAction* CurrentMeleeAttackCollection;
     UPROPERTY()
     TArray<AARPGAction*> RemoteAttackActions;
@@ -71,7 +80,7 @@ public:
     TArray<AARPGAction*> BuffActions;
     UPROPERTY()
     AARPGAction* CurrentActiveAction;
-    
+
     DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCombatEvent);
 
     UPROPERTY(BlueprintAssignable,BlueprintCallable,Category="ARPGCharacterCombatComponent")
@@ -81,21 +90,21 @@ public:
     FCombatEvent ActionEnd;
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    void TryToMeleeAttack();
+    virtual void TryToMeleeAttack();
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    void TryToRemoteAttack(int RemoteAttackIndex);
+    virtual void TryToRemoteAttack(int RemoteAttackIndex);
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    void TryToUseAbility(int AbilityIndex);
+    virtual void TryToUseAbility(int AbilityIndex);
 
-    UFUNCTION(BlueprintCallable,Category="ARPGNonPlayerCharacter")
-    void CauseRigid(float Duration, AARPGCharacter* Causer);
+    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    virtual void CauseRigid(float Duration, AARPGCharacter* Causer);
 
 
     DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRigidEvent, float, Duration);
 
-    UPROPERTY(BlueprintAssignable,Category="ARPGNonPlayerCharacter")
+    UPROPERTY(BlueprintAssignable,Category="ARPGCharacterCombatComponent")
     FRigidEvent OnRigid;
     FRigidEvent OnResumeFromRigid;
 
@@ -104,5 +113,6 @@ public:
 
     bool IsMoving;
 
-    
+    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    void ReInitCharacterActions(UCharacterConfigPrimaryDataAsset* CharacterConfigPrimaryDataAsset = nullptr);
 };

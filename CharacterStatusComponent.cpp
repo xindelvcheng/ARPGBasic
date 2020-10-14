@@ -6,41 +6,22 @@
 
 #include "ArchiveStructs.h"
 #include "ARPGBasicSettings.h"
+#include "CharacterConfigPrimaryDataAsset.h"
 
-void UCharacterStatusComponent::SetCharacterName(const FName& NewCharacterName)
+void UCharacterStatusComponent::ReInitCharacterProperties(UCharacterConfigPrimaryDataAsset* CharacterConfigDataAsset)
 {
-    this->CharacterName = NewCharacterName;
-    ReInitCharacterProperties(true);
-}
-
-void UCharacterStatusComponent::ReInitCharacterProperties(bool bInitFromDataTable)
-{
-    if (bInitFromDataTable)
+    if (CharacterConfigDataAsset)
     {
-        const auto CharactersConfigDataTable = LoadObject<UDataTable>(
-        nullptr, *UARPGBasicSettings::Get()->CharactersConfig.ToString());
-        if (!CharactersConfigDataTable)
-        {
-            if (GEngine)
-            {
-                GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow,TEXT("无效的配置文件"));
-            }
-            return;
-        }
-        FCharacterInitConfigStruct* CharacterArchiveStruct = CharactersConfigDataTable->FindRow<FCharacterInitConfigStruct>(
-            CharacterName,TEXT("PostEditChangeProperty"));
-        if (CharacterArchiveStruct)
-        {
-            Level = CharacterArchiveStruct->Level;
-            SetCoins(CharacterArchiveStruct->Coins);
+        Level = CharacterConfigDataAsset->Level;
+        SetCoins(CharacterConfigDataAsset->Coins);
         
-            HealthSpecialty = CharacterArchiveStruct->HealthSpecialty;
-            StaminaSpecialty = CharacterArchiveStruct->StaminaSpecialty;
-            AttackSpecialty = CharacterArchiveStruct->AttackSpecialty;
-            DefenseSpecialty = CharacterArchiveStruct->DefenseSpecialty;
-            ToughnessSpecialty = CharacterArchiveStruct->ToughnessSpecialty;
-        }
+        HealthSpecialty = CharacterConfigDataAsset->HealthSpecialty;
+        StaminaSpecialty = CharacterConfigDataAsset->StaminaSpecialty;
+        AttackSpecialty = CharacterConfigDataAsset->AttackSpecialty;
+        DefenseSpecialty = CharacterConfigDataAsset->DefenseSpecialty;
+        ToughnessSpecialty = CharacterConfigDataAsset->ToughnessSpecialty;
     }
+    
     SetMaxHP(CalculateValueBySpecialty(HealthSpecialty));
     SetCurrentHP(MaxHP);
     SetMaxSP(CalculateValueBySpecialty(StaminaSpecialty));
@@ -94,14 +75,4 @@ bool UCharacterStatusComponent::LevelUp(const ESpecialties Specialty)
         return true;
     }
     return false;
-}
-
-
-
-// Called when the game starts
-void UCharacterStatusComponent::BeginPlay()
-{
-    Super::BeginPlay();
-
-    ReInitCharacterProperties(true);
 }

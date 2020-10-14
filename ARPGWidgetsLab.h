@@ -4,12 +4,16 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+
 #include "Blueprint/UserWidget.h"
 #include "Components/ScrollBox.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
 
 #include "ARPGWidgetsLab.generated.h"
 
+enum class ECharacterProperty : unsigned char;
+class AARPGCharacter;
 /**
 * 
 */
@@ -86,7 +90,7 @@ public:
 
     UFUNCTION()
     void OnClickButton_Yes();
-    
+
     UFUNCTION()
     void OnClickButton_No();
 
@@ -111,7 +115,7 @@ public:
 
     UFUNCTION(BlueprintCallable,Category="ARPGWidgetsLab",meta=(BlueprintInternalUseOnly="true",WorldContext=
         "WorldContextObject"))
-    static UShowPromptWidgetBlueprintNode* ShowPromptWidget(const UObject* WorldContextObject,FText PromptText);
+    static UShowPromptWidgetBlueprintNode* ShowPromptWidget(const UObject* WorldContextObject, FText PromptText);
 
     void CreatePromptWidget(const UWorld* World, FText PromptMessage);
 };
@@ -148,9 +152,26 @@ class UARPGLockTargetWidget : public UUserWidget
     //锚点需选在左上角，x=0.5、y=0.5对其
     UPROPERTY(BlueprintReadOnly,Category="ARPGWidgetsLab",meta=(BindWidget,AllowPrivateAccess))
     UImage* Image_LockIcon;
-    
+
 public:
     virtual bool Initialize() override;
 
     void SetLockIconScreenPosition(FVector2D ScreenPosition);
+};
+
+UCLASS()
+class UARPGEnemyHPBarWidget : public UUserWidget
+{
+    GENERATED_BODY()
+
+    UPROPERTY(BlueprintReadOnly,Category="ARPGWidgetsLab",meta=(BindWidget,AllowPrivateAccess))
+    UProgressBar* ProgressBar_HP;
+
+public:
+    virtual bool Initialize() override;
+
+    void BindToCharacter(AARPGCharacter* Character);
+
+    UFUNCTION()
+    void OnCharacterStatusChanged(ECharacterProperty ChangedProperty, int CurrentValue, int TotalValue,int DeltaValue);
 };

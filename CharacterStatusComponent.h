@@ -12,6 +12,7 @@
 
 #include "CharacterStatusComponent.generated.h"
 
+class UCharacterConfigPrimaryDataAsset;
 UENUM(BlueprintType)
 enum class ESpecialties:uint8
 {
@@ -76,8 +77,6 @@ class UCharacterStatusComponent : public UActorComponent
 
 public:
 
-    void SetCharacterName(const FName& NewName);
-
     UPROPERTY(BlueprintAssignable)
     FCharacterPropertyChangedEvent OnCharacterPropertyChanged;
 
@@ -111,7 +110,7 @@ private:
     TSubclassOf<UDamageType> MeleeDamageType;
 
 public:
-    void ReInitCharacterProperties(bool bInitFromDataTable);
+    void ReInitCharacterProperties(UCharacterConfigPrimaryDataAsset* CharacterConfigDataAsset=nullptr);
 
     UFUNCTION(BlueprintCallable,Category="CharacterStatusComponent")
     FORCEINLINE int GetLevel() const { return Level; }
@@ -121,7 +120,7 @@ public:
     {
         const int Temp = Level;
         Level = NewLevel;
-        ReInitCharacterProperties(false);
+        ReInitCharacterProperties();
         OnCharacterPropertyChanged.Broadcast(ECharacterProperty::Level, Level, Level, Level - Temp);
     }
 
@@ -297,8 +296,6 @@ public:
     }
 
 protected:
-    // Called when the game starts
-    virtual void BeginPlay() override;
 
 
 public:

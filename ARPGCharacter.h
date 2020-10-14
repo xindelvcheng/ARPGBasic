@@ -5,38 +5,28 @@
 #include "CoreMinimal.h"
 
 
+
+
 #include "CharacterStatusComponent.h"
 #include "TranscendentalCombatComponent.h"
 #include "GameFramework/Character.h"
 #include "ARPGCharacter.generated.h"
 
+class UCharacterConfigPrimaryDataAsset;
 UCLASS()
 class AARPGCharacter : public ACharacter
 {
     GENERATED_BODY()
+
     UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGBASIC",meta=(AllowPrivateAccess))
-    FName CharacterName = "DefaultCharacter";
+    UCharacterConfigPrimaryDataAsset*  CharacterConfigPDataAsset;
 
-
-
-    
 public:
     // Sets default values for this character's properties
     AARPGCharacter();
 
-
-    FName GetCharacterName() const
-    {
-        return CharacterName;
-    }
-
-    void SetCharacterName(const FName& NewCharacterName)
-    {
-        this->CharacterName = NewCharacterName;
-        CharacterStatusComponent->SetCharacterName(CharacterName);
-    }
-
-    
+    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGBASIC",meta=(AllowPrivateAccess))
+    FName CharacterName = "DefaultCharacter";
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
@@ -49,8 +39,9 @@ protected:
     
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCharacterBasicComponent")
     class UARPGLockTargetComponent* CharacterLockTargetComponent;
-    
+
 public:
+
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
@@ -63,8 +54,12 @@ public:
         return CharacterStatusComponent;
     }
 
+    UARPGLockTargetComponent* GetCharacterLockTargetComponent() const
+    {
+        return CharacterLockTargetComponent;
+    }
 
-
+    FText GetCharacterDisplayName() const;
 
 //   转发常用属性到CharacterStatusComponent
 
@@ -171,4 +166,11 @@ public:
         CharacterCombatComponent->CauseRigid(Duration,Causer);
     };
 
+    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    bool GetIsRigid() const {return CharacterCombatComponent->GetIsRigid();}
+    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    bool GetIsActing() const {return CharacterCombatComponent->GetIsActing();}
+
+    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    AARPGAction*  GetCurrentActiveAction() const{return CharacterCombatComponent->GetCurrentActiveAction();}
 };

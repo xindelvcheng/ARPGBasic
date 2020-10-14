@@ -4,11 +4,18 @@
 
 #include "CoreMinimal.h"
 
+
+
+
 #include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameItem.generated.h"
 
+class AARPGCharacter;
+class UGameItemWidget;
 class ACharacter;
+class AARPGAction;
+
 UCLASS()
 class  AGameItem : public AActor
 {
@@ -23,39 +30,51 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Custom")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="GameItem")
 	FName ItemName;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="GameItem")
+	FText GameItemDisplayName;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Custom")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="GameItem")
 	UTexture2D* ItemIcon;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Custom")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="GameItem")
 	int Number=1;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Custom")
-	FText Note;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="GameItem")
+	FText Introduction;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Custom")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="GameItem")
 	FText Description;
 
-	UPROPERTY(VisibleAnywhere,BlueprintReadWrite,Category="Custom")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="GameItem")
+	TSubclassOf<AARPGAction> EffectActionClass;
+	
+	UPROPERTY(VisibleAnywhere,BlueprintReadWrite,Category="GameItem")
 	UBoxComponent* BoxCollision;
 
-	UPROPERTY(VisibleAnywhere,BlueprintReadWrite,Category="Custom")
+	UPROPERTY(VisibleAnywhere,BlueprintReadWrite,Category="GameItem")
 	UParticleSystemComponent* PromptFX;
 
-    UPROPERTY(VisibleAnywhere,BlueprintReadWrite,Category="Custom")
-    class UGameItemWidget* ItemWidget;
+    UPROPERTY(BlueprintReadWrite,Category="GameItem")
+    UGameItemWidget* ItemWidget;
+
+	UPROPERTY(BlueprintReadWrite,Category="GameItem")
+	AARPGAction* EffectAction;
 	
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable,Category="GameItem")
 	AGameItem* BeTaken();
 
-	UFUNCTION(BlueprintCallable,BlueprintImplementableEvent)
-	void BeUsed(ACharacter* User);
+	UFUNCTION(BlueprintImplementableEvent,Category="GameItem")
+	void BeUsed(AARPGCharacter* User); 
 
-	UPROPERTY(BlueprintReadWrite)
+	UFUNCTION(BlueprintCallable,DisplayName="UseGameItem",Category="GameItem")
+    void NativeUseGameItem(AARPGCharacter* User); 
+	
+	UPROPERTY(BlueprintReadWrite,Category="GameItem")
 	bool IsInBag;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite,Category="GameItem")
 	bool IsUnique;
 };

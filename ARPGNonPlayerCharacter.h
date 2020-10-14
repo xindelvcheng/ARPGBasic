@@ -10,6 +10,9 @@
 
 #include "ARPGNonPlayerCharacter.generated.h"
 
+class UWidgetComponent;
+class UARPGEnemyHPBarWidget;
+
 UCLASS()
 class AARPGNonPlayerCharacter : public AARPGCharacter
 {
@@ -23,11 +26,21 @@ protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
+    UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGNonPlayerCharacter")
+    UWidgetComponent* HPBarWidgetComponent;
+
 public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
+    virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+    void ShowHPBar();
+
+    void HideHPBar();
 };
+
+
 
 UCLASS()
 class AARPGBossAI : public AARPGNonPlayerCharacter

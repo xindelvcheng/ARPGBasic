@@ -9,6 +9,9 @@
 
 #include "GameItemWidget.generated.h"
 
+class UImage;
+class UTextBlock;
+
 /**
  * 
  */
@@ -21,21 +24,33 @@ protected:
 	virtual bool Initialize() override;
 	
 	UPROPERTY(VisibleAnywhere,BlueprintReadWrite,Category="GameItemWidget",meta=(BindWidget))
-	class UImage* Image_Icon;
+	UImage* Image_Icon;
 	
 	UPROPERTY(VisibleAnywhere,BlueprintReadWrite,Category="GameItemWidget",meta=(BindWidget))
-	class UImage* Image_BeSelectedIcon;
+	UImage* Image_BeSelectedIcon;
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadWrite,Category="GameItemWidget",meta=(BindWidget))
-	class UTextBlock* TextBlock_Number;
+	UTextBlock* TextBlock_Number;
+
+	UPROPERTY(VisibleAnywhere,BlueprintReadWrite,Category="GameItemWidget",meta=(BindWidget))
+	UTextBlock* TextBlock_GameItemDisplayName;
+
+	UPROPERTY(BlueprintReadOnly,Category="GameItemWidget")
+	TWeakObjectPtr<AGameItem> GameItem;
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void SetupGameItemWidget(class AGameItem* GameItem);
+	void SetupGameItemWidget(AGameItem* NewGameItem);
 
-	UFUNCTION(BlueprintCallable,BlueprintImplementableEvent, Category = "GameItemWidget")
+	UFUNCTION(BlueprintImplementableEvent, Category = "GameItemWidget")
 	void BeSelected();
 
-	UFUNCTION(BlueprintCallable,BlueprintImplementableEvent, Category = "GameItemWidget")
+	UFUNCTION(BlueprintImplementableEvent, Category = "GameItemWidget")
 	void NotSelected();
+	
+	UFUNCTION(BlueprintCallable,DisplayName="SelectGameItemWidget", Category = "GameItemWidget")
+	void NativeSelectGameItemWidget();
+
+	UFUNCTION(BlueprintCallable,DisplayName="DeselectGameItemWidget", Category = "GameItemWidget")
+	void NativeDeselectGameItemWidget();
 };

@@ -4,7 +4,9 @@
 #include "ARPGCharacter.h"
 
 #include "ARPGConfigSubsystem.h"
+#include "ARPGGameInstanceSubsystem.h"
 #include "ARPGGameItemsManagerComponent.h"
+#include "CharacterConfigPrimaryDataAsset.h"
 #include "CharacterStatusComponent.h"
 #include "TranscendentalCombatComponent.h"
 #include "ARPGLockTargetComponent.h"
@@ -17,21 +19,31 @@ AARPGCharacter::AARPGCharacter()
     CharacterCombatComponent = CreateDefaultSubobject<UTranscendentalCombatComponent>("ARPGCharacterCombaComponent");
     CharacterLockTargetComponent = CreateDefaultSubobject<UARPGLockTargetComponent>("ARPGLockTargetComponent");
 }
- 
+
+FText AARPGCharacter::GetCharacterDisplayName() const
+{
+    if (CharacterConfigPDataAsset)
+    {
+        return CharacterConfigPDataAsset->CharacterDisplayName;
+    }
+    return FText();
+}
+
 void AARPGCharacter::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (CharacterName.IsNone() || CharacterName.IsEqual("DefaultCharacter"))
+    if (CharacterConfigPDataAsset)
     {
-        if (GEngine)
-        {
-            GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow,TEXT("未指定角色CharacterName属性，ARPGCharacter无法进行初始化"));
-        }
-        
+        CharacterStatusComponent->ReInitCharacterProperties(CharacterConfigPDataAsset);
+        CharacterCombatComponent->ReInitCharacterActions(CharacterConfigPDataAsset);
+        CharacterName = CharacterConfigPDataAsset->CharacterName;
     }
-    CharacterStatusComponent->SetCharacterName(CharacterName);
-
+    else
+    {
+        UARPGGameInstanceSubsystem::PrintLogToScreen(
+            FString::Printf(TEXT("角色%s未设置CharacterConfigPDataAsset"), *GetName()));
+    }
 }
 
 void AARPGCharacter::Tick(float DeltaTime)

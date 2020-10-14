@@ -21,6 +21,12 @@ void AARPGAction::Interrupt(AARPGCharacter* Causer)
     FinishAction();
 }
 
+void AARPGSimpleMontageAction::ActivateAction(AARPGCharacter* Target)
+{
+    Super::ActivateAction(Target);
+    OwningCharacter->PlayAnimMontage(ActionMontage);
+}
+
 void AARPGSimpleMontageAction::Interrupt(AARPGCharacter* Causer)
 {
     AttachedCharacterAnimInstance->StopAllMontages(0.5);
@@ -50,26 +56,20 @@ void AARPGSimpleMontageAction::InitWithOwningCharacter(AARPGCharacter* NewOwning
 
 void AARPGMeleeAttackAction::ActivateAction(AARPGCharacter* Target)
 {
+    ActionMontage = MeleeAttackMontages[MeleeAttackIndex];
     Super::ActivateAction(Target);
-
-    if (IsMeleeAttacking)
-    {
-        FinishAction();
-        return;
-    }
-
-    OwningCharacter->PlayAnimMontage(MeleeAttackMontages[MeleeAttackIndex]);
 }
 
 void AARPGMeleeAttackAction::OnMontageBegin(UAnimMontage* Montage)
 {
-    IsMeleeAttacking = true;
+    Super::OnMontageBegin(Montage);
 }
 
 void AARPGMeleeAttackAction::OnMontageNotify(FName NotifyName,
                                              const FBranchingPointNotifyPayload& BranchingPointPayload)
 {
-    IsMeleeAttacking = false;
+    Super::OnMontageNotify(NotifyName, BranchingPointPayload);
+    
     MeleeAttackIndex = (MeleeAttackIndex + 1) % MeleeAttackMontages.Num();
     FinishAction();
 }
@@ -79,14 +79,13 @@ void AARPGMeleeAttackAction::OnMontageStop(UAnimMontage* Montage, bool bInterrup
     if (!bInterrupted)
     {
         MeleeAttackIndex = 0;
-        IsMeleeAttacking = false;
+        Super::OnMontageStop(Montage, bInterrupted);
     }
 }
 
 void AARPGMeleeAttackAction::Interrupt(AARPGCharacter* Causer)
 {
     MeleeAttackIndex = 0;
-    IsMeleeAttacking = false;
 
     Super::Interrupt(Causer);
 }

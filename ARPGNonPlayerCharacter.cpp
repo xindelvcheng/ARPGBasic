@@ -3,10 +3,13 @@
 
 #include "ARPGNonPlayerCharacter.h"
 
+
+#include "ARPGBasicSettings.h"
 #include "ARPGGameInstanceSubsystem.h"
 #include "Tasks/AITask_MoveTo.h"
 #include "AIModule/Classes/AIController.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -16,17 +19,62 @@ AARPGNonPlayerCharacter::AARPGNonPlayerCharacter()
 {
     // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = true;
+
+    HPBarWidgetComponent = CreateDefaultSubobject<UWidgetComponent>("HPBarWidget");
+    HPBarWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+
+    if (UARPGBasicSettings::Get())
+    {
+        HPBarWidgetComponent->SetWidgetClass(
+            LoadClass<UARPGEnemyHPBarWidget>(nullptr, *UARPGBasicSettings::Get()->EnemyHPBarWidgetClass.ToString()));
+    }
+    
 }
+
+void AARPGNonPlayerCharacter::ShowHPBar()
+{
+    if (HPBarWidgetComponent && HPBarWidgetComponent->GetUserWidgetObject())
+    {
+        HPBarWidgetComponent->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Visible);
+    }
+}
+
+void AARPGNonPlayerCharacter::HideHPBar()
+{
+    if (HPBarWidgetComponent && HPBarWidgetComponent->GetUserWidgetObject())
+    {
+        HPBarWidgetComponent->GetUserWidgetObject()->SetVisibility(ESlateVisibility::Hidden);
+    }
+}
+
 
 // Called when the game starts or when spawned
 void AARPGNonPlayerCharacter::BeginPlay()
 {
     Super::BeginPlay();
-    
+
+    HideHPBar();
+    if (HPBarWidgetComponent && HPBarWidgetComponent->GetUserWidgetObject())
+    {
+        UARPGEnemyHPBarWidget* HPBarWidget = Cast<UARPGEnemyHPBarWidget>(HPBarWidgetComponent->GetUserWidgetObject());
+        if (HPBarWidget)
+        {
+            HPBarWidget->BindToCharacter(this);
+        }
+    }
 }
 
 // Called every frame
 void AARPGNonPlayerCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+}
+
+float AARPGNonPlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
+    AController* EventInstigator, AActor* DamageCauser)
+{
+    Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+    
+    ShowHPBar();
+    return DamageAmount;
 }

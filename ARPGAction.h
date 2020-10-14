@@ -43,25 +43,34 @@ class AARPGSimpleMontageAction : public AARPGAction
 
 protected:
 
+    virtual void ActivateAction(AARPGCharacter* Target) override;
+    
     UFUNCTION()
     virtual void OnMontageBegin(UAnimMontage* Montage)
     {
-        checkf(false, TEXT("This method should be override in child class"))
+        // checkf(false, TEXT("This method should be override in child class"))
     };
     UFUNCTION()
     virtual void OnMontageNotify(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload)
     {
-        checkf(false, TEXT("This method should be override in child class"))
+        // checkf(false, TEXT("This method should be override in child class"))
     };
     UFUNCTION()
     virtual void OnMontageStop(UAnimMontage* Montage, bool bInterrupted)
     {
-        checkf(false, TEXT("This method should be override in child class"))
+        if (Montage == ActionMontage)
+        {
+            FinishAction();
+        }
     };
 
     virtual void Interrupt(AARPGCharacter* Causer) override;
 
     virtual void InitWithOwningCharacter(AARPGCharacter* NewOwningCharacter) override;
+
+public:
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGNormalAttacks",meta=(AllowPrivateAccess=true))
+    UAnimMontage* ActionMontage;
 };
 
 UCLASS(Blueprintable)
@@ -70,8 +79,6 @@ class AARPGMeleeAttackAction : public AARPGSimpleMontageAction
     GENERATED_BODY()
 
     int MeleeAttackIndex;
-
-    bool IsMeleeAttacking;
 
 public:
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGNormalAttacks",meta=(AllowPrivateAccess=true))

@@ -21,10 +21,27 @@ bool UGameItemWidget::Initialize()
     return true;
 }
 
-void UGameItemWidget::SetupGameItemWidget(AGameItem* GameItem)
+void UGameItemWidget::SetupGameItemWidget(AGameItem* NewGameItem)
 {
+    GameItem = NewGameItem;
+    
     Image_Icon->SetBrushFromTexture(GameItem->ItemIcon);
     TextBlock_Number->SetText(FText::AsNumber(GameItem->Number));
+    TextBlock_GameItemDisplayName->SetText(GameItem->GameItemDisplayName);
 
     GameItem->ItemWidget = this;
+}
+
+void UGameItemWidget::NativeSelectGameItemWidget()
+{
+    Image_BeSelectedIcon->SetVisibility(ESlateVisibility::Visible);
+    TextBlock_GameItemDisplayName->SetVisibility(ESlateVisibility::Visible);
+    BeSelected();
+}
+
+void UGameItemWidget::NativeDeselectGameItemWidget()
+{
+    Image_BeSelectedIcon->SetVisibility(ESlateVisibility::Hidden);
+    TextBlock_GameItemDisplayName->SetVisibility(ESlateVisibility::Hidden);
+    NotSelected();
 }

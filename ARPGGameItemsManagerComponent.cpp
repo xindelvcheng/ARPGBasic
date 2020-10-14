@@ -2,7 +2,7 @@
 
 
 #include "ARPGGameItemsManagerComponent.h"
-
+#include "ARPGCharacter.h"
 #include "GameItem.h"
 #include "GameItemWidget.h"
 
@@ -111,7 +111,7 @@ bool UARPGGameItemsManagerComponent::SelectPreviousItemInBag()
     return true;
 }
 
-bool UARPGGameItemsManagerComponent::UseItemInBag(ACharacter* User)
+bool UARPGGameItemsManagerComponent::UseItemInBag(AARPGCharacter* User)
 {
     if (!Bag.IsValidIndex(BagSelectedItemIndex))
     {
@@ -119,7 +119,7 @@ bool UARPGGameItemsManagerComponent::UseItemInBag(ACharacter* User)
     }
 
     AGameItem* GameItem = Bag[BagSelectedItemIndex];
-    GameItem->BeUsed(User);
+    GameItem->NativeUseGameItem(User);
     GameItem->Number--;
     if (GameItem->Number > 0)
     {

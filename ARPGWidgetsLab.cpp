@@ -4,11 +4,11 @@
 #include "ARPGWidgetsLab.h"
 
 
-
+#include "ARPGCharacter.h"
 #include "ARPGBasicSettings.h"
 #include "ARPGGameInstanceSubsystem.h"
 #include "Blueprint/WidgetTree.h"
-#include "Components/CanvasPanel.h"
+#include "CharacterStatusComponent.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/CanvasPanelSlot.h"
@@ -45,13 +45,13 @@ void UARPGProgressBar::SetPercent(int Current, int Total)
     TrueValue = static_cast<float>(Current);
     TotalValue = static_cast<float>(Total);
 
-    int Length = static_cast<int>(300*(1 + TotalValue/((TotalValue/3)+300)));
+    int Length = static_cast<int>(300 * (1 + TotalValue / ((TotalValue / 3) + 300)));
     if (GEngine)
     {
         UCanvasPanelSlot* CanvasPanelSlot = Cast<UCanvasPanelSlot>(ProgressBar->Slot);
         if (CanvasPanelSlot)
         {
-            CanvasPanelSlot->SetSize(FVector2D(Length,15));
+            CanvasPanelSlot->SetSize(FVector2D(Length, 15));
         }
     }
 }
@@ -66,8 +66,8 @@ bool UARPGPromptWidget::Initialize()
         return false;
     }
 
-    Button_Yes->OnClicked.AddDynamic(this,&UARPGPromptWidget::OnClickButton_Yes);
-    Button_No->OnClicked.AddDynamic(this,&UARPGPromptWidget::OnClickButton_No);
+    Button_Yes->OnClicked.AddDynamic(this, &UARPGPromptWidget::OnClickButton_Yes);
+    Button_No->OnClicked.AddDynamic(this, &UARPGPromptWidget::OnClickButton_No);
     return true;
 }
 
@@ -88,7 +88,8 @@ void UARPGPromptWidget::SetPromptText(FText PromptText)
     TextBlock_PromptText->SetText(PromptText);
 }
 
-UShowPromptWidgetBlueprintNode* UShowPromptWidgetBlueprintNode::ShowPromptWidget(const UObject* WorldContextObject,FText PromptText)
+UShowPromptWidgetBlueprintNode* UShowPromptWidgetBlueprintNode::ShowPromptWidget(
+    const UObject* WorldContextObject, FText PromptText)
 {
     UShowPromptWidgetBlueprintNode* Node = NewObject<UShowPromptWidgetBlueprintNode>();
     Node->CreatePromptWidget(WorldContextObject->GetWorld(), PromptText);
@@ -105,7 +106,8 @@ void UShowPromptWidgetBlueprintNode::CreatePromptWidget(const UWorld* World, FTe
         verifyf(PromptWidgetClass, TEXT("没有设定PromptWidgetClass"))
     }
 
-    UARPGPromptWidget* PromptWidget = Cast<UARPGPromptWidget>(CreateWidget(UGameplayStatics::GetPlayerController(World,0),PromptWidgetClass));
+    UARPGPromptWidget* PromptWidget = Cast<UARPGPromptWidget>(
+        CreateWidget(UGameplayStatics::GetPlayerController(World, 0), PromptWidgetClass));
     PromptWidget->SetPromptText(PromptText);
     PromptWidget->OnChooseYes.BindLambda([&]()
     {
@@ -114,7 +116,6 @@ void UShowPromptWidgetBlueprintNode::CreatePromptWidget(const UWorld* World, FTe
     PromptWidget->OnChooseNo.BindLambda([&]()
     {
         No.Broadcast();
-        
     });
     PromptWidget->AddToViewport();
 }
@@ -147,5 +148,37 @@ void UARPGLockTargetWidget::SetLockIconScreenPosition(FVector2D ScreenPosition)
         {
             CanvasPanel->SetPosition(ScreenPosition);
         }
+    }
+}
+
+bool UARPGEnemyHPBarWidget::Initialize()
+{
+    Super::Initialize();
+    if (!ProgressBar_HP)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+void UARPGEnemyHPBarWidget::BindToCharacter(AARPGCharacter* Character)
+{
+    if (Character && Character->GetCharacterStatusComponent())
+    {
+        if (ProgressBar_HP)
+        {
+            ProgressBar_HP->SetPercent(static_cast<float>(Character->GetCurrentHP())/static_cast<float>(Character->GetMaxHP()));
+        }
+        Character->GetCharacterStatusComponent()->OnCharacterPropertyChanged.AddDynamic(this,&UARPGEnemyHPBarWidget::OnCharacterStatusChanged);
+    }
+}
+
+void UARPGEnemyHPBarWidget::OnCharacterStatusChanged(ECharacterProperty ChangedProperty, int CurrentValue,
+    int TotalValue, int DeltaValue)
+{
+    if (ChangedProperty == ECharacterProperty::CurrentHP && ProgressBar_HP)
+    {
+        ProgressBar_HP->SetPercent(static_cast<float>(CurrentValue)/static_cast<float>(TotalValue));
     }
 }

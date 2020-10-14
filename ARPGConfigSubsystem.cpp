@@ -20,8 +20,8 @@ void UARPGConfigSubsystem::Initialize(FSubsystemCollectionBase& Collection)
         const bool bNotConfig = BasicSettings->StatusWidgetClass.ToString().IsEmpty()
             || BasicSettings-> NotifyWidgetClass.ToString().IsEmpty()
             || BasicSettings->GameItemWidgetClass.ToString().IsEmpty()
-            || BasicSettings->PromptWidgetClass.ToString().IsEmpty() || BasicSettings->LockTargetWidgetClass.ToString().IsEmpty()
-            || BasicSettings->CharactersConfig.ToString().IsEmpty();
+            || BasicSettings->PromptWidgetClass.ToString().IsEmpty()
+            || BasicSettings->LockTargetWidgetClass.ToString().IsEmpty();
         if (bNotConfig)
         {
             UARPGGameInstanceSubsystem::PrintLogToScreen(TEXT("错误，ARPG未完成基本项目设置"), 15, FColor::Red);

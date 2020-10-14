@@ -14,13 +14,14 @@
 /**
  * 
  */
-UCLASS(Config=ARPGBasicSettings)
+UCLASS(Config=ARPGBasicSettings,defaultconfig)
 class  UARPGBasicSettings : public UDeveloperSettings
 {
 	GENERATED_BODY()
     
 	virtual FName GetContainerName() const override{return TEXT("Project");}
 	virtual FName GetCategoryName() const override{return TEXT("ARPGBasicSettings");}
+	virtual FName GetSectionName() const override{return TEXT("ARPGBasicSettings");};
 
 public:
 	
@@ -45,9 +46,9 @@ public:
 	UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
 	TSoftClassPtr<UARPGLockTargetWidget> LockTargetWidgetClass;
 	
-	UPROPERTY(Config=Game,EditAnywhere,BlueprintReadWrite,Category="Data Config")
-	TSoftObjectPtr<UDataTable> CharactersConfig;
+	UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
+	TSoftClassPtr<UARPGEnemyHPBarWidget> EnemyHPBarWidgetClass;
 
-	UPROPERTY(Config=Game,EditAnywhere,BlueprintReadWrite,Category="Transcendental Laws Constructor Config")
+	UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="Transcendental Laws Constructor Config")
 	TSoftObjectPtr<UDataTable> LevelToRealmConfig;
 };

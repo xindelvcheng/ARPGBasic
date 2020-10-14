@@ -6,6 +6,10 @@
 #include "Components/ActorComponent.h"
 #include "ARPGGameItemsManagerComponent.generated.h"
 
+
+class AARPGCharacter;
+class AGameItem;
+
 UENUM(BlueprintType)
 enum class EBagEvent:uint8
 {
@@ -35,7 +39,7 @@ public:
     FBagChangedEvent OnBagChanged;
 
     UFUNCTION(BlueprintCallable,Category="BagSystem")
-    bool AddItemToBag(class AGameItem* GameItem);
+    bool AddItemToBag(AGameItem* GameItem);
 
     UFUNCTION(BlueprintCallable,Category="BagSystem")
     bool SelectNextItemInBag();
@@ -44,7 +48,7 @@ public:
     bool SelectPreviousItemInBag();
 
     UFUNCTION(BlueprintCallable,Category="BagSystem")
-    bool UseItemInBag(ACharacter* User);
+    bool UseItemInBag(AARPGCharacter* User);
 
     UFUNCTION(BlueprintCallable,Category="BagSystem")
     TArray<AGameItem*> GetAllGameItemsInBag() const { return this->Bag; }
