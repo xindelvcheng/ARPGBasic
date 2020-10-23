@@ -132,6 +132,7 @@ public:
 
 
     static UARPGGameInstanceSubsystem* Get(UWorld* World);
+
 };
 
 

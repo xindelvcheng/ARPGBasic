@@ -21,12 +21,11 @@ protected:
 	UPROPERTY()
 	TArray<ATranscendentalLawsSystem*> TranscendentalLawsSystems;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
-	TArray<TSubclassOf<ATranscendentalLawsSystem>> TranscendentalLawsSystemClasses;
-	
-
 public:
 	virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
+	TArray<TSubclassOf<ATranscendentalLawsSystem>> TranscendentalLawsSystemClasses;
 
 	UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
 	ATranscendentalLawsSystem* CurrentActiveTranscendentalLawsSystem;
@@ -42,4 +41,9 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="TranscendentalCombatComponent")
 	void SwitchTranscendentalLawsSystem(ATranscendentalLawsSystem* TranscendentalLawsSystem);
+
+	void SetTranscendentalLawsSystems(TArray<ATranscendentalLawsSystem*>&& NewTranscendentalLawsSystems)
+	{
+		TranscendentalLawsSystems = NewTranscendentalLawsSystems;
+	}
 };

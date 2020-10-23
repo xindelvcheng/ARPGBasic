@@ -10,7 +10,8 @@
 class UARPGCharacterCombatComponent;
 class AARPGCharacter;
 class AARPGAction;
-UENUM()
+
+UENUM(BlueprintType)
 enum class ETranscendentalLawsAttainment:uint8
 {
     Low,
@@ -51,6 +52,8 @@ protected:
 
 
 public:
+    UFUNCTION(BlueprintNativeEvent)
+    FText GetTranscendentalLawsAttainmentText();
 
     void SetAttachedCharacter(AARPGCharacter* NewAttachedCharacter);
 
@@ -69,11 +72,30 @@ public:
     TArray<TSubclassOf<AARPGAction>> BuffClasses;
 
     void Init(AARPGCharacter* NewAttachedCharacter, UARPGCharacterCombatComponent* NewAttachedCharacterCombatComponent);
-    
+
     void Activate();
     void DeActivate();
 
     virtual void BeginPlay() override;
-    
+
     void SpawnActionActors(const TArray<TSubclassOf<AARPGAction>>& Classes, TArray<AARPGAction*>& ActionActors);
+
+public:
+    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    FText GetDisplayName() const
+    {
+        return DisplayName;
+    }
+
+    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    FName GetCategory() const
+    {
+        return Category;
+    }
+
+    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    ETranscendentalLawsAttainment GetAttainment() const
+    {
+        return Attainment;
+    }
 };

@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 
+
+
+#include "ARPGGamingMenuWidget.h"
 #include "ARPGStatusWidget.h"
 #include "ARPGWidgetsLab.h"
 #include "GameItemWidget.h"
@@ -48,6 +51,9 @@ public:
 	
 	UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
 	TSoftClassPtr<UARPGEnemyHPBarWidget> EnemyHPBarWidgetClass;
+
+	UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
+	TSoftClassPtr<UARPGGamingMenuContentItemWidget> GamingMenuContentItemWidgetClass;
 
 	UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="Transcendental Laws Constructor Config")
 	TSoftObjectPtr<UDataTable> LevelToRealmConfig;

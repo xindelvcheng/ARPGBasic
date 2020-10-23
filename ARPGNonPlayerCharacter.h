@@ -29,6 +29,9 @@ protected:
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGNonPlayerCharacter")
     UWidgetComponent* HPBarWidgetComponent;
 
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGNonPlayerCharacter")
+    FVector HPBarOffsetVector{0,0,100};
+
 public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;

@@ -142,7 +142,7 @@ public:
 
     //转发常用属性到ARPGCharacterCombatComponent
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    UARPGCharacterCombatComponent* GetCharacterCombatComponent() const
+    UTranscendentalCombatComponent* GetCharacterCombatComponent() const
     {
         return CharacterCombatComponent;
     }

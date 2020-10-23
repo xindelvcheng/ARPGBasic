@@ -37,6 +37,9 @@ struct FCharacterArchiveStruct
     FName CharacterName = "DefaultCharacter";
 
     UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="CharacterArchiveStruct")
+    FText CharacterDisPlayName;
+
+    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="CharacterArchiveStruct")
     int Level = 1;
 
     UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="CharacterArchiveStruct")
@@ -65,6 +68,9 @@ struct FCharacterArchiveStruct
 
     UPROPERTY(BlueprintReadWrite,Category="CharacterArchiveStruct")
     ECharacterState CharacterState;
+
+    UPROPERTY(BlueprintReadWrite,Category="CharacterArchiveStruct")
+    TArray<TSoftClassPtr<class ATranscendentalLawsSystem> > TranscendentalLawsSystemClasses;
 };
 
 USTRUCT(BlueprintType)

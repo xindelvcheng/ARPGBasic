@@ -7,6 +7,22 @@
 #include "ARPGCharacterCombatComponent.h"
 
 
+FText ATranscendentalLawsSystem::GetTranscendentalLawsAttainmentText_Implementation()
+{
+    switch (Attainment)
+    {
+    case ETranscendentalLawsAttainment::Low:
+        return FText::FromString(TEXT("浅显"));
+    case ETranscendentalLawsAttainment::Middle:
+        return FText::FromString(TEXT("渐悟"));
+    case ETranscendentalLawsAttainment::High:
+        return FText::FromString(TEXT("大成"));
+    case ETranscendentalLawsAttainment::Perfect:
+        return FText::FromString(TEXT("极致"));
+    }
+    return FText::FromString(TEXT("无"));
+}
+
 void ATranscendentalLawsSystem::SetAttachedCharacter(AARPGCharacter* NewAttachedCharacter)
 {
     AttachedCharacter = NewAttachedCharacter;

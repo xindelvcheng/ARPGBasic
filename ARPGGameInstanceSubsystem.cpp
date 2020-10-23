@@ -8,12 +8,13 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "GameItemWidget.h"
-#include "APRGGameSaver.h"
-#include "ARPGBasicSettings.h"
 #include "ARPGPlayerController.h"
 #include "ARPGGameItemsManagerComponent.h"
 #include "Engine/LevelStreamingDynamic.h"
 #include "Kismet/KismetTextLibrary.h"
+#include "TranscendentalCombatComponent.h"
+#include "TranscendentalLawsSystem.h"
+
 
 void UARPGGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -130,12 +131,13 @@ bool UARPGGameInstanceSubsystem::SaveArchive(FString ArchiveName)
                 AGameItem* GameItem = Cast<AGameItem>(Actor);
                 if (GameItem)
                 {
-                    FGameItemArchiveStruct GameItemArchiveStruct;
-                    GameItemArchiveStruct.GameItemClass = GetPathNameSafe(GameItem->GetClass());
-                    GameItemArchiveStruct.Number = GameItem->Number;
-                    GameItemArchiveStruct.IsInBag = GameItem->IsInBag;
-                    GameItemArchiveStruct.Transform = GameItem->GetActorTransform();
-                    GameSaver->GameItems.Add(GameItemArchiveStruct);
+                    FGameItemArchiveStruct GameItemArchiveStruct = {
+                        GameItem->GetClass(),
+                        GameItem->Number,
+                        GameItem->IsInBag,
+                        GameItem->GetActorTransform()
+                    };
+                    GameSaver->GameItems.Emplace(std::move(GameItemArchiveStruct));
                 }
             }
 
@@ -150,22 +152,33 @@ bool UARPGGameInstanceSubsystem::SaveArchive(FString ArchiveName)
                     return false;
                 }
                 UCharacterStatusComponent* CharacterStatusComponent = Character->GetCharacterStatusComponent();
-                TSharedPtr<FCharacterArchiveStruct> CharacterArchiveStruct(new FCharacterArchiveStruct());
+                UTranscendentalCombatComponent* CharacterCombatComponent = Character->GetCharacterCombatComponent();
+                TArray<TSoftClassPtr<ATranscendentalLawsSystem>> TranscendentalLawsSystemClasses;
+                for (ATranscendentalLawsSystem* TranscendentalLawsSystem : CharacterCombatComponent->
+                     GetAllTranscendentalLawsSystems())
+                {
+                    TranscendentalLawsSystemClasses.Emplace(TranscendentalLawsSystem->GetClass()->GetPathName());
+                }
 
-                CharacterArchiveStruct->CharacterClassPath = GetPathNameSafe(Character->GetClass());
-                CharacterArchiveStruct->CharacterName = CharacterStatusComponent->GetCharacterName();
-                CharacterArchiveStruct->Level = CharacterStatusComponent->GetLevel();
-                CharacterArchiveStruct->CurrentHP = CharacterStatusComponent->GetCurrentHP();
-                CharacterArchiveStruct->CurrentSP = CharacterStatusComponent->GetCurrentSP();
-                CharacterArchiveStruct->Coins = CharacterStatusComponent->GetCoins();
-                CharacterArchiveStruct->AttackSpecialty = CharacterStatusComponent->GetStaminaSpecialty();
-                CharacterArchiveStruct->AttackSpecialty = CharacterStatusComponent->GetAttackSpecialty();
-                CharacterArchiveStruct->DefenseSpecialty = CharacterStatusComponent->GetDefenseSpecialty();
-                CharacterArchiveStruct->ToughnessSpecialty = CharacterStatusComponent->GetToughnessSpecialty();
-                CharacterArchiveStruct->CharacterState = CharacterStatusComponent->GetCharacterState();
-                CharacterArchiveStruct->CharacterTransform = Character->GetActorTransform();
+                FCharacterArchiveStruct CharacterArchiveStruct = {
+                    Character->GetClass(),
+                    Character->GetTransform(),
+                    Character->CharacterName,
+                    Character->GetCharacterDisplayName(),
+                    CharacterStatusComponent->GetLevel(),
+                    CharacterStatusComponent->GetCoins(),
+                    CharacterStatusComponent->GetHealthSpecialty(),
+                    CharacterStatusComponent->GetStaminaSpecialty(),
+                    CharacterStatusComponent->GetAttackSpecialty(),
+                    CharacterStatusComponent->GetDefenseSpecialty(),
+                    CharacterStatusComponent->GetToughnessSpecialty(),
+                    CharacterStatusComponent->GetCurrentHP(),
+                    CharacterStatusComponent->GetCurrentSP(),
+                    CharacterStatusComponent->GetCharacterState(),
+                    std::move(TranscendentalLawsSystemClasses)
+                };
 
-                GameSaver->Characters.Emplace(*CharacterArchiveStruct);
+                GameSaver->Characters.Emplace(std::move(CharacterArchiveStruct));
             }
             FAsyncSaveGameToSlotDelegate AsyncSaveGameToSlotDelegate;
             AsyncSaveGameToSlotDelegate.BindLambda([&](const FString&, const int32, bool)
@@ -246,7 +259,8 @@ void UARPGGameInstanceSubsystem::OnLevelLoaded()
     //还原角色
     for (auto CharacterArchiveStruct : GameSaver->Characters)
     {
-        auto CharacterClass = LoadClass<AARPGCharacter>(nullptr, *CharacterArchiveStruct.CharacterClassPath.ToString());
+        auto CharacterClass = CharacterArchiveStruct.CharacterClassPath.LoadSynchronous();
+        checkf(GetWorld(), TEXT("World is nullptr!"));
         auto Actor = GetWorld()->SpawnActor(CharacterClass, &CharacterArchiveStruct.CharacterTransform,
                                             ActorSpawnParameters);
         auto Character = Cast<AARPGCharacter>(Actor);
@@ -277,8 +291,20 @@ void UARPGGameInstanceSubsystem::OnLevelLoaded()
         Character->GetCharacterStatusComponent()->SetCurrentHP(CharacterArchiveStruct.CurrentHP);
         Character->GetCharacterStatusComponent()->SetCurrentSP(CharacterArchiveStruct.CurrentSP);
         Character->GetCharacterStatusComponent()->SetCharacterState(CharacterArchiveStruct.CharacterState);
+
+        TArray<ATranscendentalLawsSystem*> TranscendentalLawsSystems;
+        for (auto TranscendentalLawsSystemSoftClass : CharacterArchiveStruct.TranscendentalLawsSystemClasses)
+        {
+            ATranscendentalLawsSystem* TranscendentalLawsSystem = Cast<ATranscendentalLawsSystem>(
+                GetWorld()->SpawnActor(TranscendentalLawsSystemSoftClass.LoadSynchronous()));
+            TranscendentalLawsSystem->Init(Character,Character->GetCharacterCombatComponent());
+            TranscendentalLawsSystems.Emplace(TranscendentalLawsSystem);
+        }
+        Character->GetCharacterCombatComponent()->SetTranscendentalLawsSystems(std::move(TranscendentalLawsSystems));
+
         UE_LOG(LogTemp, Warning, TEXT("%s角色已重新生成"), *Character->CharacterName.ToString());
     }
+    
 
 
     //还原道具

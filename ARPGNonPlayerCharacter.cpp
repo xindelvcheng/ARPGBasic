@@ -12,7 +12,7 @@
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
-
+#include "AIModule/Classes/BrainComponent.h"
 
 // Sets default values
 AARPGNonPlayerCharacter::AARPGNonPlayerCharacter()
@@ -25,9 +25,12 @@ AARPGNonPlayerCharacter::AARPGNonPlayerCharacter()
 
     if (UARPGBasicSettings::Get())
     {
-        HPBarWidgetComponent->SetWidgetClass(
-            LoadClass<UARPGEnemyHPBarWidget>(nullptr, *UARPGBasicSettings::Get()->EnemyHPBarWidgetClass.ToString()));
+        HPBarWidgetComponent->SetWidgetClass(UARPGBasicSettings::Get()->EnemyHPBarWidgetClass.LoadSynchronous());
+        HPBarWidgetComponent->SetupAttachment(RootComponent);
+        HPBarWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+        HPBarWidgetComponent->SetRelativeLocation(HPBarOffsetVector);
     }
+
     
 }
 
@@ -55,6 +58,17 @@ void AARPGNonPlayerCharacter::OnNPCDeath()
         MainCharacter->UpdateCoins(GetCoins());
         UpdateCoins(0);
     }
+
+
+    AAIController* AIController = Cast<AAIController>(GetController());
+    if (AIController)
+    {
+        AIController->GetBrainComponent()->StopLogic(FString());
+    }
+    if (GetController())
+    {
+        GetController()->UnPossess();
+    }
 }
 
 
@@ -73,6 +87,9 @@ void AARPGNonPlayerCharacter::BeginPlay()
         }
     }
 
+    GetCharacterMovement()->bRequestedMoveUseAcceleration = true;
+    bUseControllerRotationYaw=true;
+    
     CharacterStatusComponent->OnCharacterDeath.AddDynamic(this,&AARPGNonPlayerCharacter::OnNPCDeath);
 }
 
