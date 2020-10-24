@@ -18,6 +18,17 @@ enum class EActionResult:uint8
     ActionFail
 };
 
+const FString LevelNames[] = {
+    TEXT("练气"),
+    TEXT("筑基"),
+    TEXT("金丹"),
+    TEXT("元婴"),
+    TEXT("分神"),
+    TEXT("合体"),
+    TEXT("渡劫"),
+    TEXT("大乘")
+};
+
 UCLASS()
 class AARPGCharacter : public ACharacter
 {
@@ -179,4 +190,18 @@ public:
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
     AARPGAction* GetCurrentActiveAction() const { return CharacterCombatComponent->GetCurrentActiveAction(); }
+
+
+    
+    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    FString GetLevelName()const
+    {
+        if (CharacterStatusComponent)
+        {
+            int currentLevel = CharacterStatusComponent->GetLevel();
+            TArray<FStringFormatArg> FormatArray = {LevelNames[currentLevel/9],(currentLevel+1)/9};
+            return FString::Format(TEXT("{0}{1}层"),std::move(FormatArray));
+        }
+        return FString();
+    }
 };

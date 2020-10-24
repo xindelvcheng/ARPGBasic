@@ -10,6 +10,7 @@
 #include "CharacterStatusComponent.h"
 #include "TranscendentalCombatComponent.h"
 #include "TranscendentalLawsSystem.h"
+#include "Blueprint/WidgetTree.h"
 
 
 bool UARPGGamingMenuWidget::Initialize()
@@ -65,13 +66,14 @@ bool UARPGGamingMenuContentItemWidget::Initialize()
 {
     Super::Initialize();
 
-    Button_Promote->OnClicked.AddDynamic(this, &UARPGGamingMenuContentItemWidget::OnClickButton_Promote);
-    return true;
-}
+    if (!Button_1)
+    {
+        UARPGGameInstanceSubsystem::PrintLogToScreen(TEXT("错误！ARPGGamingMenuContentItemWidget蓝图类与C++类不对应！"));
+        return false;
+    }
 
-void UARPGGamingMenuContentItemWidget::OnClickButton_Promote()
-{
-    OnPromote.ExecuteIfBound();
+    Button_1->OnClicked.AddDynamic(this, &UARPGGamingMenuContentItemWidget::OnClickButton1);
+    return true;
 }
 
 
@@ -120,6 +122,41 @@ void UARPGGamingMenuPageWidget::Button_OptionOnClick()
     OnClickTitleOption.ExecuteIfBound(this);
 }
 
+UARPGGamingMenuContentItemWidget* UARPGGamingMenuPageWidget::AddContentItem(
+    TSubclassOf<UARPGGamingMenuContentItemWidget> PageItemWidgetClass,
+    const FGamingMenuContentItemStruct& GamingMenuContentItemStruct)
+{
+    UARPGGamingMenuContentItemWidget* MenuContentItemWidget = Cast<UARPGGamingMenuContentItemWidget>(
+        CreateWidget(this, PageItemWidgetClass));
+    if (MenuContentItemWidget)
+    {
+        MenuContentItemWidget->TextBlock_LeftText->SetText(GamingMenuContentItemStruct.LeftText);
+        MenuContentItemWidget->TextBlock_MiddleText->SetText(GamingMenuContentItemStruct.MiddleText);
+        MenuContentItemWidget->TextBlock_Button1Text->SetText(GamingMenuContentItemStruct.ButtonText);
+        MenuContentItemWidget->ClickButton1.BindLambda(GamingMenuContentItemStruct.ButtonClickEffect);
+        ScrollBox_Content->AddChild(MenuContentItemWidget);
+        return MenuContentItemWidget;
+    }
+    return nullptr;
+}
+
+void UARPGGamingMenuPageWidget::AddSeparator(TSubclassOf<UARPGGamingMenuContentItemWidget> ContentSeparatorWidgetClass,
+                                             FText LeftText, FText MiddleText, FText RightText
+)
+{
+    UARPGGamingMenuContentItemWidget* SeparatorWidget = Cast<UARPGGamingMenuContentItemWidget>(
+        CreateWidget(this, ContentSeparatorWidgetClass));
+    if (SeparatorWidget)
+    {
+        SeparatorWidget->TextBlock_LeftText->SetText(LeftText);
+        SeparatorWidget->TextBlock_MiddleText->SetText(MiddleText);
+        SeparatorWidget->TextBlock_Button1Text->SetText(RightText);
+        SeparatorWidget->Button_1->SetVisibility(ESlateVisibility::Hidden);
+        ScrollBox_Content->AddChild(SeparatorWidget);
+    }
+}
+
+
 void UCharacterPropertiesPage::NativeConstruct()
 {
     Super::NativeConstruct();
@@ -156,72 +193,72 @@ void UCharacterPropertiesPage::NativeBeSelected()
         return;
     }
 
-    TArray<UARPGGamingMenuContentItemWidget*> ContentItemWidgets;
-    for (int i = 0; i < 5; ++i)
-    {
-        auto MenuContentItemWidget = Cast<UARPGGamingMenuContentItemWidget>(
-            CreateWidget(this, CharacterPropertiesPageItemWidgetClass));
-        if (MenuContentItemWidget)
-        {
-            ContentItemWidgets.Emplace(MenuContentItemWidget);
-        }
-    }
 
-    ContentItemWidgets[0]->SetupMenuContentItemWidget(
-        TEXT("生命"),
-        FString::Printf(TEXT("%d/%d"), MainCharacter->GetCurrentHP(), MainCharacter->GetMaxHP()),
-        FString::FromInt(MainCharacterStatusComponent->GetHealthSpecialty()),
-        [&]()
-        {
-            MainCharacter->GetCharacterStatusComponent()->LevelUp(ESpecialties::Health);
-        }
-    );
+    AddSeparator(CharacterPropertiesPageItemWidgetClass, FText::FromString(TEXT("境界")),
+                 FText::FromString(MainCharacter->GetLevelName()), FText());
 
-    ContentItemWidgets[1]->SetupMenuContentItemWidget(
-        TEXT("灵气"),
-        FString::Printf(TEXT("%d/%d"), MainCharacter->GetCurrentSP(), MainCharacter->GetMaxSP()),
-        FString::FromInt(MainCharacterStatusComponent->GetStaminaSpecialty()),
-        [&]()
-        {
-            MainCharacter->GetCharacterStatusComponent()->LevelUp(ESpecialties::Stamina);
-        }
-    );
+    AddContentItem(TEXT("生命"),
+                   FString::Printf(TEXT("%d/%d"), MainCharacter->GetCurrentHP(), MainCharacter->GetMaxHP()),
+                   FString::FromInt(MainCharacterStatusComponent->GetHealthSpecialty()),
+                   [&]()
+                   {
+                       MainCharacter->GetCharacterStatusComponent()->LevelUp(ESpecialties::Health);
+                   });
 
-    ContentItemWidgets[2]->SetupMenuContentItemWidget(
-        TEXT("灵气强度"),
-        MainCharacterStatusComponent->GetAttack(),
-        MainCharacterStatusComponent->GetAttackSpecialty(),
-        [&]()
-        {
-            MainCharacter->GetCharacterStatusComponent()->LevelUp(ESpecialties::Attack);
-        }
-    );
+    AddContentItem(TEXT("灵气"),
+                   FString::Printf(TEXT("%d/%d"), MainCharacter->GetCurrentSP(), MainCharacter->GetMaxSP()),
+                   FString::FromInt(MainCharacterStatusComponent->GetStaminaSpecialty()),
+                   [&]()
+                   {
+                       MainCharacter->GetCharacterStatusComponent()->LevelUp(ESpecialties::Stamina);
+                   });
 
-    ContentItemWidgets[3]->SetupMenuContentItemWidget(
-        TEXT("护体灵气"),
-        MainCharacterStatusComponent->GetDefense(),
-        MainCharacterStatusComponent->GetDefenseSpecialty(),
-        [&]()
-        {
-            MainCharacter->GetCharacterStatusComponent()->LevelUp(ESpecialties::Defense);
-        }
-    );
+    AddContentItem(TEXT("灵气强度"),
+                   MainCharacterStatusComponent->GetAttack(),
+                   MainCharacterStatusComponent->GetAttackSpecialty(),
+                   [&]()
+                   {
+                       MainCharacter->GetCharacterStatusComponent()->LevelUp(ESpecialties::Attack);
+                   });
+    AddContentItem(TEXT("护体灵气"),
+                   MainCharacterStatusComponent->GetDefense(),
+                   MainCharacterStatusComponent->GetDefenseSpecialty(),
+                   [&]()
+                   {
+                       MainCharacter->GetCharacterStatusComponent()->LevelUp(ESpecialties::Defense);
+                   });
 
-    ContentItemWidgets[4]->SetupMenuContentItemWidget(
-        TEXT("韧性"),
-        MainCharacterStatusComponent->GetToughness(),
-        MainCharacterStatusComponent->GetToughnessSpecialty(),
-        [&]()
-        {
-            MainCharacter->GetCharacterStatusComponent()->LevelUp(ESpecialties::Toughness);
-        }
-    );
+    AddContentItem(TEXT("韧性"),
+                   MainCharacterStatusComponent->GetToughness(),
+                   MainCharacterStatusComponent->GetToughnessSpecialty(),
+                   [&]()
+                   {
+                       MainCharacter->GetCharacterStatusComponent()->LevelUp(ESpecialties::Toughness);
+                   });
+}
 
+void UCharacterPropertiesPage::AddContentItem(FString Name, FString Value, FString Speciality,
+                                              const std::function<void()>& ClickEffect)
+{
+    FGamingMenuContentItemStruct GamingMenuContentItemStruct = {
+        FText::FromString(Name),
+        FText::FromString(Value),
+        FText::FromString(Speciality),
+        ClickEffect
+    };
+    Super::AddContentItem(CharacterPropertiesPageItemWidgetClass, std::move(GamingMenuContentItemStruct));
+}
 
-    for (int i = 0; i < 5; ++i)
-    {
-        ScrollBox_Content->InsertChildAt(i, ContentItemWidgets[i]);
-    }
+void UCharacterPropertiesPage::AddContentItem(FString Name, int Value, int Speciality,
+                                              const std::function<void()>& ClickEffect)
+{
+    FGamingMenuContentItemStruct GamingMenuContentItemStruct = {
+        FText::FromString(Name),
+        FText::AsNumber(Value),
+        FText::AsNumber(Speciality),
+        ClickEffect
+    };
+    Super::AddContentItem(CharacterPropertiesPageItemWidgetClass, std::move(GamingMenuContentItemStruct));
 }
 
 
@@ -265,24 +302,21 @@ void UCharacterTranscendentalLawsSystemPage::NativeBeSelected()
     for (ATranscendentalLawsSystem* TranscendentalLawsSystem : MainCharacterCombatComponent->
          GetAllTranscendentalLawsSystems())
     {
-        auto MenuContentItemWidget = Cast<UARPGGamingMenuContentItemWidget>(
-            CreateWidget(this, CharacterTranscendentalLawsSystemPageItemWidgetClass));
-        if (MenuContentItemWidget)
-        {
-            MenuContentItemWidget->SetupMenuContentItemWidget(TranscendentalLawsSystem->GetDisplayName(),
-                                                              FText::FromName(TranscendentalLawsSystem->GetCategory()),
-                                                              TranscendentalLawsSystem->
-                                                              GetTranscendentalLawsAttainmentText(), []()
-                                                              {
-                                                                  if (GEngine)
-                                                                  {
-                                                                      GEngine->AddOnScreenDebugMessage(
-                                                                          -1, 5, FColor::Yellow,TEXT("提示仙道信息"));
-                                                                  }
-                                                              });
-            ContentItemWidgets.Emplace(MenuContentItemWidget);
-            ScrollBox_Content->AddChild(MenuContentItemWidget);
-        }
+        FGamingMenuContentItemStruct GamingMenuContentItemStruct = {
+            TranscendentalLawsSystem->GetDisplayName(),
+            FText::FromName(TranscendentalLawsSystem->GetCategory()),
+            TranscendentalLawsSystem->
+            GetTranscendentalLawsAttainmentText(),
+            []()
+            {
+                if (GEngine)
+                {
+                    GEngine->AddOnScreenDebugMessage(
+                        -1, 5, FColor::Yellow,TEXT("提示仙道信息"));
+                }
+            }
+        };
+        AddContentItem(CharacterTranscendentalLawsSystemPageItemWidgetClass, std::move(GamingMenuContentItemStruct));
     }
 }
 

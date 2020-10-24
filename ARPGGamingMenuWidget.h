@@ -47,6 +47,16 @@ protected:
     virtual void NativeConstruct() override;
 };
 
+USTRUCT()
+struct FGamingMenuContentItemStruct
+{
+    GENERATED_BODY()
+
+    FText LeftText;
+    FText MiddleText;
+    FText ButtonText;
+    std::function<void()> ButtonClickEffect;
+};
 
 UCLASS()
 class TESTPROJECT_API UARPGGamingMenuPageWidget : public UUserWidget
@@ -93,7 +103,14 @@ public:
 
     UFUNCTION()
     void Button_OptionOnClick();
+
+    virtual UARPGGamingMenuContentItemWidget* AddContentItem(TSubclassOf<UARPGGamingMenuContentItemWidget> PageItemWidgetClass,
+                                                 const FGamingMenuContentItemStruct& GamingMenuContentItemStruct);
+
+    virtual void AddSeparator(TSubclassOf<UARPGGamingMenuContentItemWidget> ContentSeparatorWidgetClass,
+                                             FText LeftText, FText MiddleText, FText RightText);
 };
+
 
 
 UCLASS()
@@ -101,78 +118,26 @@ class TESTPROJECT_API UARPGGamingMenuContentItemWidget : public UUserWidget
 {
     GENERATED_BODY()
 
-protected:
+public:
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGGamingMenuContentItemWidget",meta=(BindWidget))
-    UTextBlock* TextBlock_Name;
+    UTextBlock* TextBlock_LeftText;
 
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGGamingMenuContentItemWidget",meta=(BindWidget))
-    UTextBlock* TextBlock_Value;
+    UTextBlock* TextBlock_MiddleText;
 
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGGamingMenuContentItemWidget",meta=(BindWidget))
-    UTextBlock* TextBlock_Speciality;
+    UTextBlock* TextBlock_Button1Text;
 
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGGamingMenuContentItemWidget",meta=(BindWidget))
-    UButton* Button_Promote;
-
-    
+    UButton* Button_1;
 
     virtual bool Initialize() override;
 
+    DECLARE_DELEGATE(FButtonCLickEvent);
+    FButtonCLickEvent ClickButton1;
+    
     UFUNCTION()
-    void OnClickButton_Promote();
-    public:
-    DECLARE_DELEGATE(FPromoteEvent);
-    FPromoteEvent OnPromote;
-
-
-    UTextBlock* GetTextBlock_Name() const
-    {
-        return TextBlock_Name;
-    }
-
-    UTextBlock* GetTextBlock_Value() const
-    {
-        return TextBlock_Value;
-    }
-
-    UTextBlock* GetTextBlock_Speciality() const
-    {
-        return TextBlock_Speciality;
-    }
-
-    UButton* GetButton_Promote() const
-    {
-        return Button_Promote;
-    }
-
-    FPromoteEvent GetPromoteEvent() const
-    {
-        return OnPromote;
-    }
-
-    void SetupMenuContentItemWidget(FString Name,FString Value,FString Speciality,const std::function<void()>& ClickEffect)
-    {
-        TextBlock_Name->SetText(FText::FromString(Name));
-        TextBlock_Value->SetText(FText::FromString(Value));
-        TextBlock_Speciality->SetText(FText::FromString(Speciality));
-        OnPromote.BindLambda(ClickEffect);
-    }
-
-    void SetupMenuContentItemWidget(FText Name,FText Value,FText Speciality,const std::function<void()>& ClickEffect)
-    {
-        TextBlock_Name->SetText(Name);
-        TextBlock_Value->SetText(Value);
-        TextBlock_Speciality->SetText(Speciality);
-        OnPromote.BindLambda(ClickEffect);
-    }
-
-    void SetupMenuContentItemWidget(FString Name,int Value,int Speciality,const std::function<void()>& ClickEffect)
-    {
-        TextBlock_Name->SetText(FText::FromString(Name));
-        TextBlock_Value->SetText(UKismetTextLibrary::Conv_IntToText(Value));
-        TextBlock_Speciality->SetText(UKismetTextLibrary::Conv_IntToText(Speciality));
-        OnPromote.BindLambda(ClickEffect);
-    }
+    void OnClickButton1(){ClickButton1.ExecuteIfBound();};
 };
 
 UCLASS()
@@ -192,6 +157,9 @@ public:
 
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="CharacterPropertiesPage")
     TSubclassOf<UARPGGamingMenuContentItemWidget> CharacterPropertiesPageItemWidgetClass;
+
+    void AddContentItem(FString Name,FString Value,FString Speciality,const std::function<void()>& ClickEffect);
+    void AddContentItem(FString Name,int Value,int Speciality,const std::function<void()>& ClickEffect);
 };
 
 UCLASS()
