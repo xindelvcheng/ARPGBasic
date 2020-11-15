@@ -13,6 +13,64 @@
 #include "CharacterStatusComponent.generated.h"
 
 class UCharacterConfigPrimaryDataAsset;
+
+template <class T = float>
+class TCharacterProperty
+{
+    T Value;
+
+    T MaxValue;
+
+    DECLARE_MULTICAST_DELEGATE_TwoParams(FPropertyChangeEvent, T, T);
+    FPropertyChangeEvent ChangedDelegate;
+
+public:
+    //用于无上限的属性（最大值将被设置成INT_MAX）
+    TCharacterProperty(T value)
+    {
+        this->Value = value;
+        this->MaxValue = INT_MAX;
+    }
+
+    //有上限的属性，其=、+=、-=运算都不会超过最大值
+    TCharacterProperty(T value, T maxValue)
+    {
+        this->Value = value;
+        this->MaxValue = maxValue;
+    }
+
+    void SetMaxValue(const T& maxValue)
+    {
+        this->MaxValue = maxValue;
+        ChangedDelegate.Broadcast(Value, MaxValue);
+    }
+
+    void operator=(const T& value)
+    {
+        this->Value = value <= MaxValue ? value : MaxValue;
+        ChangedDelegate.Broadcast(Value, MaxValue);
+    }
+
+    void operator+=(const T& deltaValue)
+    {
+        this->Value = Value + deltaValue <= MaxValue ? Value + deltaValue : MaxValue;
+        ChangedDelegate.Broadcast(Value, MaxValue);
+    }
+
+    void operator-=(const T& deltaValue)
+    {
+        this->Value = Value - deltaValue >= 0 ? Value + deltaValue : 0;
+        ChangedDelegate.Broadcast(Value, MaxValue);
+    }
+
+    operator T()
+    {
+        return Value;
+    }
+
+    FPropertyChangeEvent& OnChanged() { return ChangedDelegate; }
+};
+
 UENUM(BlueprintType)
 enum class ESpecialties:uint8
 {
@@ -110,7 +168,7 @@ private:
     TSubclassOf<UDamageType> MeleeDamageType;
 
 public:
-    void ReInitCharacterProperties(UCharacterConfigPrimaryDataAsset* CharacterConfigDataAsset=nullptr);
+    void ReInitCharacterProperties(UCharacterConfigPrimaryDataAsset* CharacterConfigDataAsset = nullptr);
 
     UFUNCTION(BlueprintCallable,Category="CharacterStatusComponent")
     FORCEINLINE int GetLevel() const { return Level; }
