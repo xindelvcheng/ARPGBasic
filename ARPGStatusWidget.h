@@ -64,6 +64,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly,Category="ARPGStatusWidget",meta=(BindWidget))
 	UUniformGridPanel* UniformGridPanel_Bag;
 	
+	UPROPERTY(BlueprintReadOnly,Category="ARPGStatusWidget",meta=(BindWidget))
+    UTextBlock* TextBlock_Dialog;
+	
 	UFUNCTION(Category="ARPGStatusWidget")
 	void UpdateBagWidget(EBagEvent BagEvent, AGameItem* GameItem);
 

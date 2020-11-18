@@ -2,12 +2,11 @@
 #include "ARPGCharacter.h"
 
 
-
 bool AARPGAction::CheckConditionAndPayCost_Implementation()
 {
     int SPCost = static_cast<int>(static_cast<float>(OwningCharacter->GetMaxSP()) / 4);
-    
-    if (OwningCharacter->GetCurrentSP()>SPCost)
+
+    if (OwningCharacter->GetCurrentSP() > SPCost)
     {
         OwningCharacter->UpdateCurrentSP(-SPCost);
         return true;
@@ -17,7 +16,7 @@ bool AARPGAction::CheckConditionAndPayCost_Implementation()
 
 void AARPGAction::FinishAction()
 {
-    OnActionFinished.ExecuteIfBound();
+    OnActionFinished.ExecuteIfBound(this);
 }
 
 void AARPGAction::InitWithOwningCharacter(AARPGCharacter* NewOwningCharacter)
@@ -36,20 +35,58 @@ void AARPGAction::Interrupt(AARPGCharacter* Causer)
     FinishAction();
 }
 
-void AARPGSimpleMontageAction::ActivateAction(AARPGCharacter* Target)
+void AARPGMontageAction::ActivateAction(AARPGCharacter* Target)
 {
     Super::ActivateAction(Target);
     OwningCharacter->PlayAnimMontage(ActionMontage);
 }
 
-void AARPGSimpleMontageAction::Interrupt(AARPGCharacter* Causer)
+void AARPGMontageAction::BindToMontageBegin(UAnimMontage* Montage)
+{
+    if (Montage != ActionMontage)
+    {
+        return;
+    }
+        
+    if (FAnimMontageInstance* MontageInstance = AttachedCharacterAnimInstance->GetActiveInstanceForMontage(
+        ActionMontage))
+    {
+        MontageInstanceID = MontageInstance->GetInstanceID();
+    }
+    OnMontageBegin(Montage);
+    BPFunc_OnMontageBegin(OwningCharacter);
+}
+
+void AARPGMontageAction::BindToMontageNotify(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload)
+{
+    if (BranchingPointPayload.MontageInstanceID != MontageInstanceID)
+    {
+        return;
+    }
+    OnMontageNotify(NotifyName,BranchingPointPayload);
+    BPFunc_OnMontageNotify(NotifyName, OwningCharacter);
+}
+
+void AARPGMontageAction::BindToMontageStop(UAnimMontage* Montage, bool bInterrupted)
+{
+    if (Montage != ActionMontage)
+    {
+        return;
+    }
+    FinishAction();
+    OnMontageStop(Montage,bInterrupted);
+    BPFunc_OnMontageStop(OwningCharacter);
+}
+
+void AARPGMontageAction::Interrupt(AARPGCharacter* Causer)
 {
     AttachedCharacterAnimInstance->StopAllMontages(0.5);
     Super::Interrupt(Causer);
+    BPFunc_Interrupt(OwningCharacter);
 }
 
 
-void AARPGSimpleMontageAction::InitWithOwningCharacter(AARPGCharacter* NewOwningCharacter)
+void AARPGMontageAction::InitWithOwningCharacter(AARPGCharacter* NewOwningCharacter)
 {
     Super::InitWithOwningCharacter(NewOwningCharacter);
 
@@ -59,15 +96,21 @@ void AARPGSimpleMontageAction::InitWithOwningCharacter(AARPGCharacter* NewOwning
         if (AttachedCharacterAnimInstance)
         {
             AttachedCharacterAnimInstance->OnMontageStarted.AddDynamic(
-                this, &AARPGSimpleMontageAction::OnMontageBegin);
+                this, &AARPGMontageAction::BindToMontageBegin);
             AttachedCharacterAnimInstance->OnPlayMontageNotifyBegin.AddDynamic(
-                this, &AARPGSimpleMontageAction::OnMontageNotify);
+                this, &AARPGMontageAction::BindToMontageNotify);
             AttachedCharacterAnimInstance->OnMontageEnded.AddDynamic(
-                this, &AARPGSimpleMontageAction::OnMontageStop);
+                this, &AARPGMontageAction::BindToMontageStop);
         }
     }
 }
 
+
+void AARPGSingleMontageAction::ActivateAction(AARPGCharacter* Target)
+{
+    ActionMontage = ActionMontageAsset;
+    Super::ActivateAction(Target); 
+}
 
 void AARPGMeleeAttackAction::ActivateAction(AARPGCharacter* Target)
 {
@@ -77,14 +120,12 @@ void AARPGMeleeAttackAction::ActivateAction(AARPGCharacter* Target)
 
 void AARPGMeleeAttackAction::OnMontageBegin(UAnimMontage* Montage)
 {
-    Super::OnMontageBegin(Montage);
+    /*不知道该写些什么*/
 }
 
 void AARPGMeleeAttackAction::OnMontageNotify(FName NotifyName,
                                              const FBranchingPointNotifyPayload& BranchingPointPayload)
 {
-    Super::OnMontageNotify(NotifyName, BranchingPointPayload);
-
     MeleeAttackIndex = (MeleeAttackIndex + 1) % MeleeAttackMontages.Num();
     FinishAction();
 }
@@ -94,7 +135,6 @@ void AARPGMeleeAttackAction::OnMontageStop(UAnimMontage* Montage, bool bInterrup
     if (!bInterrupted)
     {
         MeleeAttackIndex = 0;
-        Super::OnMontageStop(Montage, bInterrupted);
     }
 }
 
@@ -118,12 +158,8 @@ void AARPGMultiMontageAction::OnMontageStop(UAnimMontage* Montage, bool bInterru
         GetWorldTimerManager().ClearTimer(ResetTimerHandle);
     }
     ActionIndex = (ActionIndex + 1) % ActionMontages.Num();
-    GetWorldTimerManager().SetTimer(ResetTimerHandle,FTimerDelegate::CreateLambda([&]()
+    GetWorldTimerManager().SetTimer(ResetTimerHandle, FTimerDelegate::CreateLambda([&]()
     {
         ActionIndex = 0;
-    }),ResetDelay,false);
-    Super::OnMontageStop(Montage, bInterrupted);
+    }), ResetDelay, false);
 }
-
-
-

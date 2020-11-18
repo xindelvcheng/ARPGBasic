@@ -37,12 +37,12 @@ public:
     UFUNCTION(BlueprintNativeEvent)
     bool CheckConditionAndPayCost();
 
-    DECLARE_DELEGATE(FActionFinishDelegate);
+    DECLARE_DELEGATE_OneParam(FActionFinishDelegate,AARPGAction*);
     FActionFinishDelegate OnActionFinished;
 };
 
 UCLASS(Blueprintable)
-class AARPGSimpleMontageAction : public AARPGAction
+class AARPGMontageAction : public AARPGAction
 {
     GENERATED_BODY()
 
@@ -54,35 +54,49 @@ protected:
     virtual void ActivateAction(AARPGCharacter* Target) override;
 
     UFUNCTION()
-    virtual void OnMontageBegin(UAnimMontage* Montage)
-    {
-        // checkf(false, TEXT("This method should be override in child class"))
-    };
+    void BindToMontageBegin(UAnimMontage* Montage);
     UFUNCTION()
-    virtual void OnMontageNotify(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload)
-    {
-        // checkf(false, TEXT("This method should be override in child class"))
-    };
+    void BindToMontageNotify(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload);
     UFUNCTION()
-    virtual void OnMontageStop(UAnimMontage* Montage, bool bInterrupted)
-    {
-        if (Montage == ActionMontage)
-        {
-            FinishAction();
-        }
-    };
+    void BindToMontageStop(UAnimMontage* Montage, bool bInterrupted);
 
+    virtual void OnMontageBegin(UAnimMontage* Montage){};
+    virtual void OnMontageNotify(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload){};
+    virtual void OnMontageStop(UAnimMontage* Montage, bool bInterrupted){};
+    
     virtual void Interrupt(AARPGCharacter* Causer) override;
 
     virtual void InitWithOwningCharacter(AARPGCharacter* NewOwningCharacter) override;
 
 public:
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGNormalAttacks")
+    UPROPERTY(BlueprintReadOnly,Category="ARPGMontageAction")
     UAnimMontage* ActionMontage;
+
+    int MontageInstanceID;
+
+    UFUNCTION(BlueprintImplementableEvent,DisplayName="OnMontageBegin")
+    void BPFunc_OnMontageBegin(AARPGCharacter* Character);
+    UFUNCTION(BlueprintImplementableEvent,DisplayName="OnMontageNotify")
+    void BPFunc_OnMontageNotify(FName NotifyName, AARPGCharacter* Character);
+    UFUNCTION(BlueprintImplementableEvent,DisplayName="OnMontageStop")
+    void BPFunc_OnMontageStop(AARPGCharacter* Character);
+    UFUNCTION(BlueprintImplementableEvent,DisplayName="OnInterrupt")
+    void BPFunc_Interrupt(AARPGCharacter* Character);
 };
 
 UCLASS(Blueprintable)
-class AARPGMeleeAttackAction : public AARPGSimpleMontageAction
+class AARPGSingleMontageAction : public AARPGMontageAction
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSingleMontageAction")
+    UAnimMontage* ActionMontageAsset;
+
+    virtual void ActivateAction(AARPGCharacter* Target) override;
+};
+
+UCLASS(Blueprintable)
+class AARPGMeleeAttackAction : public AARPGMontageAction
 {
     GENERATED_BODY()
 
@@ -104,7 +118,7 @@ public:
 };
 
 UCLASS(Blueprintable)
-class AARPGMultiMontageAction : public AARPGSimpleMontageAction
+class AARPGMultiMontageAction : public AARPGMontageAction
 {
     GENERATED_BODY()
 
@@ -113,7 +127,7 @@ class AARPGMultiMontageAction : public AARPGSimpleMontageAction
     float ResetDelay = 1;
 
 public:
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGNormalAttacks",meta=(AllowPrivateAccess=true))
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGMultiMontageAction",meta=(AllowPrivateAccess=true))
     TArray<UAnimMontage*> ActionMontages;
 
     virtual void ActivateAction(AARPGCharacter* Target) override;

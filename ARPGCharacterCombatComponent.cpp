@@ -4,6 +4,7 @@
 #include "ARPGCharacterCombatComponent.h"
 #include "ARPGCharacter.h"
 #include "ARPGAction.h"
+#include "ARPGGameInstanceSubsystem.h"
 #include "CharacterConfigPrimaryDataAsset.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -58,9 +59,8 @@ void UARPGCharacterCombatComponent::BeginPlay()
     ReInitCharacterActions();
 }
 
-void UARPGCharacterCombatComponent::BindToOnActionFinished()
+void UARPGCharacterCombatComponent::BindToOnActionFinished(AARPGAction* Action)
 {
-    IsActing = false;
     CurrentActiveAction = nullptr;
 }
 
@@ -71,6 +71,7 @@ void UARPGCharacterCombatComponent::TickComponent(float DeltaTime, ELevelTick Ti
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+   
     // ...
 }
 
@@ -87,7 +88,6 @@ bool UARPGCharacterCombatComponent::TryToMeleeAttack()
         if (CurrentMeleeAttackCollection->CheckConditionAndPayCost())
         {
             CurrentMeleeAttackCollection->ActivateAction(AttachedCharacter);
-            IsActing = true;
             CurrentActiveAction = CurrentMeleeAttackCollection;
             return true;
         }
@@ -108,7 +108,6 @@ bool UARPGCharacterCombatComponent::TryToRemoteAttack(int RemoteAttackIndex = 0)
         if (RemoteAttackAction->CheckConditionAndPayCost())
         {
             RemoteAttackAction->ActivateAction(AttachedCharacter);
-            IsActing = true;
             CurrentActiveAction = RemoteAttackAction;
             return true;
         }
@@ -129,7 +128,6 @@ bool UARPGCharacterCombatComponent::TryToUseAbility(int AbilityIndex = 0)
         if (Ability->CheckConditionAndPayCost())
         {
             Ability->ActivateAction(AttachedCharacter);
-            IsActing = true;
             CurrentActiveAction = Ability;
             return true;
         }
@@ -140,10 +138,10 @@ bool UARPGCharacterCombatComponent::TryToUseAbility(int AbilityIndex = 0)
 bool UARPGCharacterCombatComponent::CauseRigid(float Duration, AARPGCharacter* Causer = nullptr)
 {
     //打断当前的攻击和技能
-    IsActing = false;
     if (CurrentActiveAction)
     {
         CurrentActiveAction->Interrupt(Causer);
+        CurrentActiveAction = nullptr;
     }
 
     if (!GetWorld()->GetTimerManager().TimerExists(RigidTimerHandle))

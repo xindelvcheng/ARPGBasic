@@ -40,6 +40,9 @@ bool UARPGStatusWidget::Initialize()
     }
 
     ScrollBox_Notifications->SetRenderOpacity(0);
+
+    TextBlock_Dialog->SetAutoWrapText(true);
+    TextBlock_Dialog->SetJustification(ETextJustify::Center);
     return true;
 }
 

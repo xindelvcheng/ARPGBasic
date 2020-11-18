@@ -57,7 +57,7 @@ public:
                                FActorComponentTickFunction* ThisTickFunction) override;
 
     UFUNCTION()
-    void BindToOnActionFinished();
+    void BindToOnActionFinished(AARPGAction* Action);
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
     bool GetIsRigid() const { return IsRigid; }
@@ -118,4 +118,6 @@ public:
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
     void ReInitCharacterActions(UCharacterConfigPrimaryDataAsset* CharacterConfigPrimaryDataAsset = nullptr);
+
+    
 };
