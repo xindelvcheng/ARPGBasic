@@ -7,12 +7,13 @@
 #include "Animation/AnimNotifies/AnimNotifyState.h"
 #include "MeleeDamageState.generated.h"
 
+class AARPGCharacter;
 class UCharacterStatusComponent;
 /**
  * 
  */
 UCLASS()
-class  UMeleeDamageState : public UAnimNotifyState
+class UMeleeDamageState : public UAnimNotifyState
 {
     GENERATED_BODY()
 
@@ -27,7 +28,7 @@ class  UMeleeDamageState : public UAnimNotifyState
     FVector LastLocation1;
 
     UPROPERTY()
-    ACharacter* Player;
+    AARPGCharacter* Player;
     FVector CurrentLocation1;
     FRotator CurrentRotation1;
 
@@ -39,14 +40,20 @@ class  UMeleeDamageState : public UAnimNotifyState
 
 protected:
     UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Melee Damage Trace")
-    TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+    TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes{ObjectTypeQuery1, ObjectTypeQuery2, ObjectTypeQuery3};
 
     UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Melee Damage Trace")
     bool bDrawDebug = false;
- 
+
     UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Melee Damage Trace")
     bool CauseDamage = true;
-    
+
+    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Melee Damage Trace")
+    float ImpactStrengthFactor = 1;
+
+    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Melee Damage Trace")
+    float RigidTime = 0.3;
+
 public:
 
     UPROPERTY(EditAnywhere,Category="Custom")
@@ -70,7 +77,7 @@ public:
     //速度伤害加成系数
     UPROPERTY(EditAnywhere,Category="Custom")
     float VelocityDamageBonusWeight = 0.01;
-    
+
     UPROPERTY(EditAnywhere,Category="Custom")
     TSubclassOf<UDamageType> DamageTypeClass;
 

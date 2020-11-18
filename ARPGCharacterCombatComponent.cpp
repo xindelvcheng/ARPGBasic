@@ -5,7 +5,7 @@
 #include "ARPGCharacter.h"
 #include "ARPGAction.h"
 #include "CharacterConfigPrimaryDataAsset.h"
-
+#include "GameFramework/CharacterMovementComponent.h"
 
 
 // Sets default values for this component's properties
@@ -25,7 +25,7 @@ void UARPGCharacterCombatComponent::SpawnActionActors(const TArray<TSubclassOf<A
     FTransform Transform;
     for (auto ActionClass : ActionClasses)
     {
-        AARPGAction* Action = Cast<AARPGAction>(GetWorld()->SpawnActor(ActionClass,&Transform,ActorSpawnParameters));
+        AARPGAction* Action = Cast<AARPGAction>(GetWorld()->SpawnActor(ActionClass, &Transform, ActorSpawnParameters));
         if (Action)
         {
             Action->InitWithOwningCharacter(AttachedCharacter);
@@ -45,11 +45,12 @@ void UARPGCharacterCombatComponent::BeginPlay()
 
     // ...
     AttachedCharacter = Cast<AARPGCharacter>(GetOwner());
-    
+
     check(AttachedCharacter);
 
     RigidTimerDelegate.BindLambda([&]()
     {
+        AttachedCharacter->GetCharacterMovement()->Activate();
         IsRigid = false;
         OnResumeFromRigid.Broadcast(GetWorld()->GetTimerManager().GetTimerElapsed(RigidTimerHandle));
     });
@@ -71,9 +72,6 @@ void UARPGCharacterCombatComponent::TickComponent(float DeltaTime, ELevelTick Ti
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
     // ...
-
-
-
 }
 
 
@@ -83,7 +81,7 @@ bool UARPGCharacterCombatComponent::TryToMeleeAttack()
     {
         return false;
     }
-    
+
     if (CurrentMeleeAttackCollection)
     {
         if (CurrentMeleeAttackCollection->CheckConditionAndPayCost())
@@ -162,11 +160,26 @@ bool UARPGCharacterCombatComponent::CauseRigid(float Duration, AARPGCharacter* C
                                                , false);
         OnRigid.Broadcast(TimerRemaining);
     }
+
+    ActivateBuff(0,Causer);
+    AttachedCharacter->GetCharacterMovement()->Deactivate();
+    
     IsRigid = true;
     return true;
 }
 
-void UARPGCharacterCombatComponent::ReInitCharacterActions(UCharacterConfigPrimaryDataAsset* CharacterConfigPrimaryDataAsset)
+bool UARPGCharacterCombatComponent::ActivateBuff(int BuffIndex, AARPGCharacter* Instigator)
+{
+    if (BuffActions.IsValidIndex(BuffIndex))
+    {
+        BuffActions[BuffIndex]->ActivateAction(Instigator);
+        return true;
+    }
+    return false;
+}
+
+void UARPGCharacterCombatComponent::ReInitCharacterActions(
+    UCharacterConfigPrimaryDataAsset* CharacterConfigPrimaryDataAsset)
 {
     if (CharacterConfigPrimaryDataAsset)
     {
@@ -180,13 +193,11 @@ void UARPGCharacterCombatComponent::ReInitCharacterActions(UCharacterConfigPrima
         AbilityActions.Empty();
         BuffActions.Empty();
     }
-    
-    SpawnActionActors(MeleeAttackCollectionClasses,MeleeAttackCollectionActions);
-    SpawnActionActors(RemoteAttackClasses,RemoteAttackActions);
-    SpawnActionActors(AbilityClasses,AbilityActions);
-    SpawnActionActors(BuffClasses,BuffActions);
+
+    SpawnActionActors(MeleeAttackCollectionClasses, MeleeAttackCollectionActions);
+    SpawnActionActors(RemoteAttackClasses, RemoteAttackActions);
+    SpawnActionActors(AbilityClasses, AbilityActions);
+    SpawnActionActors(BuffClasses, BuffActions);
 
     CurrentMeleeAttackCollection = MeleeAttackCollectionActions[0];
 }
-
-

@@ -20,21 +20,23 @@ protected:
     UFUNCTION(BlueprintImplementableEvent,DisplayName="ActionActive")
     void BPFunc_Active(AARPGCharacter* Target = nullptr);
 
-    
-
-    UFUNCTION(BlueprintCallable,DisplayName="Action Finish")
-    void FinishAction();
 
 public:
 
     virtual void InitWithOwningCharacter(AARPGCharacter* NewOwningCharacter);
 
+    UFUNCTION(BlueprintCallable,Category="ARPGAction")
     virtual void ActivateAction(AARPGCharacter* Target = nullptr);
+
+    UFUNCTION(BlueprintCallable,Category="ARPGAction")
     virtual void Interrupt(AARPGCharacter* Causer);
+
+    UFUNCTION(BlueprintCallable,Category="ARPGAction")
+    void FinishAction();
 
     UFUNCTION(BlueprintNativeEvent)
     bool CheckConditionAndPayCost();
-        
+
     DECLARE_DELEGATE(FActionFinishDelegate);
     FActionFinishDelegate OnActionFinished;
 };
@@ -75,7 +77,7 @@ protected:
     virtual void InitWithOwningCharacter(AARPGCharacter* NewOwningCharacter) override;
 
 public:
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGNormalAttacks",meta=(AllowPrivateAccess=true))
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGNormalAttacks")
     UAnimMontage* ActionMontage;
 };
 
@@ -99,4 +101,22 @@ public:
     virtual void OnMontageStop(UAnimMontage* Montage, bool bInterrupted) override;
 
     virtual void Interrupt(AARPGCharacter* Causer) override;
+};
+
+UCLASS(Blueprintable)
+class AARPGMultiMontageAction : public AARPGSimpleMontageAction
+{
+    GENERATED_BODY()
+
+    int ActionIndex;
+    FTimerHandle ResetTimerHandle;
+    float ResetDelay = 1;
+
+public:
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGNormalAttacks",meta=(AllowPrivateAccess=true))
+    TArray<UAnimMontage*> ActionMontages;
+
+    virtual void ActivateAction(AARPGCharacter* Target) override;
+
+    virtual void OnMontageStop(UAnimMontage* Montage, bool bInterrupted) override;
 };

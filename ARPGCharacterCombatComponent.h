@@ -63,22 +63,22 @@ public:
     bool GetIsRigid() const { return IsRigid; }
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    bool GetIsActing() const { return CurrentActiveAction?true:false; }
+    bool GetIsActing() const { return CurrentActiveAction ? true : false; }
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    AARPGAction* GetCurrentActiveAction() const{return CurrentActiveAction;}
+    AARPGAction* GetCurrentActiveAction() const { return CurrentActiveAction; }
 
-    UPROPERTY()
+    UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     TArray<AARPGAction*> MeleeAttackCollectionActions;
-    UPROPERTY()
+    UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     AARPGAction* CurrentMeleeAttackCollection;
-    UPROPERTY()
+    UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     TArray<AARPGAction*> RemoteAttackActions;
-    UPROPERTY()
+    UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     TArray<AARPGAction*> AbilityActions;
-    UPROPERTY()
+    UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     TArray<AARPGAction*> BuffActions;
-    UPROPERTY()
+    UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     AARPGAction* CurrentActiveAction;
 
     DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCombatEvent);
@@ -89,17 +89,20 @@ public:
     UPROPERTY(BlueprintAssignable,BlueprintCallable,Category="ARPGCharacterCombatComponent")
     FCombatEvent ActionEnd;
 
-    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    UFUNCTION()
     virtual bool TryToMeleeAttack();
 
-    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    UFUNCTION()
     virtual bool TryToRemoteAttack(int RemoteAttackIndex);
 
-    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    UFUNCTION()
     virtual bool TryToUseAbility(int AbilityIndex);
 
-    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+    UFUNCTION()
     virtual bool CauseRigid(float Duration, AARPGCharacter* Causer);
+
+    UFUNCTION()
+    virtual bool ActivateBuff(int BuffIndex,AARPGCharacter* Instigator = nullptr);
 
 
     DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRigidEvent, float, Duration);

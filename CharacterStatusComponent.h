@@ -29,7 +29,7 @@ public:
     TCharacterProperty(T value)
     {
         this->Value = value;
-        this->MaxValue = INT_MAX;
+        this->MaxValue = FLT_MAX;
     }
 
     //有上限的属性，其=、+=、-=运算都不会超过最大值

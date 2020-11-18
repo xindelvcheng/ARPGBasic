@@ -30,6 +30,7 @@ void AARPGAction::ActivateAction(AARPGCharacter* Target)
     BPFunc_Active(Target);
 }
 
+
 void AARPGAction::Interrupt(AARPGCharacter* Causer)
 {
     FinishAction();
@@ -103,3 +104,26 @@ void AARPGMeleeAttackAction::Interrupt(AARPGCharacter* Causer)
 
     Super::Interrupt(Causer);
 }
+
+void AARPGMultiMontageAction::ActivateAction(AARPGCharacter* Target)
+{
+    ActionMontage = ActionMontages[ActionIndex];
+    Super::ActivateAction(Target);
+}
+
+void AARPGMultiMontageAction::OnMontageStop(UAnimMontage* Montage, bool bInterrupted)
+{
+    if (GetWorldTimerManager().TimerExists(ResetTimerHandle))
+    {
+        GetWorldTimerManager().ClearTimer(ResetTimerHandle);
+    }
+    ActionIndex = (ActionIndex + 1) % ActionMontages.Num();
+    GetWorldTimerManager().SetTimer(ResetTimerHandle,FTimerDelegate::CreateLambda([&]()
+    {
+        ActionIndex = 0;
+    }),ResetDelay,false);
+    Super::OnMontageStop(Montage, bInterrupted);
+}
+
+
+

@@ -3,15 +3,18 @@
 
 #include "MeleeDamageState.h"
 
+
+#include "ARPGCharacter.h"
 #include "CharacterStatusComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 void UMeleeDamageState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration)
 {
-    Player = Cast<ACharacter>(MeshComp->GetOwner());
+    Player = Cast<AARPGCharacter>(MeshComp->GetOwner());
     if (Player)
     {
         ActorsToIgnore = {MeshComp->GetOwner()};
@@ -26,9 +29,6 @@ void UMeleeDamageState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSeque
         StatusComponent = Cast<UCharacterStatusComponent>(
             Player->FindComponentByClass(UCharacterStatusComponent::StaticClass()));
     }
-    ObjectTypes.AddUnique(EObjectTypeQuery::ObjectTypeQuery1);
-    ObjectTypes.AddUnique(EObjectTypeQuery::ObjectTypeQuery2);
-    ObjectTypes.AddUnique(EObjectTypeQuery::ObjectTypeQuery3);
 
     HitActors.Empty();
 }
@@ -75,13 +75,21 @@ void UMeleeDamageState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequen
                 if (CauseDamage)
                 {
                     UGameplayStatics::ApplyPointDamage(
-                    HitActor, BaseDamage,
-                    HitResult[i].Location, HitResult[i],
-                    EventInstigator,
-                    Player, DamageTypeClass
-                                ? DamageTypeClass
-                                : StatusComponent->GetMeleeDamageType());
+                        HitActor, BaseDamage,
+                        HitResult[i].Location, HitResult[i],
+                        EventInstigator,
+                        Player, DamageTypeClass
+                                    ? DamageTypeClass
+                                    : StatusComponent->GetMeleeDamageType());
                 }
+                if (AARPGCharacter* HitCharacter = Cast<AARPGCharacter>(HitActor))
+                {
+                    HitCharacter->LaunchCharacter(
+                        UKismetMathLibrary::Normal(HitCharacter->GetActorLocation() - Player->GetActorLocation()) * 1000
+                        * ImpactStrengthFactor, true, true);
+                    HitCharacter->CauseRigid(RigidTime, Player);
+                }
+
                 if (StatusComponent)
                 {
                     StatusComponent->OnAttackHitActor.Broadcast(HitResult[i]);
