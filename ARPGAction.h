@@ -48,6 +48,8 @@ class AARPGMontageAction : public AARPGAction
 
     UPROPERTY()
     UAnimInstance* AttachedCharacterAnimInstance;
+    
+
 
 protected:
 
@@ -69,8 +71,14 @@ protected:
     virtual void InitWithOwningCharacter(AARPGCharacter* NewOwningCharacter) override;
 
 public:
-    UPROPERTY(BlueprintReadOnly,Category="ARPGMontageAction")
+    UPROPERTY(BlueprintReadWrite,Category="ARPGMontageAction")
     UAnimMontage* ActionMontage;
+
+    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGMontageAction")
+    FName StartSectionName = NAME_None;
+
+    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGMontageAction")
+    float PlayRate = 1;
 
     int MontageInstanceID;
 
@@ -103,7 +111,7 @@ class AARPGMeleeAttackAction : public AARPGMontageAction
     int MeleeAttackIndex;
 
 public:
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGNormalAttacks",meta=(AllowPrivateAccess=true))
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGMeleeAttackCollection",meta=(AllowPrivateAccess=true))
     TArray<UAnimMontage*> MeleeAttackMontages;
 
     virtual void ActivateAction(AARPGCharacter* Target) override;

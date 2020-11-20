@@ -38,7 +38,7 @@ void AARPGAction::Interrupt(AARPGCharacter* Causer)
 void AARPGMontageAction::ActivateAction(AARPGCharacter* Target)
 {
     Super::ActivateAction(Target);
-    OwningCharacter->PlayAnimMontage(ActionMontage);
+    OwningCharacter->PlayAnimMontage(ActionMontage,PlayRate,StartSectionName);
 }
 
 void AARPGMontageAction::BindToMontageBegin(UAnimMontage* Montage)

@@ -18,6 +18,7 @@ void UMeleeDamageState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSeque
     if (Player)
     {
         ActorsToIgnore = {MeshComp->GetOwner()};
+        EventInstigator = Player->GetController();
         if (Weapon)
         {
             LastLocation1 = Weapon->GetSocketLocation(DamageCenterSocketName);

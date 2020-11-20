@@ -10,6 +10,7 @@
 #include "CharacterStatusComponent.h"
 #include "TranscendentalCombatComponent.h"
 #include "ARPGLockTargetComponent.h"
+#include "ARPGAIPerceptionStimuliSourceComponent.h"
 
 AARPGCharacter::AARPGCharacter()
 {
@@ -18,6 +19,7 @@ AARPGCharacter::AARPGCharacter()
     CharacterStatusComponent = CreateDefaultSubobject<UCharacterStatusComponent>("CharacterStatusComponent");
     CharacterCombatComponent = CreateDefaultSubobject<UTranscendentalCombatComponent>("ARPGCharacterCombaComponent");
     CharacterLockTargetComponent = CreateDefaultSubobject<UARPGLockTargetComponent>("ARPGLockTargetComponent");
+    AIPerceptionStimuliSourceComponent = CreateDefaultSubobject<UARPGAIPerceptionStimuliSourceComponent>("AIPerceptionStimuliSourceComponent");
 }
 
 FText AARPGCharacter::GetCharacterDisplayName() const
@@ -44,6 +46,14 @@ void AARPGCharacter::BeginPlay()
         UARPGGameInstanceSubsystem::PrintLogToScreen(
             FString::Printf(TEXT("角色%s未设置CharacterConfigPDataAsset"), *GetName()));
     }
+}
+
+float AARPGCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
+    AActor* DamageCauser)
+{
+    const float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+    UpdateCurrentHP(-DamageAmount);
+    return ActualDamage;
 }
 
 void AARPGCharacter::Tick(float DeltaTime)

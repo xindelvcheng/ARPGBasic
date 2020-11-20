@@ -56,6 +56,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadWrite,Category="GameItem")
 	UParticleSystemComponent* PromptFX;
+	
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="GameItem")
+	UBillboardComponent* BillboardComponent;
 
     UPROPERTY(BlueprintReadWrite,Category="GameItem")
     UGameItemWidget* ItemWidget;

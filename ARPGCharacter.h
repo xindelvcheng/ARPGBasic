@@ -56,6 +56,11 @@ protected:
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCharacterBasicComponent")
     class UARPGLockTargetComponent* CharacterLockTargetComponent;
 
+    UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCharacterBasicComponent")
+    class UARPGAIPerceptionStimuliSourceComponent* AIPerceptionStimuliSourceComponent;
+
+    virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
 public:
 
     // Called every frame

@@ -104,7 +104,7 @@ public:
     UFUNCTION()
     void Button_OptionOnClick();
 
-    virtual UARPGGamingMenuContentItemWidget* AddContentItem(TSubclassOf<UARPGGamingMenuContentItemWidget> PageItemWidgetClass,
+    UARPGGamingMenuContentItemWidget* AddContentItem(TSubclassOf<UARPGGamingMenuContentItemWidget> PageItemWidgetClass,
                                                  const FGamingMenuContentItemStruct& GamingMenuContentItemStruct);
 
     virtual void AddSeparator(TSubclassOf<UARPGGamingMenuContentItemWidget> ContentSeparatorWidgetClass,

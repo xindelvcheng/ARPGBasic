@@ -5,7 +5,9 @@
 #include "CoreMinimal.h"
 
 #include "ARPGCharacter.h"
+#include "ARPGPlayerController.h"
 #include "GameFramework/Character.h"
+#include "Perception/AIPerceptionComponent.h"
 #include "Sound/SoundCue.h"
 
 #include "ARPGNonPlayerCharacter.generated.h"
@@ -32,6 +34,12 @@ protected:
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGNonPlayerCharacter")
     FVector HPBarOffsetVector{0,0,100};
 
+    UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGNonPlayerCharacter")
+    UAIPerceptionComponent* AIPerceptionComponent;
+
+    UFUNCTION()
+    void BindToSensePerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
+
 public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
@@ -44,6 +52,8 @@ public:
 
     UFUNCTION()
     void OnNPCDeath();
+
+    FTimerHandle ForgetTargetTimerHandle;
 };
 
 

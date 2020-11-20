@@ -13,6 +13,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "AIModule/Classes/BrainComponent.h"
+#include "Perception/AISenseConfig_Sight.h"
 
 // Sets default values
 AARPGNonPlayerCharacter::AARPGNonPlayerCharacter()
@@ -31,7 +32,14 @@ AARPGNonPlayerCharacter::AARPGNonPlayerCharacter()
         HPBarWidgetComponent->SetRelativeLocation(HPBarOffsetVector);
     }
 
-    
+    AIPerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AIPerceptionComponent"));
+    UAISenseConfig_Sight* AISenseConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("AISenseConfig"));
+    AISenseConfig->PeripheralVisionAngleDegrees = 120;
+    FAISenseAffiliationFilter AISenseAffiliationFilter{true, true, false};
+    AISenseConfig->DetectionByAffiliation = std::move(AISenseAffiliationFilter);
+    AIPerceptionComponent->ConfigureSense(*AISenseConfig);
+    AIPerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(
+        this, &AARPGNonPlayerCharacter::BindToSensePerceptionUpdated);
 }
 
 void AARPGNonPlayerCharacter::ShowHPBar()
@@ -88,9 +96,9 @@ void AARPGNonPlayerCharacter::BeginPlay()
     }
 
     GetCharacterMovement()->bRequestedMoveUseAcceleration = true;
-    bUseControllerRotationYaw=true;
-    
-    CharacterStatusComponent->OnCharacterDeath.AddDynamic(this,&AARPGNonPlayerCharacter::OnNPCDeath);
+    bUseControllerRotationYaw = true;
+
+    CharacterStatusComponent->OnCharacterDeath.AddDynamic(this, &AARPGNonPlayerCharacter::OnNPCDeath);
 }
 
 // Called every frame
@@ -100,10 +108,41 @@ void AARPGNonPlayerCharacter::Tick(float DeltaTime)
 }
 
 float AARPGNonPlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
-    AController* EventInstigator, AActor* DamageCauser)
+                                          AController* EventInstigator, AActor* DamageCauser)
 {
     Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-    
-    ShowHPBar();
+    if (Cast<AARPGPlayerController>(EventInstigator))
+    {
+        ShowHPBar();
+    }   
     return DamageAmount;
+}
+
+
+void AARPGNonPlayerCharacter::BindToSensePerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
+{
+    GetWorldTimerManager().ClearTimer(ForgetTargetTimerHandle);
+    if (Stimulus.WasSuccessfullySensed())
+    {
+        if (Cast<AARPGMainCharacter>(Actor))
+        {
+            if (FVector::Distance(GetActorLocation(), Actor->GetActorLocation()) > 1500 && Actor->GetVelocity().Size() <
+                500)
+            {
+                FaceRotation(UKismetMathLibrary::Conv_VectorToRotator(
+                    UKismetMathLibrary::GetDirectionUnitVector(GetActorLocation(), Actor->GetActorLocation())));
+            }
+            else
+            {
+                LastHitBy = Cast<AARPGMainCharacter>(Actor)->GetController();
+            }
+        }
+    }
+    else
+    {
+        GetWorldTimerManager().SetTimer(ForgetTargetTimerHandle, FTimerDelegate::CreateLambda([&]()
+        {
+            LastHitBy = nullptr;
+        }), 5, false);
+    }
 }

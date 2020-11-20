@@ -71,12 +71,12 @@ public:
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Sound Effect Config")
     TArray<TSoftObjectPtr<USoundCue>> CancelSoundEffects;
 
-    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Sound Visual Config")
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Visual Effect Config")
     TArray<TSoftObjectPtr<UParticleSystem>> PositiveVisualEffects;
 
-    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Sound Visual Config")
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Visual Effect Config")
     TArray<TSoftObjectPtr<UParticleSystem>> NegativeVisualEffects;
-    
-    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="Transcendental Laws Constructor Config")
-    TSoftObjectPtr<UDataTable> LevelToRealmConfig;
+
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Visual Effect Config")
+    TSoftObjectPtr<UParticleSystem> DefaultGameItemPickUpPromptVisualEffect;
 };

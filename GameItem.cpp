@@ -7,7 +7,9 @@
 #include "Engine/Engine.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "ARPGAction.h"
+#include "ARPGBasicSettings.h"
 #include "ARPGCharacter.h"
+#include "Components/BillboardComponent.h"
 
 // Sets default values
 AGameItem::AGameItem()
@@ -17,6 +19,17 @@ AGameItem::AGameItem()
 
     PromptFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("PromptFX"));
     PromptFX->SetupAttachment(RootComponent);
+    if (UARPGBasicSettings::Get() && UARPGBasicSettings::Get()->DefaultGameItemPickUpPromptVisualEffect)
+    {
+        PromptFX->SetTemplate(UARPGBasicSettings::Get()->DefaultGameItemPickUpPromptVisualEffect.LoadSynchronous());
+    }
+
+    BillboardComponent = CreateDefaultSubobject<UBillboardComponent>(TEXT("BillboardComponent"));
+    BillboardComponent->SetupAttachment(RootComponent);
+    if (ItemIcon)
+    {
+        BillboardComponent->SetSprite(ItemIcon);
+    }
 }
 
 // Called when the game starts or when spawned
