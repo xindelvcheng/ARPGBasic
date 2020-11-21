@@ -95,9 +95,7 @@ void AARPGNonPlayerCharacter::BeginPlay()
         }
     }
 
-    GetCharacterMovement()->bRequestedMoveUseAcceleration = true;
     bUseControllerRotationYaw = true;
-
     CharacterStatusComponent->OnCharacterDeath.AddDynamic(this, &AARPGNonPlayerCharacter::OnNPCDeath);
 }
 

@@ -83,14 +83,6 @@ void UMeleeDamageState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequen
                                     ? DamageTypeClass
                                     : StatusComponent->GetMeleeDamageType());
                 }
-                if (AARPGCharacter* HitCharacter = Cast<AARPGCharacter>(HitActor))
-                {
-                    HitCharacter->LaunchCharacter(
-                        UKismetMathLibrary::Normal(HitCharacter->GetActorLocation() - Player->GetActorLocation()) * 1000
-                        * ImpactStrengthFactor, true, true);
-                    HitCharacter->CauseRigid(RigidTime, Player);
-                }
-
                 if (StatusComponent)
                 {
                     StatusComponent->OnAttackHitActor.Broadcast(HitResult[i]);

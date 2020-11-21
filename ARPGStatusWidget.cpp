@@ -194,4 +194,5 @@ void UARPGStatusWidget::ProcessCharacterPropertiesChanged(ECharacterProperty Cha
     default:
         break;
     }
+    BPFunc_OnCharacterPropertiesChanged(ChangedProperty, CurrentValue, TotalValue, DeltaValue);
 }

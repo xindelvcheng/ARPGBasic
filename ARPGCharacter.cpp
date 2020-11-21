@@ -12,6 +12,7 @@
 #include "ARPGLockTargetComponent.h"
 #include "ARPGAIPerceptionStimuliSourceComponent.h"
 #include "ARPGBasicSettings.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 AARPGCharacter::AARPGCharacter()
@@ -30,7 +31,7 @@ AARPGCharacter::AARPGCharacter()
         {
             ImpactVisualEffect = UARPGBasicSettings::Get()->DefaultImpactVisualEffect.LoadSynchronous();
         }
-        if(!ImpactSoundEffect)
+        if (!ImpactSoundEffect)
         {
             ImpactSoundEffect = UARPGBasicSettings::Get()->DefaultImpactSoundEffect.LoadSynchronous();
         }
@@ -70,25 +71,35 @@ float AARPGCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
     const float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
     UpdateCurrentHP(-DamageAmount);
 
+    FVector HitLocation = GetActorLocation();
     if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
     {
-        const FPointDamageEvent* PointDamageEvent= static_cast<const FPointDamageEvent*>(&DamageEvent);
-        UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),ImpactVisualEffect,PointDamageEvent->HitInfo.Location);
-        UGameplayStatics::SpawnSoundAtLocation(GetWorld(),ImpactSoundEffect,PointDamageEvent->HitInfo.Location);
+        const FPointDamageEvent* PointDamageEvent = static_cast<const FPointDamageEvent*>(&DamageEvent);
+        HitLocation = PointDamageEvent->HitInfo.Location;
+        UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactVisualEffect, HitLocation);
+        UGameplayStatics::SpawnSoundAtLocation(GetWorld(), ImpactSoundEffect, HitLocation);
     }
 
-    if (HitReactAnimMontages.Num()>0)
+    if (HitReactAnimMontages.Num() > 0)
     {
-        PlayAnimMontage(HitReactAnimMontages.IsValidIndex(HitReactIndex) ? HitReactAnimMontages[HitReactIndex] : nullptr);
+        PlayAnimMontage(
+            HitReactAnimMontages.IsValidIndex(HitReactIndex) ? HitReactAnimMontages[HitReactIndex] : nullptr);
         HitReactIndex = (HitReactIndex + 1) % HitReactAnimMontages.Num();
         FTimerManager& WorldTimerManager = GetWorldTimerManager();
         WorldTimerManager.ClearTimer(ResetHitReactIndexTimerHandle);
-        WorldTimerManager.SetTimer(ResetHitReactIndexTimerHandle,FTimerDelegate::CreateLambda([&]()
+        WorldTimerManager.SetTimer(ResetHitReactIndexTimerHandle, FTimerDelegate::CreateLambda([&]()
         {
             HitReactIndex = 0;
-        }),2,false);
+        }), 2, false);
     }
-    
+
+    const float ImpactForceFactor = 1000 * (DamageAmount / GetMaxHP());
+    LaunchCharacter(
+        (UKismetMathLibrary::GetDirectionUnitVector(
+            EventInstigator ? EventInstigator->GetTargetLocation() : HitLocation,
+            GetActorLocation()) * ImpactForceFactor),
+        true, true);
+
     return ActualDamage;
 }
 

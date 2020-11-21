@@ -48,12 +48,6 @@ protected:
     UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Melee Damage Trace")
     bool CauseDamage = true;
 
-    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Melee Damage Trace")
-    float ImpactStrengthFactor = 1;
-
-    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Melee Damage Trace")
-    float RigidTime = 0.3;
-
 public:
 
     UPROPERTY(EditAnywhere,Category="Custom")
