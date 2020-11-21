@@ -17,16 +17,16 @@ UARPGCharacterCombatComponent::UARPGCharacterCombatComponent()
     PrimaryComponentTick.bCanEverTick = true;
 }
 
-
-void UARPGCharacterCombatComponent::SpawnActionActors(const TArray<TSubclassOf<AARPGAction>>& ActionClasses,
-                                                      TArray<AARPGAction*>& ActionActors)
+template <typename T>
+void UARPGCharacterCombatComponent::SpawnActionActors(const TArray<TSubclassOf<T>>& ActionClasses,
+                                                      TArray<T*>& ActionActors)
 {
     FActorSpawnParameters ActorSpawnParameters;
     ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
     FTransform Transform;
     for (auto ActionClass : ActionClasses)
     {
-        AARPGAction* Action = Cast<AARPGAction>(GetWorld()->SpawnActor(ActionClass, &Transform, ActorSpawnParameters));
+        T* Action = Cast<T>(GetWorld()->SpawnActor(ActionClass, &Transform, ActorSpawnParameters));
         if (Action)
         {
             Action->InitWithOwningCharacter(AttachedCharacter);
@@ -49,19 +49,8 @@ void UARPGCharacterCombatComponent::BeginPlay()
 
     check(AttachedCharacter);
 
-    RigidTimerDelegate.BindLambda([&]()
-    {
-        AttachedCharacter->GetCharacterMovement()->Activate();
-        IsRigid = false;
-        OnResumeFromRigid.Broadcast(GetWorld()->GetTimerManager().GetTimerElapsed(RigidTimerHandle));
-    });
 
     ReInitCharacterActions();
-}
-
-void UARPGCharacterCombatComponent::BindToOnActionFinished(AARPGAction* Action)
-{
-    CurrentActiveAction = nullptr;
 }
 
 
@@ -71,106 +60,115 @@ void UARPGCharacterCombatComponent::TickComponent(float DeltaTime, ELevelTick Ti
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-   
+
     // ...
+}
+
+void UARPGCharacterCombatComponent::BindToOnActionFinished(AARPGAction* Action)
+{
+    if (ExclusiveGroupActionsMap.FindRef(Action->GetActionExclusiveGroupID()) == Action)
+    {
+        ExclusiveGroupActionsMap.Remove(Action->GetActionExclusiveGroupID());
+    }
 }
 
 
 bool UARPGCharacterCombatComponent::TryToMeleeAttack()
 {
-    if (CurrentActiveAction || IsRigid)
+    if (IsRigid || !CurrentMeleeAttackCollection || ExclusiveGroupActionsMap.Contains(
+        CurrentMeleeAttackCollection->GetActionExclusiveGroupID()))
     {
         return false;
     }
-
-    if (CurrentMeleeAttackCollection)
+    if (CurrentMeleeAttackCollection->TryToActivateAction(AttachedCharacter))
     {
-        if (CurrentMeleeAttackCollection->CheckConditionAndPayCost())
-        {
-            CurrentMeleeAttackCollection->ActivateAction(AttachedCharacter);
-            CurrentActiveAction = CurrentMeleeAttackCollection;
-            return true;
-        }
+        ExclusiveGroupActionsMap.Add(CurrentMeleeAttackCollection->GetActionExclusiveGroupID(),
+                                     CurrentMeleeAttackCollection);
+        CurrentActiveAction = CurrentMeleeAttackCollection;
+        return true;
     }
     return false;
 }
 
 bool UARPGCharacterCombatComponent::TryToRemoteAttack(int RemoteAttackIndex = 0)
 {
-    if (CurrentActiveAction || IsRigid)
+    if (IsRigid || !RemoteAttackActions.IsValidIndex(RemoteAttackIndex) || ExclusiveGroupActionsMap.Contains(
+        RemoteAttackActions[RemoteAttackIndex]->GetActionExclusiveGroupID()))
     {
         return false;
     }
 
-    if (RemoteAttackActions.IsValidIndex(RemoteAttackIndex))
+    AARPGAction* RemoteAttackAction = RemoteAttackActions[RemoteAttackIndex];
+    if (RemoteAttackAction->TryToActivateAction(AttachedCharacter))
     {
-        AARPGAction* RemoteAttackAction = RemoteAttackActions[RemoteAttackIndex];
-        if (RemoteAttackAction->CheckConditionAndPayCost())
-        {
-            RemoteAttackAction->ActivateAction(AttachedCharacter);
-            CurrentActiveAction = RemoteAttackAction;
-            return true;
-        }
+        ExclusiveGroupActionsMap.Add(RemoteAttackAction->GetActionExclusiveGroupID(), RemoteAttackAction);
+        CurrentActiveAction = RemoteAttackAction;
+        return true;
     }
     return false;
 }
 
 bool UARPGCharacterCombatComponent::TryToUseAbility(int AbilityIndex = 0)
 {
-    if (CurrentActiveAction || IsRigid)
+    if (IsRigid || !AbilityActions.IsValidIndex(AbilityIndex) || ExclusiveGroupActionsMap.Contains(
+        AbilityActions[AbilityIndex]->GetActionExclusiveGroupID()))
     {
         return false;
     }
 
-    if (AbilityActions.IsValidIndex(AbilityIndex))
+    AARPGAction* Ability = AbilityActions[AbilityIndex];
+    if (Ability->TryToActivateAction(AttachedCharacter))
     {
-        AARPGAction* Ability = AbilityActions[AbilityIndex];
-        if (Ability->CheckConditionAndPayCost())
-        {
-            Ability->ActivateAction(AttachedCharacter);
-            CurrentActiveAction = Ability;
-            return true;
-        }
+        ExclusiveGroupActionsMap.Add(Ability->GetActionExclusiveGroupID(), Ability);
+        CurrentActiveAction = Ability;
+        return true;
     }
     return false;
 }
 
 bool UARPGCharacterCombatComponent::CauseRigid(float Duration, AARPGCharacter* Causer = nullptr)
 {
+    IsRigid = true;
     //打断当前的攻击和技能
     if (CurrentActiveAction)
     {
         CurrentActiveAction->Interrupt(Causer);
-        CurrentActiveAction = nullptr;
     }
+    FTimerManager& WorldTimeManager = GetWorld()->GetTimerManager();
 
-    if (!GetWorld()->GetTimerManager().TimerExists(RigidTimerHandle))
-    {
-        GetWorld()->GetTimerManager().SetTimer(RigidTimerHandle, RigidTimerDelegate, Duration, false);
-        OnRigid.Broadcast(Duration);
-    }
-    else
-    {
-        float TimerRemaining = GetWorld()->GetTimerManager().GetTimerRemaining(RigidTimerHandle);
-        TimerRemaining = Duration > TimerRemaining ? Duration : TimerRemaining;
-        GetWorld()->GetTimerManager().ClearTimer(RigidTimerHandle);
-        GetWorld()->GetTimerManager().SetTimer(RigidTimerHandle, RigidTimerDelegate, TimerRemaining
-                                               , false);
-        OnRigid.Broadcast(TimerRemaining);
-    }
+    const float TimerRemaining = Duration > WorldTimeManager.GetTimerRemaining(RigidTimerHandle)
+                                     ? Duration
+                                     : WorldTimeManager.GetTimerRemaining(RigidTimerHandle);
+    WorldTimeManager.SetTimer(RigidTimerHandle,
+                              FTimerDelegate::CreateLambda([&]()
+                              {
+                                  AttachedCharacter->GetCharacterMovement()->Activate();
+                                  IsRigid = false;
+                                  OnResumeFromRigid.Broadcast(WorldTimeManager.GetTimerElapsed(RigidTimerHandle));
+                              }),
+                              TimerRemaining
+                              , false);
+    OnRigid.Broadcast(TimerRemaining);
 
-    ActivateBuff(0,Causer);
+    ActivateBuff(0, 0.3, Causer);
     AttachedCharacter->GetCharacterMovement()->Deactivate();
-    
-    IsRigid = true;
+
     return true;
 }
 
-bool UARPGCharacterCombatComponent::ActivateBuff(int BuffIndex, AARPGCharacter* Instigator)
+bool UARPGCharacterCombatComponent::ActivateBuff(int BuffIndex, float Duration, AARPGCharacter* Instigator)
 {
-    if (BuffActions.IsValidIndex(BuffIndex))
+    if (IsRigid || !BuffActions.IsValidIndex(BuffIndex) || ExclusiveGroupActionsMap.Contains(
+            BuffActions[BuffIndex]->GetActionExclusiveGroupID()))
     {
-        BuffActions[BuffIndex]->ActivateAction(Instigator);
+        return false;
+    }
+
+    AARPGBuff* Buff = BuffActions[BuffIndex];
+    Buff->SetDuration(Duration);
+    if (Buff->TryToActivateAction(AttachedCharacter))
+    {
+        ExclusiveGroupActionsMap.Add(Buff->GetActionExclusiveGroupID(), Buff);
         return true;
     }
     return false;

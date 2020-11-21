@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 
+
+#include "ARPGAction.h"
 #include "Components/ActorComponent.h"
 
 #include "ARPGCharacterCombatComponent.generated.h"
@@ -23,6 +25,9 @@ public:
     // Sets default values for this component's properties
     UARPGCharacterCombatComponent();
 
+    UPROPERTY()
+    TMap<int, AARPGAction*> ExclusiveGroupActionsMap;
+
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     TArray<TSubclassOf<AARPGAction>> MeleeAttackCollectionClasses;
 
@@ -33,7 +38,7 @@ public:
     TArray<TSubclassOf<AARPGAction>> AbilityClasses;
 
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
-    TArray<TSubclassOf<AARPGAction>> BuffClasses;
+    TArray<TSubclassOf<AARPGBuff>> BuffClasses;
 
 protected:
     // Called when the game starts
@@ -43,13 +48,11 @@ protected:
 
     bool IsRigid;
 
-    bool IsActing;
-
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess=true))
     bool AllowInterruptBackswing;
 
-
-    void SpawnActionActors(const TArray<TSubclassOf<AARPGAction>>& ActionClasses, TArray<AARPGAction*>& ActionActors);
+    template<typename  T>
+    void SpawnActionActors(const TArray<TSubclassOf<T>>& ActionClasses, TArray<T*>& ActionActors);
 
 public:
     // Called every frame
@@ -77,7 +80,7 @@ public:
     UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     TArray<AARPGAction*> AbilityActions;
     UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
-    TArray<AARPGAction*> BuffActions;
+    TArray<AARPGBuff*> BuffActions;
     UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     AARPGAction* CurrentActiveAction;
 
@@ -102,7 +105,7 @@ public:
     virtual bool CauseRigid(float Duration, AARPGCharacter* Causer);
 
     UFUNCTION()
-    virtual bool ActivateBuff(int BuffIndex,AARPGCharacter* Instigator = nullptr);
+    virtual bool ActivateBuff(int BuffIndex, float Duration, AARPGCharacter* Instigator = nullptr);
 
 
     DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRigidEvent, float, Duration);
@@ -118,6 +121,4 @@ public:
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
     void ReInitCharacterActions(UCharacterConfigPrimaryDataAsset* CharacterConfigPrimaryDataAsset = nullptr);
-
-    
 };

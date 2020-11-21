@@ -1,32 +1,40 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-
 #include "ARPGAction.generated.h"
 
 class AARPGCharacter;
+class AARPGAction;
+
+class FARPGGroupIDActionMap : public TMap<int, AARPGAction*>
+{
+};
 
 UCLASS(Blueprintable)
 class AARPGAction : public AActor
 {
     GENERATED_BODY()
 
-
 protected:
 
     UPROPERTY(BlueprintReadOnly,Category="ARPGAction")
     AARPGCharacter* OwningCharacter;
 
-    UFUNCTION(BlueprintImplementableEvent,DisplayName="ActionActive")
-    void BPFunc_Active(AARPGCharacter* Target = nullptr);
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGAction")
+    int ExclusiveGroupID = 0;
 
+    UFUNCTION(BlueprintImplementableEvent,DisplayName="ActionActive")
+    void BPFunc_Active();
 
 public:
+    int GetActionExclusiveGroupID()const{return ExclusiveGroupID;}
 
     virtual void InitWithOwningCharacter(AARPGCharacter* NewOwningCharacter);
 
     UFUNCTION(BlueprintCallable,Category="ARPGAction")
-    virtual void ActivateAction(AARPGCharacter* Target = nullptr);
+    bool TryToActivateAction(AARPGCharacter* User = nullptr, AARPGCharacter* Target = nullptr);
+
+    virtual void OnActionActivate();
 
     UFUNCTION(BlueprintCallable,Category="ARPGAction")
     virtual void Interrupt(AARPGCharacter* Causer);
@@ -34,10 +42,12 @@ public:
     UFUNCTION(BlueprintCallable,Category="ARPGAction")
     void FinishAction();
 
-    UFUNCTION(BlueprintNativeEvent)
     bool CheckConditionAndPayCost();
 
-    DECLARE_DELEGATE_OneParam(FActionFinishDelegate,AARPGAction*);
+    UFUNCTION(BlueprintNativeEvent,DisplayName="CheckConditionAndPayCost")
+    bool BPFunc_CheckConditionAndPayCost();
+
+    DECLARE_DELEGATE_OneParam(FActionFinishDelegate, AARPGAction*);
     FActionFinishDelegate OnActionFinished;
 };
 
@@ -48,12 +58,11 @@ class AARPGMontageAction : public AARPGAction
 
     UPROPERTY()
     UAnimInstance* AttachedCharacterAnimInstance;
-    
 
 
 protected:
 
-    virtual void ActivateAction(AARPGCharacter* Target) override;
+    virtual void OnActionActivate() override;
 
     UFUNCTION()
     void BindToMontageBegin(UAnimMontage* Montage);
@@ -62,10 +71,18 @@ protected:
     UFUNCTION()
     void BindToMontageStop(UAnimMontage* Montage, bool bInterrupted);
 
-    virtual void OnMontageBegin(UAnimMontage* Montage){};
-    virtual void OnMontageNotify(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload){};
-    virtual void OnMontageStop(UAnimMontage* Montage, bool bInterrupted){};
-    
+    virtual void OnMontageBegin(UAnimMontage* Montage)
+    {
+    };
+
+    virtual void OnMontageNotify(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload)
+    {
+    };
+
+    virtual void OnMontageStop(UAnimMontage* Montage, bool bInterrupted)
+    {
+    };
+
     virtual void Interrupt(AARPGCharacter* Causer) override;
 
     virtual void InitWithOwningCharacter(AARPGCharacter* NewOwningCharacter) override;
@@ -100,7 +117,9 @@ public:
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSingleMontageAction")
     UAnimMontage* ActionMontageAsset;
 
-    virtual void ActivateAction(AARPGCharacter* Target) override;
+    virtual void OnActionActivate() override;
+
+    virtual void OnMontageStop(UAnimMontage* Montage, bool bInterrupted) override;
 };
 
 UCLASS(Blueprintable)
@@ -114,7 +133,7 @@ public:
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGMeleeAttackCollection",meta=(AllowPrivateAccess=true))
     TArray<UAnimMontage*> MeleeAttackMontages;
 
-    virtual void ActivateAction(AARPGCharacter* Target) override;
+    virtual void OnActionActivate() override;
 
     virtual void OnMontageBegin(UAnimMontage* Montage) override;
 
@@ -138,7 +157,23 @@ public:
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGMultiMontageAction",meta=(AllowPrivateAccess=true))
     TArray<UAnimMontage*> ActionMontages;
 
-    virtual void ActivateAction(AARPGCharacter* Target) override;
+    virtual void OnActionActivate() override;
 
     virtual void OnMontageStop(UAnimMontage* Montage, bool bInterrupted) override;
+};
+
+
+UCLASS(Blueprintable)
+class AARPGBuff : public AARPGAction
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPG Buff",meta=(AllowPrivateAccess))
+    float BuffDuration = 30;
+    FTimerHandle BuffTimerHandle;
+
+    virtual void OnActionActivate() override;
+
+public:
+    void SetDuration(const float Duration){BuffDuration = Duration;}
 };

@@ -53,7 +53,7 @@ public:
 	
 	virtual void Tick(float DeltaSeconds) override;
 	
-	virtual void ActivateAction(AARPGCharacter* Target) override;
+	virtual void OnActionActivate() override;
 };
 
 UCLASS()

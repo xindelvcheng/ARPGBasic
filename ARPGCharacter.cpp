@@ -1,8 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "particles/ParticleSystem.h"
-
 #include "ARPGCharacter.h"
+#include "particles/ParticleSystem.h"
 #include "ARPGConfigSubsystem.h"
 #include "ARPGGameInstanceSubsystem.h"
 #include "ARPGGameItemsManagerComponent.h"
@@ -99,7 +98,7 @@ float AARPGCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
             EventInstigator ? EventInstigator->GetTargetLocation() : HitLocation,
             GetActorLocation()) * ImpactForceFactor),
         true, true);
-
+    CauseRigid(1 * (DamageAmount / GetMaxHP()), nullptr);
     return ActualDamage;
 }
 

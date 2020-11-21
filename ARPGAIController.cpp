@@ -70,11 +70,9 @@ void AAction_MoveToTarget::Tick(float DeltaSeconds)
 
 }
 
-void AAction_MoveToTarget::ActivateAction(AARPGCharacter* NewTarget)
+void AAction_MoveToTarget::OnActionActivate()
 {
-    Super::ActivateAction(Target);
-    
-    Target = NewTarget;
+    Super::OnActionActivate();
 
     if (!GetWorldTimerManager().IsTimerActive(TimerHandle))
     {
