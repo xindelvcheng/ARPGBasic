@@ -7,6 +7,10 @@
 #include "ArchiveStructs.h"
 #include "ARPGBasicSettings.h"
 #include "CharacterConfigPrimaryDataAsset.h"
+#include "ARPGCharacter.h"
+#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGSpecialEffectsSubsystem.h"
+
 
 void UCharacterStatusComponent::ReInitCharacterProperties(UCharacterConfigPrimaryDataAsset* CharacterConfigDataAsset)
 {
@@ -14,14 +18,16 @@ void UCharacterStatusComponent::ReInitCharacterProperties(UCharacterConfigPrimar
     {
         Level = CharacterConfigDataAsset->Level;
         SetCoins(CharacterConfigDataAsset->Coins);
-        
+
         HealthSpecialty = CharacterConfigDataAsset->HealthSpecialty;
         StaminaSpecialty = CharacterConfigDataAsset->StaminaSpecialty;
         AttackSpecialty = CharacterConfigDataAsset->AttackSpecialty;
         DefenseSpecialty = CharacterConfigDataAsset->DefenseSpecialty;
         ToughnessSpecialty = CharacterConfigDataAsset->ToughnessSpecialty;
+
+        DeathAnimation = CharacterConfigDataAsset->DeathAnimationAsset;
     }
-    
+
     SetMaxHP(CalculateValueBySpecialty(HealthSpecialty));
     SetCurrentHP(MaxHP);
     SetMaxSP(CalculateValueBySpecialty(StaminaSpecialty));
@@ -32,8 +38,100 @@ void UCharacterStatusComponent::ReInitCharacterProperties(UCharacterConfigPrimar
     Toughness = CalculateValueBySpecialty(ToughnessSpecialty);
 }
 
+void UCharacterStatusComponent::SetCurrentHP(const int NewCurrentHP)
+{
+    if (CurrentHP <= 0)
+    {
+        return;
+    }
+    
+    const int Temp = CurrentHP;
+    CurrentHP = FMath::Clamp(NewCurrentHP, 0, MaxHP);
+    OnCharacterPropertyChanged.Broadcast(ECharacterProperty::CurrentHP, CurrentHP, MaxHP, CurrentHP - Temp);
+    if (this->CurrentHP <= 0)
+    {
+        OnCharacterDeath.Broadcast();
+        if (AttachCharacter)
+        {
+            AttachCharacter->SetCanBeDamaged(false);
+            if (AttachCharacter->GetMesh())
+            {
+                AttachCharacter->GetMesh()->PlayAnimation(DeathAnimation, false);
+            }
+
+            UARPGSpecialEffectsSubsystem* SpecialEffectsSubsystem = UARPGSpecialEffectsSubsystem::Get(GetWorld());
+            if (AARPGMainCharacter* MainCharacter = UARPGGameInstanceSubsystem::GetMainCharacter(GetWorld()))
+            {
+                if (AttachCharacter != MainCharacter)
+                {
+                    MainCharacter->UpdateCoins(Coins);
+                    if (SpecialEffectsSubsystem && SpecialEffectsSubsystem->PositiveSoundEffects.IsValidIndex(0))
+                    {
+                        UGameplayStatics::PlaySound2D(GetWorld(), SpecialEffectsSubsystem->PositiveSoundEffects[0]);
+                    }
+                }
+            }
+
+            if (AttachCharacter && SpecialEffectsSubsystem && SpecialEffectsSubsystem->NegativeVisualEffects.
+                IsValidIndex(0))
+            {
+                UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SpecialEffectsSubsystem->NegativeVisualEffects[0],
+                                                         AttachCharacter->GetActorLocation());
+            }
+            FTimerHandle TimerHandle;
+            GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([&]()
+            {
+                GetWorld()->DestroyActor(GetOwner());
+            }), 1, false);
+        }
+    }
+}
 
 
+void UCharacterStatusComponent::SetCurrentSP(const int NewCurrentSP)
+{
+    const int Temp = CurrentSP;
+    CurrentSP = FMath::Clamp(NewCurrentSP, 0, MaxSP);
+    OnCharacterPropertyChanged.Broadcast(ECharacterProperty::CurrentSP, CurrentSP, MaxSP, CurrentSP - Temp);
+    if (this->CurrentSP <= 0)
+    {
+        OnCharacterStaminaExhausted.Broadcast();
+    }
+    FTimerManager& WorldTimerManager = GetWorld()->GetTimerManager();
+    WorldTimerManager.ClearTimer(SPResumeTimerHandle);
+    WorldTimerManager.ClearTimer(SPGrowingTimerHandle);
+
+    if (!SPResumeTimerDelegate.IsBound())
+    {
+        SPResumeTimerDelegate.BindLambda([&]()
+        {
+            WorldTimerManager.SetTimer(SPGrowingTimerHandle, SPGrowingTimerDelegate, 0.1, true);
+        });
+    }
+
+    if (!SPGrowingTimerDelegate.IsBound())
+    {
+        SPGrowingTimerDelegate.BindLambda([&]()
+        {
+            if (CurrentSP >= MaxSP)
+            {
+                WorldTimerManager.ClearTimer(SPGrowingTimerHandle);
+                return;
+            }
+            const float FloatMaxSP = static_cast<float>(MaxSP);
+            CurrentSP += static_cast<int>((FloatMaxSP / 20.f) * StaminaSpecialty) > 0
+                             ? static_cast<int>((FloatMaxSP / 100.f) * StaminaSpecialty)
+                             : 1;
+            CurrentSP = CurrentSP > MaxSP ? MaxSP : CurrentSP;
+            OnCharacterPropertyChanged.Broadcast(ECharacterProperty::CurrentSP, CurrentSP, MaxSP, CurrentSP - Temp);
+        });
+    }
+
+    if (CurrentSP < MaxSP)
+    {
+        WorldTimerManager.SetTimer(SPResumeTimerHandle, SPResumeTimerDelegate, 3, false);
+    }
+}
 
 // Sets default values for this component's properties
 UCharacterStatusComponent::UCharacterStatusComponent()
@@ -43,6 +141,7 @@ UCharacterStatusComponent::UCharacterStatusComponent()
     PrimaryComponentTick.bCanEverTick = false;
 
     // ...
+    AttachCharacter = Cast<AARPGCharacter>(GetOwner());
 }
 
 bool UCharacterStatusComponent::LevelUp(const ESpecialties Specialty)
@@ -71,7 +170,7 @@ bool UCharacterStatusComponent::LevelUp(const ESpecialties Specialty)
         default:
             if (GEngine) { GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow,TEXT("无效的升级加点")); }
         }
-        SetLevel(Level+1);
+        SetLevel(Level + 1);
         return true;
     }
     return false;

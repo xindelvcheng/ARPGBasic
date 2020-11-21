@@ -18,45 +18,51 @@ class UCharacterConfigPrimaryDataAsset : public UPrimaryDataAsset
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="CharacterConfigPrimaryDataAsset")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Character Basic Information")
 	FName CharacterName = "DefaultCharacter";
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="CharacterConfigPrimaryDataAsset")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Character Basic Information")
 	FText CharacterDisplayName;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="CharacterConfigPrimaryDataAsset")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Character Property")
 	int Level = 10;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="CharacterConfigPrimaryDataAsset")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Character Property")
 	int Coins = 10;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="CharacterConfigPrimaryDataAsset")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Character Property")
 	int HealthSpecialty = 10;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="CharacterConfigPrimaryDataAsset")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Character Property")
 	int StaminaSpecialty = 0;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="CharacterConfigPrimaryDataAsset")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Character Property")
 	int AttackSpecialty = 0;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="CharacterConfigPrimaryDataAsset")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Character Property")
 	int DefenseSpecialty = 0;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="CharacterConfigPrimaryDataAsset")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Character Property")
 	int ToughnessSpecialty = 0;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="CharacterConfigPrimaryDataAsset")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Combat")
 	TArray<TSubclassOf<AARPGAction>> MeleeAttackCollectionClasses;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="CharacterConfigPrimaryDataAsset")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Combat")
 	TArray<TSubclassOf<AARPGAction>> RemoteAttackClasses;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="CharacterConfigPrimaryDataAsset")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Combat")
 	TArray<TSubclassOf<AARPGAction>> AbilityClasses;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="CharacterConfigPrimaryDataAsset")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Combat")
 	TArray<TSubclassOf<AARPGAction>> BuffClasses;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="CharacterConfigPrimaryDataAsset")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Combat")
 	TArray<TSubclassOf<ATranscendentalLawsSystem>> TranscendentalLawsSystemClasses;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Animation")
+	UAnimSequence* DeathAnimationAsset;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Animation")
+	TArray<UAnimMontage*> HitReactAnimMontages;
 };

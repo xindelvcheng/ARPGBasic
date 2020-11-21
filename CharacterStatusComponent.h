@@ -3,29 +3,33 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+
 #include "Components/ActorComponent.h"
 #include "Engine/DataTable.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "math.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetStringLibrary.h"
 
 
 #include "CharacterStatusComponent.generated.h"
 
 class UCharacterConfigPrimaryDataAsset;
+class AARPGCharacter;
 
 template <class T = float>
 class TCharacterProperty
 {
     T Value;
-
     T MaxValue;
+    int Specialty = 0;
 
-    DECLARE_MULTICAST_DELEGATE_TwoParams(FPropertyChangeEvent, T, T);
+    DECLARE_MULTICAST_DELEGATE_ThreeParams(FPropertyChangeEvent, T, T, int);
     FPropertyChangeEvent ChangedDelegate;
 
 public:
-    //用于无上限的属性（最大值将被设置成INT_MAX）
+    //用于无上限的属性（最大值将被设置成FLT_MAX）
     TCharacterProperty(T value)
     {
         this->Value = value;
@@ -42,26 +46,41 @@ public:
     void SetMaxValue(const T& maxValue)
     {
         this->MaxValue = maxValue;
-        ChangedDelegate.Broadcast(Value, MaxValue);
+        ChangedDelegate.Broadcast(Value, MaxValue, Specialty);
     }
 
     void operator=(const T& value)
     {
         this->Value = value <= MaxValue ? value : MaxValue;
-        ChangedDelegate.Broadcast(Value, MaxValue);
+        ChangedDelegate.Broadcast(Value, MaxValue,Specialty);
     }
 
     void operator+=(const T& deltaValue)
     {
         this->Value = Value + deltaValue <= MaxValue ? Value + deltaValue : MaxValue;
-        ChangedDelegate.Broadcast(Value, MaxValue);
+        ChangedDelegate.Broadcast(Value, MaxValue,Specialty);
     }
 
     void operator-=(const T& deltaValue)
     {
         this->Value = Value - deltaValue >= 0 ? Value + deltaValue : 0;
-        ChangedDelegate.Broadcast(Value, MaxValue);
+        ChangedDelegate.Broadcast(Value, MaxValue,Specialty);
     }
+
+    int GetSpecialty() const { return Specialty; }
+
+    void AddSpecialty()
+    {
+        Specialty++;
+        ChangedDelegate.Broadcast(Value, MaxValue,Specialty);
+    }
+
+    void SetSpecialty(const int NewSpecialty)
+    {
+        Specialty = NewSpecialty;
+        ChangedDelegate.Broadcast(Value, MaxValue,Specialty);
+    }
+
 
     operator T()
     {
@@ -134,7 +153,9 @@ class UCharacterStatusComponent : public UActorComponent
     FTimerDelegate SPGrowingTimerDelegate;
 
 public:
-
+    AARPGCharacter* AttachCharacter;
+    
+    
     UPROPERTY(BlueprintAssignable)
     FCharacterPropertyChangedEvent OnCharacterPropertyChanged;
 
@@ -167,6 +188,9 @@ private:
 
     TSubclassOf<UDamageType> MeleeDamageType;
 
+    UPROPERTY(EditAnywhere,meta=(AllowPrivateAccess))
+    UAnimSequence* DeathAnimation;
+
 public:
     void ReInitCharacterProperties(UCharacterConfigPrimaryDataAsset* CharacterConfigDataAsset = nullptr);
 
@@ -197,16 +221,7 @@ public:
     FORCEINLINE int GetCurrentHP() const { return CurrentHP; }
 
     UFUNCTION(BlueprintCallable,Category="CharacterStatusComponent")
-    void SetCurrentHP(const int NewCurrentHP)
-    {
-        const int Temp = CurrentHP;
-        CurrentHP = FMath::Clamp(NewCurrentHP, 0, MaxHP);
-        OnCharacterPropertyChanged.Broadcast(ECharacterProperty::CurrentHP, CurrentHP, MaxHP, CurrentHP - Temp);
-        if (this->CurrentHP <= 0)
-        {
-            OnCharacterDeath.Broadcast();
-        }
-    }
+    void SetCurrentHP(const int NewCurrentHP);
 
     DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCharacterDeathEvent);
 
@@ -219,6 +234,7 @@ public:
         //Check value in set
         SetCurrentHP(CurrentHP + DeltaHP);
     }
+
 
     UFUNCTION(BlueprintCallable,Category="CharacterStatusComponent")
     FORCEINLINE int GetMaxSP() const { return MaxSP; }
@@ -240,50 +256,7 @@ public:
     FCharacterStaminaExhaustedEvent OnCharacterStaminaExhausted;
 
     UFUNCTION(BlueprintCallable,Category="CharacterStatusComponent")
-    void SetCurrentSP(const int NewCurrentSP)
-    {
-        const int Temp = CurrentSP;
-        CurrentSP = FMath::Clamp(NewCurrentSP, 0, MaxSP);
-        OnCharacterPropertyChanged.Broadcast(ECharacterProperty::CurrentSP, CurrentSP, MaxSP, CurrentSP - Temp);
-        if (this->CurrentSP <= 0)
-        {
-            OnCharacterStaminaExhausted.Broadcast();
-        }
-
-        GetWorld()->GetTimerManager().ClearTimer(SPResumeTimerHandle);
-        GetWorld()->GetTimerManager().ClearTimer(SPGrowingTimerHandle);
-
-        if (!SPResumeTimerDelegate.IsBound())
-        {
-            SPResumeTimerDelegate.BindLambda([&]()
-            {
-                GetWorld()->GetTimerManager().SetTimer(SPGrowingTimerHandle, SPGrowingTimerDelegate, 0.1, true);
-            });
-        }
-
-        if (!SPGrowingTimerDelegate.IsBound())
-        {
-            SPGrowingTimerDelegate.BindLambda([&]()
-            {
-                if (CurrentSP >= MaxSP)
-                {
-                    GetWorld()->GetTimerManager().ClearTimer(SPGrowingTimerHandle);
-                    return;
-                }
-                const float FloatMaxSP = static_cast<float>(MaxSP);
-                CurrentSP += static_cast<int>((FloatMaxSP / 20.f) * StaminaSpecialty) > 0
-                                 ? static_cast<int>((FloatMaxSP / 100.f) * StaminaSpecialty)
-                                 : 1;
-                CurrentSP = CurrentSP > MaxSP ? MaxSP : CurrentSP;
-                OnCharacterPropertyChanged.Broadcast(ECharacterProperty::CurrentSP, CurrentSP, MaxSP, CurrentSP - Temp);
-            });
-        }
-
-        if (CurrentSP < MaxSP)
-        {
-            GetWorld()->GetTimerManager().SetTimer(SPResumeTimerHandle, SPResumeTimerDelegate, 3, false);
-        }
-    }
+    void SetCurrentSP(const int NewCurrentSP);
 
     UFUNCTION(BlueprintCallable,Category="CharacterStatusComponent")
     void UpdateCharacterSP(const int DeltaSP)

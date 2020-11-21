@@ -5,9 +5,9 @@
 
 #include "ARPGBasicSettings.h"
 
-template<typename T>
+template <typename T>
 void UARPGSpecialEffectsSubsystem::LoadEffectsAssets(TArray<T*>& Effects,
-                                              TArray<TSoftObjectPtr<T>> EffectSoftObjectPtrs)
+                                                     TArray<TSoftObjectPtr<T>> EffectSoftObjectPtrs)
 {
     for (TSoftObjectPtr<T> Effect : EffectSoftObjectPtrs)
     {
@@ -27,7 +27,7 @@ void UARPGSpecialEffectsSubsystem::Initialize(FSubsystemCollectionBase& Collecti
         LoadEffectsAssets(ClickSoundEffects, ARPGBasicSettings->ClickSoundEffects);
         LoadEffectsAssets(ConfirmSoundEffects, ARPGBasicSettings->ConfirmSoundEffects);
         LoadEffectsAssets(CancelSoundEffects, ARPGBasicSettings->CancelSoundEffects);
-        LoadEffectsAssets(PositiveVisualEffects,ARPGBasicSettings->PositiveVisualEffects);
-        LoadEffectsAssets(NegativeVisualEffects,ARPGBasicSettings->NegativeVisualEffects);
+        LoadEffectsAssets(PositiveVisualEffects, ARPGBasicSettings->PositiveVisualEffects);
+        LoadEffectsAssets(NegativeVisualEffects, ARPGBasicSettings->NegativeVisualEffects);
     }
 }

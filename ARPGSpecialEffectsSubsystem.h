@@ -11,7 +11,11 @@
 
 enum class ESoundEffectCategory:uint8
 {
-    Positive,Negative,Click,Confirm,Cancel
+    Positive,
+    Negative,
+    Click,
+    Confirm,
+    Cancel
 };
 
 /**
@@ -22,10 +26,10 @@ class UARPGSpecialEffectsSubsystem : public UGameInstanceSubsystem
 {
     GENERATED_BODY()
 
-    template<typename T>
-    void LoadEffectsAssets(TArray<T*>& Effects,TArray<TSoftObjectPtr<T>> EffectSoftObjectPtrs);
+    template <typename T>
+    void LoadEffectsAssets(TArray<T*>& Effects, TArray<TSoftObjectPtr<T>> EffectSoftObjectPtrs);
 
-protected:
+public:
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
     UPROPERTY(BlueprintReadOnly,Category="ARPGSpecialEffectsSubsystem")
@@ -49,7 +53,6 @@ protected:
     UPROPERTY(BlueprintReadOnly,Category="ARPGSpecialEffectsSubsystem")
     TArray<UParticleSystem*> NegativeVisualEffects;
 
-public:
     static UARPGSpecialEffectsSubsystem* Get(UWorld* World)
     {
         if (World && World->GetGameInstance() && World->GetGameInstance()->GetSubsystem<UARPGSpecialEffectsSubsystem>())
@@ -60,5 +63,3 @@ public:
         return nullptr;
     }
 };
-
-

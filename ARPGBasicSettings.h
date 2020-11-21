@@ -79,4 +79,10 @@ public:
 
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Visual Effect Config")
     TSoftObjectPtr<UParticleSystem> DefaultGameItemPickUpPromptVisualEffect;
+
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Visual Effect Config")
+    TSoftObjectPtr<UParticleSystem> DefaultImpactVisualEffect;
+
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Visual Effect Config")
+    TSoftObjectPtr<USoundCue> DefaultImpactSoundEffect;
 };

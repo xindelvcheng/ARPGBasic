@@ -7,6 +7,7 @@
 #include "CharacterStatusComponent.h"
 #include "TranscendentalCombatComponent.h"
 #include "GameFramework/Character.h"
+#include "Sound/SoundCue.h"
 #include "ARPGCharacter.generated.h"
 
 class UCharacterConfigPrimaryDataAsset;
@@ -59,8 +60,24 @@ protected:
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCharacterBasicComponent")
     class UARPGAIPerceptionStimuliSourceComponent* AIPerceptionStimuliSourceComponent;
 
-    virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
+    
+    virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+    UPROPERTY(EditAnywhere,Category="ARPGCharacter")
+    
+    TArray<UAnimMontage*> HitReactAnimMontages;
+    
+    int HitReactIndex = 0;
+    
+    FTimerHandle ResetHitReactIndexTimerHandle;
+
+    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPG Art Resource")
+    UParticleSystem* ImpactVisualEffect;
+    
+    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPG Art Resource")
+    USoundCue* ImpactSoundEffect;
+    
+    
 public:
 
     // Called every frame
@@ -195,7 +212,6 @@ public:
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
     AARPGAction* GetCurrentActiveAction() const { return CharacterCombatComponent->GetCurrentActiveAction(); }
-
 
     
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
