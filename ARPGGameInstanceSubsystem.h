@@ -46,7 +46,7 @@ class UARPGGameInstanceSubsystem : public UGameInstanceSubsystem
 
     UPROPERTY()
     TArray<FArchiveInfoStruct> ArchiveInfos;
-    
+
 protected:
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
     virtual void Deinitialize() override;
@@ -66,31 +66,40 @@ private:
     TWeakObjectPtr<UARPGStatusWidget> StatusWidget;
 
 public:
-    
-    UFUNCTION(BlueprintCallable,BlueprintPure,Category="ARPGGameInstanceSubsystem",meta=(WorldContext=WorldContextObject))
-    static AARPGMainCharacter* GetMainCharacter(const UObject* WorldContextObject) ;
 
-    UFUNCTION(BlueprintCallable,BlueprintPure,Category="ARPGGameInstanceSubsystem",meta=(WorldContext=WorldContextObject))
-    static AARPGPlayerController* GetMainCharacterController(const UObject* WorldContextObject) ;
+    UFUNCTION(BlueprintCallable,BlueprintPure,Category="ARPGGameInstanceSubsystem",meta=(WorldContext=WorldContextObject
+    ))
+    static AARPGMainCharacter* GetMainCharacter(const UObject* WorldContextObject);
 
-    UFUNCTION(BlueprintCallable,BlueprintPure,Category="ARPGGameInstanceSubsystem",meta=(WorldContext=WorldContextObject))
+    UFUNCTION(BlueprintCallable,BlueprintPure,Category="ARPGGameInstanceSubsystem",meta=(WorldContext=WorldContextObject
+    ))
+    static AARPGPlayerController* GetMainCharacterController(const UObject* WorldContextObject);
+
+    UFUNCTION(BlueprintCallable,BlueprintPure,Category="ARPGGameInstanceSubsystem",meta=(WorldContext=WorldContextObject
+    ))
     static UARPGStatusWidget* GetMainCharacterStatusWidget(const UObject* WorldContextObject);
 
-    void SetMainCharacter(AARPGMainCharacter* NewMainCharacter){MainCharacter = NewMainCharacter;}
-    void SetMainCharacterController(AARPGPlayerController* NewMainCharacterController){MainCharacterController = NewMainCharacterController;}
-    void SetMainCharacterStatusWidget(UARPGStatusWidget* NewARPGStatusWidget){StatusWidget = NewARPGStatusWidget;}
+    void SetMainCharacter(AARPGMainCharacter* NewMainCharacter) { MainCharacter = NewMainCharacter; }
+
+    void SetMainCharacterController(AARPGPlayerController* NewMainCharacterController)
+    {
+        MainCharacterController = NewMainCharacterController;
+    }
+
+    void SetMainCharacterStatusWidget(UARPGStatusWidget* NewARPGStatusWidget) { StatusWidget = NewARPGStatusWidget; }
 
     DECLARE_MULTICAST_DELEGATE(FSetupPlayerEvent)
     FSetupPlayerEvent OnPlayerSetupEnd;
-    
-    void SetupPlayer(AARPGMainCharacter* NewMainCharacter,AARPGPlayerController* NewMainCharacterController,UARPGStatusWidget* NewARPGStatusWidget)
+
+    void SetupPlayer(AARPGMainCharacter* NewMainCharacter, AARPGPlayerController* NewMainCharacterController,
+                     UARPGStatusWidget* NewARPGStatusWidget)
     {
         MainCharacter = NewMainCharacter;
         MainCharacterController = NewMainCharacterController;
         StatusWidget = NewARPGStatusWidget;
         OnPlayerSetupEnd.Broadcast();
     }
-    
+
 public:
 
     UFUNCTION(BlueprintCallable,meta=(WorldContext=WorldContextObject))
@@ -130,9 +139,10 @@ public:
 
     static void PrintLogToScreen(FString Message, float Time = 5, FColor Color = FColor::Yellow);
 
+    UFUNCTION(BlueprintCallable,Category="ARPGBASIC",BlueprintPure)
+    static FTransform GetActorNearPositionTransform(AActor* OriginActor,
+                                                    const FVector LocationOffset,
+                                                    const FRotator RotationOffset);
 
     static UARPGGameInstanceSubsystem* Get(UWorld* World);
-
 };
-
-

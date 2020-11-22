@@ -63,13 +63,7 @@ public:
     TArray<TSoftObjectPtr<USoundCue>> NegativeSoundEffects;
 
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Sound Effect Config")
-    TArray<TSoftObjectPtr<USoundCue>> ClickSoundEffects;
-
-    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Sound Effect Config")
-    TArray<TSoftObjectPtr<USoundCue>> ConfirmSoundEffects;
-
-    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Sound Effect Config")
-    TArray<TSoftObjectPtr<USoundCue>> CancelSoundEffects;
+    TArray<TSoftObjectPtr<USoundCue>> NeutralSoundEffects;
 
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Visual Effect Config")
     TArray<TSoftObjectPtr<UParticleSystem>> PositiveVisualEffects;

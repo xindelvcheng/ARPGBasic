@@ -297,14 +297,13 @@ void UARPGGameInstanceSubsystem::OnLevelLoaded()
         {
             ATranscendentalLawsSystem* TranscendentalLawsSystem = Cast<ATranscendentalLawsSystem>(
                 GetWorld()->SpawnActor(TranscendentalLawsSystemSoftClass.LoadSynchronous()));
-            TranscendentalLawsSystem->Init(Character,Character->GetCharacterCombatComponent());
+            TranscendentalLawsSystem->Init(Character, Character->GetCharacterCombatComponent());
             TranscendentalLawsSystems.Emplace(TranscendentalLawsSystem);
         }
         Character->GetCharacterCombatComponent()->SetTranscendentalLawsSystems(std::move(TranscendentalLawsSystems));
 
         UE_LOG(LogTemp, Warning, TEXT("%s角色已重新生成"), *Character->CharacterName.ToString());
     }
-    
 
 
     //还原道具
@@ -350,6 +349,17 @@ void UARPGGameInstanceSubsystem::PrintLogToScreen(FString Message, float Time, F
     {
         GEngine->AddOnScreenDebugMessage(-1, Time, Color, Message);
     }
+}
+
+FTransform UARPGGameInstanceSubsystem::GetActorNearPositionTransform(AActor* OriginActor,
+                                                                     const FVector LocationOffset,
+                                                                     const FRotator RotationOffset)
+{
+    return FTransform{
+        OriginActor->GetActorRotation() + RotationOffset,
+        OriginActor->GetActorLocation() + OriginActor->GetActorForwardVector() * LocationOffset.X + OriginActor->
+        GetActorRightVector() * LocationOffset.Y + OriginActor->GetActorUpVector() * LocationOffset.Z
+    };
 }
 
 UARPGGameInstanceSubsystem* UARPGGameInstanceSubsystem::Get(UWorld* World)

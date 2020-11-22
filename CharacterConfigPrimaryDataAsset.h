@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "ARPGAction.h"
 #include "CharacterConfigPrimaryDataAsset.generated.h"
 
 class AARPGAction;
@@ -55,7 +56,7 @@ public:
 	TArray<TSubclassOf<AARPGAction>> AbilityClasses;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Combat")
-	TArray<TSubclassOf<AARPGAction>> BuffClasses;
+	TArray<TSubclassOf<AARPGBuff>> BuffClasses;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Combat")
 	TArray<TSubclassOf<ATranscendentalLawsSystem>> TranscendentalLawsSystemClasses;
