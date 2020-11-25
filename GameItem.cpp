@@ -9,11 +9,15 @@
 #include "ARPGAction.h"
 #include "ARPGBasicSettings.h"
 #include "ARPGCharacter.h"
+#include "ARPGGameInstanceSubsystem.h"
 #include "Components/BillboardComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 AGameItem::AGameItem()
 {
+    PrimaryActorTick.bCanEverTick = false;
+
     BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
     RootComponent = BoxCollision;
 
@@ -50,12 +54,21 @@ void AGameItem::BeginPlay()
     }
 }
 
-AGameItem* AGameItem::BeTaken()
+AGameItem* AGameItem::BeTaken(AARPGCharacter* Character)
 {
-    PromptFX->DestroyComponent();
     BoxCollision->DestroyComponent();
+    RootComponent = PromptFX;
     IsInBag = true;
+    OwnerCharacter = Character;
+    FMoveFinishDelegate MoveFinishDelegate;
+    MoveFinishDelegate.BindDynamic(this,&AGameItem::BindToBeTaken);
+    UARPGGameInstanceSubsystem::MoveActorTowardActorWithScale(this,OwnerCharacter,MoveFinishDelegate);
     return this;
+}
+
+void AGameItem::BindToBeTaken()
+{
+    
 }
 
 void AGameItem::NativeUseGameItem(AARPGCharacter* User)

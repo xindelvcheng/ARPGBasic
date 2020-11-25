@@ -38,6 +38,8 @@ void UARPGGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collection
             UGameplayStatics::SaveGameToSlot(ArchiveManager, ArchiveManageSlot, 0);
         }
     }
+
+    FTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateUObject(this, &UARPGGameInstanceSubsystem::Tick));
 }
 
 void UARPGGameInstanceSubsystem::Deinitialize()
@@ -319,7 +321,7 @@ void UARPGGameInstanceSubsystem::OnLevelLoaded()
             if (GameItemArchiveStruct.IsInBag)
             {
                 GameItem->Number = GameItemArchiveStruct.Number;
-                Bag.Emplace(GameItem->BeTaken());
+                Bag.Emplace(GameItem->BeTaken(MainCharacter.Get()));
             }
         }
     }
@@ -370,4 +372,72 @@ UARPGGameInstanceSubsystem* UARPGGameInstanceSubsystem::Get(UWorld* World)
     }
 
     return nullptr;
+}
+
+void UARPGGameInstanceSubsystem::MoveActorTowardsDirection(AActor* Actor, FVector Direction,
+                                                           FMoveFinishDelegate MoveFinishDelegate, float MoveRate,
+                                                           float Duration)
+{
+    if (!Actor)
+    {
+        return;
+    }
+
+    if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
+    {
+        GameInstanceSubsystem->MoveRecords.Emplace(UMoveActorTowardsDirectionRecord::CreateRecord(
+            Actor, Direction, MoveFinishDelegate, MoveRate, Duration));
+    }
+}
+
+void UARPGGameInstanceSubsystem::MoveActorTowardActor(AActor* Actor, AActor* Target,
+                                                      FMoveFinishDelegate MoveFinishDelegate, float MoveRate,
+                                                      float Duration)
+{
+    if (!Actor)
+    {
+        return;
+    }
+
+    if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
+    {
+        GameInstanceSubsystem->MoveRecords.Emplace(
+            UMoveActorTowardActorRecord::CreateRecord(Actor, Target, MoveFinishDelegate, MoveRate, Duration));
+    }
+}
+
+void UARPGGameInstanceSubsystem::MoveActorTowardActorWithScale(AActor* Actor, AActor* Target,
+                                                               FMoveFinishDelegate MoveFinishDelegate, float MoveRate,
+                                                               float ScaleRate, float Duration)
+{
+    if (!Actor)
+    {
+        return;
+    }
+
+    if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
+    {
+        GameInstanceSubsystem->MoveRecords.Emplace(
+            UMoveActorTowardActorWithScaleRecord::CreateRecord(Actor, Target, MoveFinishDelegate, MoveRate, ScaleRate,
+                                                               Duration));
+    }
+}
+
+bool UARPGGameInstanceSubsystem::Tick(float DeltaSeconds)
+{
+    for (auto Record : MoveRecords)
+    {
+        Record->Move(DeltaSeconds);
+        Record->TimeLeft -= DeltaSeconds;
+    }
+    MoveRecords.RemoveAll([](UActorMoveRecord* Record)-> bool
+    {
+        if (Record->TimeLeft <= 0)
+        {
+            Record->MoveFinishDelegate.ExecuteIfBound();
+            return true;
+        }
+        return false;
+    });
+    return true;
 }

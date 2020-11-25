@@ -67,7 +67,12 @@ public:
 	AARPGAction* EffectAction;
 	
 	UFUNCTION(BlueprintCallable,Category="GameItem")
-	AGameItem* BeTaken();
+	AGameItem* BeTaken(AARPGCharacter* Character);
+
+	UFUNCTION()
+	void BindToBeTaken();
+	
+	AARPGCharacter* OwnerCharacter;
 
 	UFUNCTION(BlueprintImplementableEvent,Category="GameItem")
 	void BeUsed(AARPGCharacter* User); 

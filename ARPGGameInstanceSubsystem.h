@@ -11,16 +11,180 @@
 
 #include "ARPGStatusWidget.h"
 #include "GameItem.h"
+#include "GenericPlatform/GenericApplicationMessageHandler.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "ARPGGameInstanceSubsystem.generated.h"
 
 class USaveGame;
+DECLARE_DYNAMIC_DELEGATE(FMoveFinishDelegate);
 
 UENUM()
 enum class EChoice:uint8
 {
     ChoiceA,
     ChoiceB
+};
+
+
+UCLASS()
+class UActorMoveRecord : public UObject
+{
+    GENERATED_BODY()
+
+public:
+    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGBASIC")
+    AActor* Actor;
+
+    float TimeLeft = FLT_MAX;
+
+    FMoveFinishDelegate MoveFinishDelegate;
+
+    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="GameItemVisualEffect",meta=(AllowPrivateAccess))
+    float ModifiedMoveRate = 1;
+
+    float MoveRateModificationCoefficient = 1000;
+
+    virtual void Move(float DeltaSeconds)
+    {
+    };
+
+    virtual bool CheckContinueCondition()
+    {
+        if (TimeLeft > 0)
+        {
+            return true;
+        }
+        return false;
+    };
+
+    static UActorMoveRecord* CreateRecord(AActor* MoveActor, FMoveFinishDelegate& MoveFinishDelegate,
+                                          float MoveRate, float Duration)
+    {
+        UActorMoveRecord* Record = NewObject<UActorMoveRecord>();
+        InitializeRecord(Record, MoveActor, MoveFinishDelegate, MoveRate, Duration);
+        return Record;
+    };
+
+protected:
+    static void InitializeRecord(UActorMoveRecord* Record, AActor* MoveActor, FMoveFinishDelegate MoveFinishDelegate,
+                                 float MoveRate, float Duration)
+    {
+        Record->Actor = MoveActor;
+        Record->ModifiedMoveRate = MoveRate;
+        Record->MoveFinishDelegate = MoveFinishDelegate;
+        Record->TimeLeft = Duration;
+    };
+};
+
+
+UCLASS()
+class UMoveActorTowardsDirectionRecord : public UActorMoveRecord
+{
+    GENERATED_BODY()
+
+public:
+    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGBASIC")
+    FVector Direction;
+
+    static UActorMoveRecord* CreateRecord(AActor* MoveActor, FVector MoveDirection,
+                                          FMoveFinishDelegate MoveFinishDelegate, float MoveRate, float Duration)
+    {
+        UMoveActorTowardsDirectionRecord* Record = NewObject<UMoveActorTowardsDirectionRecord>();
+        InitializeRecord(Record, MoveActor, MoveDirection, MoveFinishDelegate, MoveRate, Duration);
+        return Record;
+    }
+
+    virtual void Move(float DeltaSeconds) override
+    {
+        if (Actor)
+        {
+            Actor->AddActorWorldOffset(
+                Direction.GetSafeNormal() * DeltaSeconds * ModifiedMoveRate * MoveRateModificationCoefficient);
+        }
+    }
+
+protected:
+    static void InitializeRecord(UMoveActorTowardsDirectionRecord* Record, AActor* MoveActor, FVector MoveDirection,
+                                 FMoveFinishDelegate MoveFinishDelegate
+                                 , float MoveRate, float Duration)
+    {
+        Super::InitializeRecord(Record, MoveActor, MoveFinishDelegate, MoveRate, Duration);
+        Record->Direction = MoveDirection;
+    };
+};
+
+UCLASS()
+class UMoveActorTowardActorRecord : public UActorMoveRecord
+{
+    GENERATED_BODY()
+
+public:
+    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGBASIC")
+    AActor* Target;
+
+    static UActorMoveRecord* CreateRecord(AActor* MoveActor, AActor* TargetActor,
+                                          FMoveFinishDelegate& MoveFinishDelegate, float MoveRate, float Duration)
+    {
+        UMoveActorTowardActorRecord* Record = NewObject<UMoveActorTowardActorRecord>();
+        InitializeRecord(Record, MoveActor, TargetActor, MoveFinishDelegate, MoveRate, Duration);
+        return Record;
+    }
+
+    virtual void Move(float DeltaSeconds) override
+    {
+        if (Actor && Target)
+        {
+            const FVector Direction = Target->GetActorLocation() - Actor->GetActorLocation();
+            Actor->AddActorWorldOffset(
+                Direction.GetSafeNormal() * DeltaSeconds * ModifiedMoveRate * MoveRateModificationCoefficient);
+        }
+    }
+
+protected:
+    static void InitializeRecord(UMoveActorTowardActorRecord* Record, AActor* MoveActor, AActor* TargetActor,
+                                 FMoveFinishDelegate MoveFinishDelegate,
+                                 float MoveRate, float Duration)
+    {
+        Super::InitializeRecord(Record, MoveActor, MoveFinishDelegate, MoveRate, Duration);
+        Record->Target = TargetActor;
+    };
+};
+
+UCLASS()
+class UMoveActorTowardActorWithScaleRecord : public UMoveActorTowardActorRecord
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="GameItemVisualEffect",meta=(AllowPrivateAccess))
+    float ModifiedScaleRate = 1;
+    float ScaleRateModificationCoefficient = 0.0005;
+
+    static UActorMoveRecord* CreateRecord(AActor* MoveActor, AActor* TargetActor,
+                                          FMoveFinishDelegate MoveFinishDelegate, float MoveRate,
+                                          float ScaleRate, float Duration)
+    {
+        UMoveActorTowardActorWithScaleRecord* Record = NewObject<UMoveActorTowardActorWithScaleRecord>();
+        InitializeRecord(Record, MoveActor, TargetActor, MoveFinishDelegate, MoveRate, ScaleRate, Duration);
+        return Record;
+    }
+
+    virtual void Move(float DeltaSeconds) override
+    {
+        Super::Move(DeltaSeconds);
+        Actor->SetActorScale3D(
+            Actor->GetActorScale3D() * pow(
+                0.1, (1 / DeltaSeconds) * ModifiedScaleRate * ScaleRateModificationCoefficient));
+    }
+
+protected:
+    static void InitializeRecord(UMoveActorTowardActorWithScaleRecord* Record, AActor* MoveActor, AActor* TargetActor,
+                                 FMoveFinishDelegate MoveFinishDelegate,
+                                 float MoveRate,
+                                 float ScaleRate, float Duration)
+    {
+        Super::InitializeRecord(Record, MoveActor, TargetActor, MoveFinishDelegate, MoveRate, Duration);
+        Record->ModifiedScaleRate = ScaleRate;
+    };
 };
 
 
@@ -145,4 +309,24 @@ public:
                                                     const FRotator RotationOffset);
 
     static UARPGGameInstanceSubsystem* Get(UWorld* World);
+
+    UFUNCTION()
+    bool Tick(float DeltaSeconds);
+
+    UFUNCTION(BlueprintCallable,Category="ARPGBASIC",meta=(DefaultToSelf="Actor"))
+    static void MoveActorTowardsDirection(AActor* Actor, FVector Direction,
+                                          FMoveFinishDelegate MoveFinishDelegate, float MoveRate = 1,
+                                          float Duration = 5);
+
+    UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
+    static void MoveActorTowardActor(AActor* Actor, AActor* Target,
+                                     FMoveFinishDelegate MoveFinishDelegate, float MoveRate = 1, float Duration = 5);
+
+    UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
+    static void MoveActorTowardActorWithScale(AActor* Actor, AActor* Target,
+                                              FMoveFinishDelegate MoveFinishDelegate, float MoveRate = 1,
+                                              float ScaleRate = 1, float Duration = 5);
+
+    UPROPERTY()
+    TArray<UActorMoveRecord*> MoveRecords;
 };
