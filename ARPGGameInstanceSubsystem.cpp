@@ -3,17 +3,23 @@
 
 #include "ARPGGameInstanceSubsystem.h"
 
+#include "Kismet/GameplayStatics.h"
+#include "BlueprintGraph/Public/BlueprintActionDatabaseRegistrar.h"
+#include "KismetCompiler/Public/KismetCompiler.h"
+#include "EdGraphSchema_K2.h"
+#include "K2Node_CallFunction.h"
+#include "Engine/LevelStreamingDynamic.h"
+#include "Kismet/KismetTextLibrary.h"
+
 
 #include "APRGGameSaver.h"
-
-#include "Kismet/GameplayStatics.h"
 #include "GameItemWidget.h"
 #include "ARPGPlayerController.h"
 #include "ARPGGameItemsManagerComponent.h"
-#include "Engine/LevelStreamingDynamic.h"
-#include "Kismet/KismetTextLibrary.h"
+
 #include "TranscendentalCombatComponent.h"
 #include "TranscendentalLawsSystem.h"
+
 
 
 void UARPGGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -385,8 +391,25 @@ void UARPGGameInstanceSubsystem::MoveActorTowardsDirection(AActor* Actor, FVecto
 
     if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
     {
-        GameInstanceSubsystem->MoveRecords.Emplace(UMoveActorTowardsDirectionRecord::CreateRecord(
-            Actor, Direction, MoveFinishDelegate, MoveRate, Duration));
+        auto Record = UMoveActorTowardsDirectionRecord::CreateRecord(Actor, Direction, MoveFinishDelegate, MoveRate, Duration);
+        Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem,&UARPGGameInstanceSubsystem::BindToMoveFinish);
+        GameInstanceSubsystem->MoveRecords.Emplace(Record);
+    }
+}
+
+void UARPGGameInstanceSubsystem::MoveActorTowardsDirectionFinishOnCollision(AActor* Actor, FVector Direction,TArray<AActor*> IgnoreActors,
+                                                                            FCollisionDelegate OnCollision, float MoveRate, float Duration,bool ShouldStopAfterFirstCollision)
+{
+    if (!Actor)
+    {
+        return;
+    }
+    if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
+    {
+        auto Record = UMoveActorTowardDirectionFinishOnCollision::CreateRecord(
+            Actor, Direction,IgnoreActors, OnCollision,MoveRate, Duration,ShouldStopAfterFirstCollision);
+        Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem,&UARPGGameInstanceSubsystem::BindToMoveFinish);
+        GameInstanceSubsystem->MoveRecords.Emplace(Record);
     }
 }
 
@@ -401,8 +424,9 @@ void UARPGGameInstanceSubsystem::MoveActorTowardActor(AActor* Actor, AActor* Tar
 
     if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
     {
-        GameInstanceSubsystem->MoveRecords.Emplace(
-            UMoveActorTowardActorRecord::CreateRecord(Actor, Target, MoveFinishDelegate, MoveRate, Duration));
+        auto Record = UMoveActorTowardActorRecord::CreateRecord(Actor, Target, MoveFinishDelegate, MoveRate, Duration);
+        Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem,&UARPGGameInstanceSubsystem::BindToMoveFinish);
+        GameInstanceSubsystem->MoveRecords.Emplace(Record);
     }
 }
 
@@ -417,27 +441,37 @@ void UARPGGameInstanceSubsystem::MoveActorTowardActorWithScale(AActor* Actor, AA
 
     if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
     {
-        GameInstanceSubsystem->MoveRecords.Emplace(
-            UMoveActorTowardActorWithScaleRecord::CreateRecord(Actor, Target, MoveFinishDelegate, MoveRate, ScaleRate,
-                                                               Duration));
+        auto Record = UMoveActorTowardActorWithScaleRecord::CreateRecord(Actor, Target, MoveFinishDelegate, MoveRate, ScaleRate,
+                                                               Duration);
+        Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem,&UARPGGameInstanceSubsystem::BindToMoveFinish);
+        GameInstanceSubsystem->MoveRecords.Emplace(Record);
+    }
+}
+
+void UARPGGameInstanceSubsystem::MoveActorComplex(AActor* Actor, FTransformFunctionOfTime TransformFunctionOfTime, TArray<AActor*> IgnoreActors,
+                                                  FCollisionDelegate OnCollision, float Duration, bool ShouldStopAfterFirstCollision)
+{
+    if (!Actor)
+    {
+        return;
+    }
+
+    if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
+    {
+        auto Record = UMoveActorComplex::CreateRecord(Actor, TransformFunctionOfTime,IgnoreActors, OnCollision, Duration,ShouldStopAfterFirstCollision);
+        Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem,&UARPGGameInstanceSubsystem::BindToMoveFinish);
+        GameInstanceSubsystem->MoveRecords.Emplace(Record);
     }
 }
 
 bool UARPGGameInstanceSubsystem::Tick(float DeltaSeconds)
 {
-    for (auto Record : MoveRecords)
+    for (int i = MoveRecords.Num()-1; i >=0; --i)
     {
-        Record->Move(DeltaSeconds);
-        Record->TimeLeft -= DeltaSeconds;
+        MoveRecords[i]->Move(DeltaSeconds);
     }
-    MoveRecords.RemoveAll([](UActorMoveRecord* Record)-> bool
-    {
-        if (Record->TimeLeft <= 0)
-        {
-            Record->MoveFinishDelegate.ExecuteIfBound();
-            return true;
-        }
-        return false;
-    });
+    
     return true;
 }
+
+

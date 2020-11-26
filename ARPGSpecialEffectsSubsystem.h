@@ -97,15 +97,14 @@ public:
     UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffect")
     void SetOwnerCharacter(AARPGCharacter* NewOwnerCharacter) { OwnerCharacter = NewOwnerCharacter; }
 
+    UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffect")
     AARPGCharacter* GetOwnerCharacter() const { return OwnerCharacter; }
 
-    static void SpawnARPGSpecialEffectCreature(UWorld* World, TSubclassOf<AARPGSpecialEffectCreature> CreatureClass,
-                                               FTransform const& Transform,
-                                               AARPGCharacter* OwnerCharacter, const FActorSpawnParameters& SpawnParameters);
+   
 
-    UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffectCreature",meta=(WorldContext=WorldContextObject))
-    static void SpawnARPGSpecialEffectCreature(const UObject* WorldContextObject, TSubclassOf<AARPGSpecialEffectCreature> CreatureClass,
-                                               FTransform const& Transform, AARPGCharacter* OwnerCharacter);
+    UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffectCreature")
+    static void SpawnARPGSpecialEffectCreature(TSubclassOf<AARPGSpecialEffectCreature> CreatureClass,
+                                               FTransform Transform, AARPGCharacter* OwnerCharacter);
 };
 
 UCLASS(Blueprintable)
@@ -120,8 +119,9 @@ class AARPGSimpleMovableCauseDamageSpecialEffectCreature : public AARPGSpecialEf
     UBoxComponent* DamageDetectionCollisionBox;
 public:
     AARPGSimpleMovableCauseDamageSpecialEffectCreature();
-    
-    virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 
-    virtual void Tick(float DeltaSeconds) override;
+    UFUNCTION()
+    void BindToActorBeginOverlap(AActor* OtherActor) ;
+
+    virtual void BeginPlay() override;
 };

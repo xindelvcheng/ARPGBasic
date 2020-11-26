@@ -114,59 +114,57 @@ void UARPGSpecialEffectsSubsystem::PlaySpecialEffectAtLocation(const UObject* Wo
     }
 }
 
-void AARPGSpecialEffectCreature::SpawnARPGSpecialEffectCreature(UWorld* World,
-                                                                TSubclassOf<AARPGSpecialEffectCreature> CreatureClass,
-                                                                FTransform const& Transform,
-                                                                AARPGCharacter* OwnerCharacter,
-                                                                const FActorSpawnParameters& SpawnParameters)
-{
-    auto SpecialEffectCreature = Cast<AARPGSpecialEffectCreature>(
-        World->SpawnActor(CreatureClass, &Transform, SpawnParameters));
-    SpecialEffectCreature->SetOwnerCharacter(OwnerCharacter);
-}
 
-void AARPGSpecialEffectCreature::SpawnARPGSpecialEffectCreature(const UObject* WorldContextObject,
-                                                                TSubclassOf<AARPGSpecialEffectCreature> CreatureClass,
-                                                                FTransform const& Transform,
+void AARPGSpecialEffectCreature::SpawnARPGSpecialEffectCreature(TSubclassOf<AARPGSpecialEffectCreature> CreatureClass,
+                                                                FTransform Transform,
                                                                 AARPGCharacter* OwnerCharacter)
 {
     FActorSpawnParameters ActorSpawnParameters;
+    ActorSpawnParameters.Instigator = OwnerCharacter;
     ActorSpawnParameters.Owner = OwnerCharacter;
-    SpawnARPGSpecialEffectCreature(WorldContextObject->GetWorld(), CreatureClass, Transform, OwnerCharacter,
-                                   ActorSpawnParameters);
+    ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+    auto SpecialEffectCreature = OwnerCharacter->GetWorld()->SpawnActor<AARPGSpecialEffectCreature>(CreatureClass, Transform, ActorSpawnParameters);
+    if (SpecialEffectCreature)
+    {
+        SpecialEffectCreature->SetOwnerCharacter(OwnerCharacter);
+    }
 }
 
 AARPGSimpleMovableCauseDamageSpecialEffectCreature::AARPGSimpleMovableCauseDamageSpecialEffectCreature()
 {
     DamageDetectionCollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("DamageDetectionCollisionBox"));
-    DamageDetectionCollisionBox->SetupAttachment(RootComponent);
+    RootComponent = DamageDetectionCollisionBox;
     PrimaryActorTick.bCanEverTick = true;
 }
 
-void AARPGSimpleMovableCauseDamageSpecialEffectCreature::NotifyActorBeginOverlap(AActor* OtherActor)
+void AARPGSimpleMovableCauseDamageSpecialEffectCreature::BeginPlay()
 {
-    Super::NotifyActorBeginOverlap(OtherActor);
-
-    if (Cast<AARPGCharacter>(OtherActor) == OwnerCharacter
-        || Cast<AGameItem>(OtherActor)
-        || (OtherActor->GetClass() == this->GetClass() && OtherActor->GetOwner() == this->GetOwner()))
+    Super::BeginPlay();
+    FCollisionDelegate CollisionDelegate;
+    CollisionDelegate.BindDynamic(this,&AARPGSimpleMovableCauseDamageSpecialEffectCreature::BindToActorBeginOverlap);
+    if (GetInstigator())
     {
-        return;
+        UARPGGameInstanceSubsystem::MoveActorTowardsDirectionFinishOnCollision(this,GetInstigator()->GetActorForwardVector(),{},CollisionDelegate);
     }
-
-    GetWorld()->DestroyActor(this);
-    UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), DestroyVisualEffect, GetActorLocation());
-    UGameplayStatics::SpawnSoundAtLocation(GetWorld(), DestroySoundEffect, GetActorLocation());
-
-    verify(OwnerCharacter);
-    UGameplayStatics::ApplyDamage(
-        OtherActor, OwnerCharacter->GetCharacterStatusComponent()->GetAttack() * DamageWeight + DamageBias,
-        OwnerCharacter->GetController(), this, DamageType); //DestroyActor销毁Actor将会在下一帧，所以此处还可以使用
+    SetLifeSpan(1);
 }
 
-void AARPGSimpleMovableCauseDamageSpecialEffectCreature::Tick(float DeltaSeconds)
+void AARPGSimpleMovableCauseDamageSpecialEffectCreature::BindToActorBeginOverlap(AActor* OtherActor)
 {
-    Super::Tick(DeltaSeconds);
-
-    AddActorLocalOffset(FVector{1, 0, 0} * MoveSpeed);
+    if (OwnerCharacter)
+    {
+        UGameplayStatics::ApplyDamage(
+        OtherActor, OwnerCharacter->GetCharacterStatusComponent()->GetAttack() * DamageWeight + DamageBias,
+        OwnerCharacter->GetController(), this, DamageType);
+    }else
+    {
+        UGameplayStatics::ApplyDamage(
+        OtherActor, 1,
+        nullptr, this, DamageType);
+    }
+    
+    const FVector ActorLocation = GetActorLocation();
+    GetWorld()->DestroyActor(this);
+    UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), DestroyVisualEffect, ActorLocation);
+    UGameplayStatics::SpawnSoundAtLocation(GetWorld(), DestroySoundEffect, ActorLocation);
 }

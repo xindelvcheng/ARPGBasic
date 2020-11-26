@@ -2,6 +2,10 @@
 
 #pragma once
 
+#include "GameFramework/Actor.h"
+#include "BlueprintNodeSpawner.h"
+#include "K2Node.h"
+
 #include "APRGGameSaver.h"
 #include "CharacterStatusComponent.h"
 #include "CoreMinimal.h"
@@ -11,12 +15,23 @@
 
 #include "ARPGStatusWidget.h"
 #include "GameItem.h"
-#include "GenericPlatform/GenericApplicationMessageHandler.h"
+#include "K2Node_SpawnActor.h"
+#include "Chaos/AABB.h"
+#include "Chaos/AABB.h"
+
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "ARPGGameInstanceSubsystem.generated.h"
 
 class USaveGame;
+class UActorMoveRecord;
+
 DECLARE_DYNAMIC_DELEGATE(FMoveFinishDelegate);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMoveFinishEvent, UActorMoveRecord*, Record);
+
+DECLARE_DYNAMIC_DELEGATE_OneParam(FCollisionDelegate, AActor*, OtherActor);
+
+DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(FTransform, FTransformFunctionOfTime, float, Time);
 
 UENUM()
 enum class EChoice:uint8
@@ -33,11 +48,14 @@ class UActorMoveRecord : public UObject
 
 public:
     UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGBASIC")
-    AActor* Actor;
+    TWeakObjectPtr<AActor> Actor;
 
     float TimeLeft = FLT_MAX;
+    float TimePassed = 0;
 
+    FTransformFunctionOfTime TransformFunction;
     FMoveFinishDelegate MoveFinishDelegate;
+    FMoveFinishEvent MoveFinishEvent;
 
     UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="GameItemVisualEffect",meta=(AllowPrivateAccess))
     float ModifiedMoveRate = 1;
@@ -46,6 +64,19 @@ public:
 
     virtual void Move(float DeltaSeconds)
     {
+        if (CheckContinueCondition())
+        {
+            this->TimeLeft -= DeltaSeconds;
+            this->TimePassed += DeltaSeconds;
+            if (TransformFunction.IsBound())
+            {
+                Actor->SetActorTransform(TransformFunction.Execute(TimePassed));
+            }
+        }
+        else
+        {
+            MoveFinishEvent.Broadcast(this);
+        }
     };
 
     virtual bool CheckContinueCondition()
@@ -57,11 +88,21 @@ public:
         return false;
     };
 
-    static UActorMoveRecord* CreateRecord(AActor* MoveActor, FMoveFinishDelegate& MoveFinishDelegate,
+    static UActorMoveRecord* CreateRecord(AActor* MoveActor, FMoveFinishDelegate MoveFinishDelegate,
                                           float MoveRate, float Duration)
     {
         UActorMoveRecord* Record = NewObject<UActorMoveRecord>();
         InitializeRecord(Record, MoveActor, MoveFinishDelegate, MoveRate, Duration);
+        return Record;
+    };
+
+    static UActorMoveRecord* CreateRecord(AActor* MoveActor, FTransformFunctionOfTime TransformFunctionOfTime,
+                                          FMoveFinishDelegate MoveFinishDelegate,
+                                          float Duration)
+    {
+        UActorMoveRecord* Record = NewObject<UActorMoveRecord>();
+        InitializeRecord(Record, MoveActor, MoveFinishDelegate, 0, Duration);
+        Record->TransformFunction = TransformFunctionOfTime;
         return Record;
     };
 
@@ -71,7 +112,7 @@ protected:
     {
         Record->Actor = MoveActor;
         Record->ModifiedMoveRate = MoveRate;
-        Record->MoveFinishDelegate = MoveFinishDelegate;
+        Record->MoveFinishEvent.Add(MoveFinishDelegate);
         Record->TimeLeft = Duration;
     };
 };
@@ -96,7 +137,8 @@ public:
 
     virtual void Move(float DeltaSeconds) override
     {
-        if (Actor)
+        Super::Move(DeltaSeconds);
+        if (Actor.IsValid())
         {
             Actor->AddActorWorldOffset(
                 Direction.GetSafeNormal() * DeltaSeconds * ModifiedMoveRate * MoveRateModificationCoefficient);
@@ -132,7 +174,8 @@ public:
 
     virtual void Move(float DeltaSeconds) override
     {
-        if (Actor && Target)
+        Super::Move(DeltaSeconds);
+        if (Actor.IsValid() && Target)
         {
             const FVector Direction = Target->GetActorLocation() - Actor->GetActorLocation();
             Actor->AddActorWorldOffset(
@@ -187,6 +230,104 @@ protected:
     };
 };
 
+
+UCLASS()
+class UMoveActorTowardDirectionFinishOnCollision : public UMoveActorTowardsDirectionRecord
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    TArray<AActor*> IgnoreActors;
+
+    bool bStopAfterCollision;
+public:
+
+
+    FCollisionDelegate CollisionsDelegate;
+
+
+    static UActorMoveRecord* CreateRecord(AActor* MoveActor, FVector MoveDirection, TArray<AActor*> IgnoreActors,
+                                          FCollisionDelegate OnCollision, float MoveRate, float Duration,
+                                          bool ShouldDestroyAfterFirstCollision)
+    {
+        auto Record = NewObject<UMoveActorTowardDirectionFinishOnCollision>();
+        InitializeRecord(Record, MoveActor, MoveDirection, IgnoreActors, OnCollision, MoveRate, Duration,
+                         ShouldDestroyAfterFirstCollision);
+        return Record;
+    }
+
+    static void InitializeRecord(UMoveActorTowardDirectionFinishOnCollision* Record, AActor* MoveActor,
+                                 FVector MoveDirection, TArray<AActor*> IgnoreActors,
+                                 FCollisionDelegate OnCollision, float MoveRate, float Duration,
+                                 bool ShouldDestroyAfterFirstCollision)
+    {
+        Super::InitializeRecord(Record, MoveActor, MoveDirection, FMoveFinishDelegate{}, MoveRate, Duration);
+        Record->IgnoreActors = IgnoreActors;
+        Record->CollisionsDelegate = OnCollision;
+        Record->bStopAfterCollision = ShouldDestroyAfterFirstCollision;
+        MoveActor->OnActorBeginOverlap.AddDynamic(
+            Record, &UMoveActorTowardDirectionFinishOnCollision::BindToActorBeginOverlap);
+    }
+
+    UFUNCTION()
+    void BindToActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
+    {
+        if (OverlappedActor->GetOwner() == OtherActor->GetOwner()
+            || OverlappedActor->GetInstigator() == OtherActor->GetInstigator()
+            || Cast<AGameItem>(OtherActor)
+            || OtherActor->GetClass() == OverlappedActor->GetClass()
+            || IgnoreActors.Contains(OtherActor))
+        {
+            return;
+        }
+        CollisionsDelegate.ExecuteIfBound(OtherActor);
+
+        if (bStopAfterCollision)
+        {
+            MoveFinishEvent.Broadcast(this);
+        }
+    }
+};
+
+UCLASS()
+class UMoveActorComplex : public UMoveActorTowardDirectionFinishOnCollision
+{
+    GENERATED_BODY()
+public:
+    virtual void Move(float DeltaSeconds) override
+    {
+        Super::Move(DeltaSeconds);
+    };
+    static UActorMoveRecord* CreateRecord(AActor* MoveActor, FTransformFunctionOfTime TransformFunctionOfTime, TArray<AActor*> IgnoreActors,
+                                          FCollisionDelegate OnCollision, float Duration,
+                                          bool ShouldDestroyAfterFirstCollision)
+    {
+        auto Record = NewObject<UMoveActorComplex>();
+        Super::InitializeRecord(Record, MoveActor, {0,0,0}, IgnoreActors,
+                                OnCollision, 0, Duration,
+                                ShouldDestroyAfterFirstCollision);
+        Record->TransformFunction = TransformFunctionOfTime;
+        return Record;
+    }
+};
+
+UCLASS()
+class ATestActor : public AActor
+{
+    GENERATED_BODY()
+    UFUNCTION()
+    void BindToActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
+    {
+    }
+
+public:
+    virtual void BeginPlay() override
+    {
+        auto Record = NewObject<UMoveActorTowardDirectionFinishOnCollision>();
+        this->OnActorBeginOverlap.AddDynamic(
+            Record, &UMoveActorTowardDirectionFinishOnCollision::BindToActorBeginOverlap);
+    }
+};
 
 /**
  * 
@@ -318,6 +459,13 @@ public:
                                           FMoveFinishDelegate MoveFinishDelegate, float MoveRate = 1,
                                           float Duration = 5);
 
+    UFUNCTION(BlueprintCallable,Category="ARPGBASIC",meta=(DefaultToSelf="Actor"))
+    static void MoveActorTowardsDirectionFinishOnCollision(AActor* Actor, FVector Direction,
+                                                           TArray<AActor*> IgnoreActors,
+                                                           FCollisionDelegate OnCollision, float MoveRate = 1,
+                                                           float Duration = 5,
+                                                           bool ShouldStopAfterFirstCollision = true);
+
     UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
     static void MoveActorTowardActor(AActor* Actor, AActor* Target,
                                      FMoveFinishDelegate MoveFinishDelegate, float MoveRate = 1, float Duration = 5);
@@ -326,7 +474,25 @@ public:
     static void MoveActorTowardActorWithScale(AActor* Actor, AActor* Target,
                                               FMoveFinishDelegate MoveFinishDelegate, float MoveRate = 1,
                                               float ScaleRate = 1, float Duration = 5);
+    UFUNCTION(BlueprintCallable,Category="ARPGBASIC",meta=(DefaultToSelf="Actor"))
+    static void MoveActorComplex(AActor* Actor, FTransformFunctionOfTime TransformFunctionOfTime, TArray<AActor*> IgnoreActors,
+                                 FCollisionDelegate OnCollision, float Duration=5, bool ShouldStopAfterFirstCollision=true);
 
     UPROPERTY()
     TArray<UActorMoveRecord*> MoveRecords;
+
+    UFUNCTION()
+    void BindToMoveFinish(UActorMoveRecord* Record) { MoveRecords.Remove(Record); }
+
+
+    template <typename T>
+    static T* SpawnActor(FTransform Transform, AARPGCharacter* OwnerCharacter)
+    {
+        FActorSpawnParameters ActorSpawnParameters;
+        ActorSpawnParameters.Instigator = OwnerCharacter;
+        ActorSpawnParameters.Owner = OwnerCharacter;
+        ActorSpawnParameters.SpawnCollisionHandlingOverride =
+            ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+        return OwnerCharacter->GetWorld()->SpawnActor<T>(Transform, ActorSpawnParameters);
+    }
 };
