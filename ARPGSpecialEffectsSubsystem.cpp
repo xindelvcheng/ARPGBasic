@@ -144,7 +144,10 @@ void AARPGSimpleMovableCauseDamageSpecialEffectCreature::BeginPlay()
     CollisionDelegate.BindDynamic(this,&AARPGSimpleMovableCauseDamageSpecialEffectCreature::BindToActorBeginOverlap);
     if (GetInstigator())
     {
-        UARPGGameInstanceSubsystem::MoveActorTowardsDirectionFinishOnCollision(this,GetInstigator()->GetActorForwardVector(),{},CollisionDelegate);
+        UARPGGameInstanceSubsystem::MoveActorTowardsDirectionFinishOnCollision(this,GetInstigator()->GetActorForwardVector(),{},CollisionDelegate,MoveRate);
+    }else
+    {
+        UARPGGameInstanceSubsystem::PrintLogToScreen(FString::Printf(TEXT("实例化类%s时未使用SpawnCreature，且没有指定拥有者，将不会移动。"),*GetFullName()));
     }
     SetLifeSpan(1);
 }

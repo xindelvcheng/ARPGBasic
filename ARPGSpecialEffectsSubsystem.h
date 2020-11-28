@@ -113,7 +113,7 @@ class AARPGSimpleMovableCauseDamageSpecialEffectCreature : public AARPGSpecialEf
     GENERATED_BODY()
     
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect",meta=(AllowPrivateAccess))
-    float MoveSpeed = 10;
+    float MoveRate = 10;
 
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect",meta=(AllowPrivateAccess))
     UBoxComponent* DamageDetectionCollisionBox;

@@ -56,11 +56,9 @@ class AARPGMontageAction : public AARPGAction
 {
     GENERATED_BODY()
 
+protected:
     UPROPERTY()
     UAnimInstance* AttachedCharacterAnimInstance;
-
-
-protected:
 
     virtual void OnActionActivate() override;
 

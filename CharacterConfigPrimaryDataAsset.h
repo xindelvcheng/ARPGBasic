@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "ARPGAction.h"
+#include "ARPGCharacter.h"
 #include "CharacterConfigPrimaryDataAsset.generated.h"
 
 class AARPGAction;
@@ -61,9 +62,12 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Combat")
 	TArray<TSubclassOf<ATranscendentalLawsSystem>> TranscendentalLawsSystemClasses;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Animation")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Art Resource")
 	UAnimSequence* DeathAnimationAsset;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Animation")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Art Resource")
 	TArray<UAnimMontage*> HitReactAnimMontages;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Art Resource")
+	TMap<EGroundTypeEnum, USoundBase*> FootstepSoundEffects;
 };

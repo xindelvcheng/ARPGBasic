@@ -62,13 +62,13 @@ AGameItem* AGameItem::BeTaken(AARPGCharacter* Character)
     OwnerCharacter = Character;
     FMoveFinishDelegate MoveFinishDelegate;
     MoveFinishDelegate.BindDynamic(this,&AGameItem::BindToBeTaken);
-    UARPGGameInstanceSubsystem::MoveActorTowardActorWithScale(this,OwnerCharacter,MoveFinishDelegate, 20);
+    UARPGGameInstanceSubsystem::MoveActorTowardActorWithScale(this,OwnerCharacter,MoveFinishDelegate);
     return this;
 }
 
 void AGameItem::BindToBeTaken()
 {
-    
+    PromptFX->DestroyComponent();
 }
 
 void AGameItem::NativeUseGameItem(AARPGCharacter* User)

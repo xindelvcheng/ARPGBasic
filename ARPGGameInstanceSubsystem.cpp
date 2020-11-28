@@ -355,6 +355,21 @@ void UARPGGameInstanceSubsystem::PrintLogToScreen(FString Message, float Time, F
     }
 }
 
+void UARPGGameInstanceSubsystem::PrintLogToScreen(FText Message, float Time, FColor Color)
+{
+    PrintLogToScreen(Message.ToString(),Time,Color);
+}
+
+void UARPGGameInstanceSubsystem::PrintLogToScreen(float Message, float Time, FColor Color)
+{
+    PrintLogToScreen(UKismetStringLibrary::Conv_FloatToString(Message),Time,Color);
+}
+
+void UARPGGameInstanceSubsystem::PrintLogToScreen(UObject* Message, float Time, FColor Color)
+{
+    PrintLogToScreen(Message->GetFullName(),Time,Color);
+}
+
 FTransform UARPGGameInstanceSubsystem::GetActorNearPositionTransform(AActor* OriginActor,
                                                                      const FVector LocationOffset,
                                                                      const FRotator RotationOffset)
@@ -404,6 +419,23 @@ void UARPGGameInstanceSubsystem::MoveActorTowardsDirectionFinishOnCollision(AAct
     {
         auto Record = UMoveActorTowardDirectionFinishOnCollision::CreateRecord(
             Actor, Direction,IgnoreActors, OnCollision,MoveRate, Duration,ShouldStopAfterFirstCollision);
+        Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem,&UARPGGameInstanceSubsystem::BindToMoveFinish);
+        GameInstanceSubsystem->MoveRecords.Emplace(Record);
+    }
+}
+
+void UARPGGameInstanceSubsystem::MoveActorTowardDirectionFinishOnCollisionWithScale(AActor* Actor, FVector Direction,
+    TArray<AActor*> IgnoreActors, FCollisionDelegate OnCollision, float MoveRate,float ScaleRate, float Duration,
+    bool ShouldStopAfterFirstCollision)
+{
+    if (!Actor)
+    {
+        return;
+    }
+    if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
+    {
+        auto Record = UMoveActorTowardDirectionFinishOnCollisionWithScale::CreateRecord(
+            Actor, Direction,IgnoreActors, OnCollision,MoveRate,ScaleRate, Duration,ShouldStopAfterFirstCollision);
         Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem,&UARPGGameInstanceSubsystem::BindToMoveFinish);
         GameInstanceSubsystem->MoveRecords.Emplace(Record);
     }
