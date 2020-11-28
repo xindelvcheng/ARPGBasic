@@ -4,12 +4,8 @@
 #include "ARPGGameInstanceSubsystem.h"
 
 #include "Kismet/GameplayStatics.h"
-#include "BlueprintGraph/Public/BlueprintActionDatabaseRegistrar.h"
-#include "KismetCompiler/Public/KismetCompiler.h"
-#include "EdGraphSchema_K2.h"
-#include "K2Node_CallFunction.h"
-#include "Engine/LevelStreamingDynamic.h"
 #include "Kismet/KismetTextLibrary.h"
+#include "Engine/Classes/Engine/LevelStreaming.h"
 
 
 #include "APRGGameSaver.h"
@@ -415,7 +411,7 @@ void UARPGGameInstanceSubsystem::MoveActorTowardsDirectionFinishOnCollision(AAct
 
 void UARPGGameInstanceSubsystem::MoveActorTowardActor(AActor* Actor, AActor* Target,
                                                       FMoveFinishDelegate MoveFinishDelegate, float MoveRate,
-                                                      float Duration)
+                                                      float Duration,float AcceptableRadius)
 {
     if (!Actor)
     {
@@ -424,7 +420,7 @@ void UARPGGameInstanceSubsystem::MoveActorTowardActor(AActor* Actor, AActor* Tar
 
     if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
     {
-        auto Record = UMoveActorTowardActorRecord::CreateRecord(Actor, Target, MoveFinishDelegate, MoveRate, Duration);
+        auto Record = UMoveActorTowardActorRecord::CreateRecord(Actor, Target, MoveFinishDelegate, MoveRate, Duration,AcceptableRadius);
         Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem,&UARPGGameInstanceSubsystem::BindToMoveFinish);
         GameInstanceSubsystem->MoveRecords.Emplace(Record);
     }
@@ -432,7 +428,7 @@ void UARPGGameInstanceSubsystem::MoveActorTowardActor(AActor* Actor, AActor* Tar
 
 void UARPGGameInstanceSubsystem::MoveActorTowardActorWithScale(AActor* Actor, AActor* Target,
                                                                FMoveFinishDelegate MoveFinishDelegate, float MoveRate,
-                                                               float ScaleRate, float Duration)
+                                                               float ScaleRate, float Duration, float AcceptableRadius)
 {
     if (!Actor)
     {
@@ -442,7 +438,7 @@ void UARPGGameInstanceSubsystem::MoveActorTowardActorWithScale(AActor* Actor, AA
     if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
     {
         auto Record = UMoveActorTowardActorWithScaleRecord::CreateRecord(Actor, Target, MoveFinishDelegate, MoveRate, ScaleRate,
-                                                               Duration);
+                                                                         Duration,AcceptableRadius);
         Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem,&UARPGGameInstanceSubsystem::BindToMoveFinish);
         GameInstanceSubsystem->MoveRecords.Emplace(Record);
     }

@@ -62,7 +62,7 @@ AGameItem* AGameItem::BeTaken(AARPGCharacter* Character)
     OwnerCharacter = Character;
     FMoveFinishDelegate MoveFinishDelegate;
     MoveFinishDelegate.BindDynamic(this,&AGameItem::BindToBeTaken);
-    UARPGGameInstanceSubsystem::MoveActorTowardActorWithScale(this,OwnerCharacter,MoveFinishDelegate);
+    UARPGGameInstanceSubsystem::MoveActorTowardActorWithScale(this,OwnerCharacter,MoveFinishDelegate, 20);
     return this;
 }
 

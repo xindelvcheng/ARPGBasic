@@ -3,8 +3,6 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
-#include "BlueprintNodeSpawner.h"
-#include "K2Node.h"
 
 #include "APRGGameSaver.h"
 #include "CharacterStatusComponent.h"
@@ -15,9 +13,6 @@
 
 #include "ARPGStatusWidget.h"
 #include "GameItem.h"
-#include "K2Node_SpawnActor.h"
-#include "Chaos/AABB.h"
-#include "Chaos/AABB.h"
 
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "ARPGGameInstanceSubsystem.generated.h"
@@ -81,11 +76,7 @@ public:
 
     virtual bool CheckContinueCondition()
     {
-        if (TimeLeft > 0)
-        {
-            return true;
-        }
-        return false;
+        return TimeLeft > 0;
     };
 
     static UActorMoveRecord* CreateRecord(AActor* MoveActor, FMoveFinishDelegate MoveFinishDelegate,
@@ -164,11 +155,15 @@ public:
     UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGBASIC")
     AActor* Target;
 
+    float AcceptableRadius = 20;
+
+    float CurrentDistance = FLT_MAX;
+
     static UActorMoveRecord* CreateRecord(AActor* MoveActor, AActor* TargetActor,
-                                          FMoveFinishDelegate& MoveFinishDelegate, float MoveRate, float Duration)
+                                          FMoveFinishDelegate& MoveFinishDelegate, float MoveRate, float Duration, float AcceptableFinishRadius)
     {
         UMoveActorTowardActorRecord* Record = NewObject<UMoveActorTowardActorRecord>();
-        InitializeRecord(Record, MoveActor, TargetActor, MoveFinishDelegate, MoveRate, Duration);
+        InitializeRecord(Record, MoveActor, TargetActor, MoveFinishDelegate, MoveRate, Duration,AcceptableFinishRadius);
         return Record;
     }
 
@@ -178,17 +173,24 @@ public:
         if (Actor.IsValid() && Target)
         {
             const FVector Direction = Target->GetActorLocation() - Actor->GetActorLocation();
+            CurrentDistance = Direction.Size();
             Actor->AddActorWorldOffset(
                 Direction.GetSafeNormal() * DeltaSeconds * ModifiedMoveRate * MoveRateModificationCoefficient);
         }
     }
 
+    virtual bool CheckContinueCondition() override
+    {
+        return TimeLeft>0 && CurrentDistance > AcceptableRadius;
+    }
+
 protected:
     static void InitializeRecord(UMoveActorTowardActorRecord* Record, AActor* MoveActor, AActor* TargetActor,
                                  FMoveFinishDelegate MoveFinishDelegate,
-                                 float MoveRate, float Duration)
+                                 float MoveRate, float Duration, float AcceptableFinishRadius)
     {
         Super::InitializeRecord(Record, MoveActor, MoveFinishDelegate, MoveRate, Duration);
+        Record->AcceptableRadius = AcceptableFinishRadius;
         Record->Target = TargetActor;
     };
 };
@@ -204,10 +206,10 @@ public:
 
     static UActorMoveRecord* CreateRecord(AActor* MoveActor, AActor* TargetActor,
                                           FMoveFinishDelegate MoveFinishDelegate, float MoveRate,
-                                          float ScaleRate, float Duration)
+                                          float ScaleRate, float Duration, float AcceptableFinishRadius)
     {
         UMoveActorTowardActorWithScaleRecord* Record = NewObject<UMoveActorTowardActorWithScaleRecord>();
-        InitializeRecord(Record, MoveActor, TargetActor, MoveFinishDelegate, MoveRate, ScaleRate, Duration);
+        InitializeRecord(Record, MoveActor, TargetActor, MoveFinishDelegate, MoveRate, ScaleRate, Duration,AcceptableFinishRadius);
         return Record;
     }
 
@@ -223,9 +225,9 @@ protected:
     static void InitializeRecord(UMoveActorTowardActorWithScaleRecord* Record, AActor* MoveActor, AActor* TargetActor,
                                  FMoveFinishDelegate MoveFinishDelegate,
                                  float MoveRate,
-                                 float ScaleRate, float Duration)
+                                 float ScaleRate, float Duration, float AcceptableFinishRadius)
     {
-        Super::InitializeRecord(Record, MoveActor, TargetActor, MoveFinishDelegate, MoveRate, Duration);
+        Super::InitializeRecord(Record, MoveActor, TargetActor, MoveFinishDelegate, MoveRate, Duration,AcceptableFinishRadius);
         Record->ModifiedScaleRate = ScaleRate;
     };
 };
@@ -468,12 +470,12 @@ public:
 
     UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
     static void MoveActorTowardActor(AActor* Actor, AActor* Target,
-                                     FMoveFinishDelegate MoveFinishDelegate, float MoveRate = 1, float Duration = 5);
+                                     FMoveFinishDelegate MoveFinishDelegate, float MoveRate = 1, float Duration = 5,float AcceptableRadius=20);
 
     UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
     static void MoveActorTowardActorWithScale(AActor* Actor, AActor* Target,
                                               FMoveFinishDelegate MoveFinishDelegate, float MoveRate = 1,
-                                              float ScaleRate = 1, float Duration = 5);
+                                              float ScaleRate = 1, float Duration = 5, float AcceptableRadius=20);
     UFUNCTION(BlueprintCallable,Category="ARPGBASIC",meta=(DefaultToSelf="Actor"))
     static void MoveActorComplex(AActor* Actor, FTransformFunctionOfTime TransformFunctionOfTime, TArray<AActor*> IgnoreActors,
                                  FCollisionDelegate OnCollision, float Duration=5, bool ShouldStopAfterFirstCollision=true);

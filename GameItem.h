@@ -4,9 +4,6 @@
 
 #include "CoreMinimal.h"
 
-
-
-
 #include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameItem.generated.h"
@@ -15,6 +12,7 @@ class AARPGCharacter;
 class UGameItemWidget;
 class ACharacter;
 class AARPGAction;
+class UBillboardComponent;
 
 UCLASS()
 class  AGameItem : public AActor
