@@ -23,10 +23,11 @@ AARPGCharacter::AARPGCharacter()
 
 	CharacterStatusComponent = CreateDefaultSubobject<UCharacterStatusComponent>("CharacterStatusComponent");
 	CharacterCombatComponent = CreateDefaultSubobject<UTranscendentalCombatComponent>("ARPGCharacterCombaComponent");
-	CharacterLockTargetComponent = CreateDefaultSubobject<UARPGLockTargetComponent>("ARPGLockTargetComponent");
 	AIPerceptionStimuliSourceComponent = CreateDefaultSubobject<UARPGAIPerceptionStimuliSourceComponent>(
 		"AIPerceptionStimuliSourceComponent");
-
+	CharacterLockTargetComponent = CreateDefaultSubobject<UARPGLockTargetComponent>("ARPGLockTargetComponent");
+	CharacterLockTargetComponent->SetupAttachment(RootComponent);
+	
 	if (UARPGBasicSettings::Get())
 	{
 		if (!ImpactVisualEffect)

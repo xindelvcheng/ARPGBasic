@@ -12,11 +12,14 @@
 // Sets default values for this component's properties
 UARPGLockTargetComponent::UARPGLockTargetComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
 	// ...
+	if (UARPGBasicSettings::Get())
+	{
+		WidgetClass = UARPGBasicSettings::Get()->LockTargetWidgetClass.LoadSynchronous();
+	}
+	SetWidgetSpace(EWidgetSpace::Screen);
 }
 
 
@@ -24,68 +27,56 @@ UARPGLockTargetComponent::UARPGLockTargetComponent()
 void UARPGLockTargetComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// ...
+	Widget->SetVisibility(ESlateVisibility::Hidden);
 	AttachedCharacter = Cast<AARPGCharacter>(GetOwner());
-	verifyf(AttachedCharacter,TEXT("锁定组件只能用于AARPGCharacter"));
-
 	ActorsToIgnore.Emplace(AttachedCharacter);
 	MainCharacterPlayerController = Cast<AARPGPlayerController>(AttachedCharacter->GetController());
-	if (MainCharacterPlayerController && UARPGBasicSettings::Get())
-	{
-		const auto LockTargetWidgetClass= LoadClass<UARPGLockTargetWidget>(nullptr,*UARPGBasicSettings::Get()->LockTargetWidgetClass.ToString());
-		LockTargetWidget = Cast<UARPGLockTargetWidget>(CreateWidget(MainCharacterPlayerController,LockTargetWidgetClass));
-		if (LockTargetWidget)
-		{
-			LockTargetWidget->SetVisibility(ESlateVisibility::Hidden);
-			LockTargetWidget->AddToViewport();
-		}
-	}
 }
 
 
 // Called every frame
-void UARPGLockTargetComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UARPGLockTargetComponent::TickComponent(float DeltaTime, ELevelTick TickType,
+                                             FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// ...
 	if (LockingTarget)
 	{
-		AttachedCharacter->SetActorRotation((LockingTarget->GetActorLocation()-AttachedCharacter->GetActorLocation()).ToOrientationRotator());
-		if (LockTargetWidget)
-		{
-			if(MainCharacterPlayerController->ProjectWorldLocationToScreen(LockingTarget->GetActorLocation(),LockIconScreenPosition))
-			LockTargetWidget->SetLockIconScreenPosition(LockIconScreenPosition);
-        }
+		AttachedCharacter->SetActorRotation(
+			(LockingTarget->GetActorLocation() - AttachedCharacter->GetActorLocation()).ToOrientationRotator());
 	}
-
-	
 }
 
 AARPGCharacter* UARPGLockTargetComponent::ToggleLockTarget()
 {
-	UKismetSystemLibrary::BoxTraceMultiForObjects(GetWorld(),AttachedCharacter->GetActorLocation(),
-		AttachedCharacter->GetActorLocation()+AttachedCharacter->GetActorForwardVector()*500,
-		HalfSize,
-		AttachedCharacter->GetActorRotation(),ObjectTypes,false,ActorsToIgnore,EDrawDebugTrace::ForDuration,OutHits,true);
+	UKismetSystemLibrary::BoxTraceMultiForObjects(GetWorld(), AttachedCharacter->GetActorLocation(),
+	                                              AttachedCharacter->GetActorLocation() + AttachedCharacter->
+	                                              GetActorForwardVector() * 500,
+	                                              HalfSize,
+	                                              AttachedCharacter->GetActorRotation(), ObjectTypes, false,
+	                                              ActorsToIgnore,
+	                                              bDrawDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
+	                                              OutHits, true);
+
 
 	for (const FHitResult HitResult : OutHits)
 	{
-		const auto CandidateTarget =  Cast<AARPGCharacter>(HitResult.GetActor());
-		if (!LockedTargets.Contains(LockingTarget))
+		const auto CandidateTarget = Cast<AARPGCharacter>(HitResult.GetActor());
+		if (!LockedTargets.Contains(CandidateTarget) && CandidateTarget->GetCharacterLockTargetComponent())
 		{
 			LockingTarget = CandidateTarget;
 			LockedTargets.Emplace(LockingTarget);
-			LockTargetWidget->SetVisibility(ESlateVisibility::Visible);
+			LockingTarget->GetCharacterLockTargetComponent()->Widget->SetVisibility(ESlateVisibility::Visible);
 			return LockingTarget;
 		}
 	}
 
-	//连按解除锁定
-	LockingTarget = nullptr;
+	//未找到满足条件的对象，视为玩家想解除当前锁定
+	if (LockingTarget && LockingTarget->GetCharacterLockTargetComponent())
+	{
+		LockingTarget->GetCharacterLockTargetComponent()->Widget->SetVisibility(ESlateVisibility::Hidden);
+		LockingTarget = nullptr;
+	}
 	LockedTargets.Empty();
-	LockTargetWidget->SetVisibility(ESlateVisibility::Hidden);
 	return nullptr;
 }
-

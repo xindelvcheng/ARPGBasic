@@ -6,17 +6,21 @@
 
 
 #include "Components/ActorComponent.h"
+#include "Components/WidgetComponent.h"
+
 #include "ARPGLockTargetComponent.generated.h"
 
 class AARPGCharacter;
 class AARPGPlayerController;
 class UARPGLockTargetWidget;
 
+/*锁定组件，进行锁定的玩家和NPC都需要有这个组件。如果锁定图标的位置不对，考虑是否Widget锚点未设置成中心*/
+
 UCLASS( ClassGroup=(ARPGBasic), meta=(BlueprintSpawnableComponent) )
-class UARPGLockTargetComponent : public UActorComponent
+class UARPGLockTargetComponent : public UWidgetComponent
 {
 	GENERATED_BODY()
-
+		
 	UPROPERTY(EditAnywhere,Category="Debug",meta=(AllowPrivateAccess))
 	bool bDrawDebug = false;
 public:	
@@ -29,8 +33,6 @@ protected:
 
 	AARPGCharacter* AttachedCharacter;
 	AARPGPlayerController* MainCharacterPlayerController;
-	UARPGLockTargetWidget* LockTargetWidget;
-	FVector2D LockIconScreenPosition;
 
 public:	
 	// Called every frame
@@ -41,8 +43,9 @@ public:
 	TArray<AARPGCharacter*> CharactersInSight;
 
 	TArray<TEnumAsByte<	EObjectTypeQuery> > ObjectTypes = {ObjectTypeQuery3};
-	FVector HalfSize = FVector(300,150,150);
+	FVector HalfSize{300,150,150};
 	TArray<AActor*> ActorsToIgnore;
+
 	TArray<AARPGCharacter*> Targets;
 	TArray<AARPGCharacter*> LockedTargets;
 
