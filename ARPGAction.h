@@ -125,6 +125,7 @@ class AARPGMeleeAttackAction : public AARPGMontageAction
 {
     GENERATED_BODY()
 
+    UPROPERTY(BlueprintReadOnly,Category="ARPGMeleeAttackAction",meta=(AllowPrivateAccess))
     int MeleeAttackIndex;
 
 public:

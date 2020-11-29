@@ -34,6 +34,8 @@ public:
     {
         return GetMutableDefault<UARPGBasicSettings>();
     }
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
+    TSoftClassPtr<UARPGStatusWidget> LoadingWidgetClass;
 
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
     TSoftClassPtr<UARPGStatusWidget> StatusWidgetClass;
@@ -56,6 +58,9 @@ public:
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
     TSoftClassPtr<UARPGGamingMenuContentItemWidget> GamingMenuContentItemWidgetClass;
 
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Art Resource Config")
+    TArray<TSoftObjectPtr<UTexture2D>> Icons;
+    
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Sound Effect Config")
     TArray<TSoftObjectPtr<USoundCue>> PositiveSoundEffects;
 

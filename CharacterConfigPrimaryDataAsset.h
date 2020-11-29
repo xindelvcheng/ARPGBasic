@@ -69,5 +69,5 @@ public:
 	TArray<UAnimMontage*> HitReactAnimMontages;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Art Resource")
-	TMap<EGroundTypeEnum, USoundBase*> FootstepSoundEffects;
+	TArray<FGroundTypeFootstepSoundPairStruct> FootstepSoundEffects;
 };

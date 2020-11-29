@@ -103,7 +103,7 @@ public:
    
 
     UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffectCreature")
-    static void SpawnARPGSpecialEffectCreature(TSubclassOf<AARPGSpecialEffectCreature> CreatureClass,
+    static AARPGSpecialEffectCreature* SpawnARPGSpecialEffectCreature(TSubclassOf<AARPGSpecialEffectCreature> CreatureClass,
                                                FTransform Transform, AARPGCharacter* OwnerCharacter);
 };
 

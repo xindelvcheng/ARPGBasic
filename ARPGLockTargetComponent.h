@@ -17,7 +17,8 @@ class UARPGLockTargetComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-	
+	UPROPERTY(EditAnywhere,Category="Debug",meta=(AllowPrivateAccess))
+	bool bDrawDebug = false;
 public:	
 	// Sets default values for this component's properties
 	UARPGLockTargetComponent();

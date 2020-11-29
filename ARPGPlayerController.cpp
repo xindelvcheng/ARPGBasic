@@ -4,6 +4,8 @@
 #include "ARPGPlayerController.h"
 
 
+
+#include "ARPGArchiveSubsystem.h"
 #include "ARPGBasicSettings.h"
 #include "ARPGGameInstanceSubsystem.h"
 #include "ARPGStatusWidget.h"
@@ -26,10 +28,9 @@ void AARPGPlayerController::OnPossess(APawn* InPawn)
 
 
     const auto MainCharacter = Cast<AARPGMainCharacter>(InPawn);
-    if (MainCharacter && GetGameInstance() && GetGameInstance()->GetSubsystem<UARPGGameInstanceSubsystem>())
+    if (MainCharacter)
     {
-        UARPGGameInstanceSubsystem* ARPGGameInstanceSubsystem = GetGameInstance()->GetSubsystem<
-            UARPGGameInstanceSubsystem>();
+        UARPGGameInstanceSubsystem* ARPGGameInstanceSubsystem = UARPGGameInstanceSubsystem::Get(GetWorld());
         MainCharacter->MainPlayerController = this;
         UARPGStatusWidget* MainCharacterStatusWidget =
             UARPGGameInstanceSubsystem::GetMainCharacterStatusWidget(GetWorld());
@@ -37,7 +38,7 @@ void AARPGPlayerController::OnPossess(APawn* InPawn)
         {
             MainCharacterStatusWidget->BindToMainCharacter(MainCharacter);
         }
-        else if (ARPGGameInstanceSubsystem->CurrentStreamingLevelName != "MainMenu")
+        else if (UARPGArchiveSubsystem::Get(GetWorld())||UARPGArchiveSubsystem::Get(GetWorld())->CurrentStreamingLevelName != "MainMenu")
         {
             MainCharacterStatusWidget = Cast<UARPGStatusWidget>(
                 CreateWidget(this, StatusWidgetClass));

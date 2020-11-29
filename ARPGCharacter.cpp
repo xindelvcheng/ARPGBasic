@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ARPGCharacter.h"
+
+#include "GameFramework/Character.h"
 #include "particles/ParticleSystem.h"
 #include "ARPGConfigSubsystem.h"
 #include "ARPGGameInstanceSubsystem.h"
@@ -11,6 +13,7 @@
 #include "ARPGLockTargetComponent.h"
 #include "ARPGAIPerceptionStimuliSourceComponent.h"
 #include "ARPGBasicSettings.h"
+#include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 
@@ -108,7 +111,7 @@ void AARPGCharacter::RefreshWithCharacterConfigPDataAsset()
 	if (CharacterConfigPDataAsset)
 	{
 		CharacterName = CharacterConfigPDataAsset->CharacterName;
-		
+
 		CharacterName = CharacterConfigPDataAsset->CharacterName;
 		CharacterStatusComponent->ReInitCharacterProperties(CharacterConfigPDataAsset);
 		CharacterCombatComponent->ReInitCharacterActions(CharacterConfigPDataAsset);
@@ -117,7 +120,7 @@ void AARPGCharacter::RefreshWithCharacterConfigPDataAsset()
 	else
 	{
 		UARPGGameInstanceSubsystem::PrintLogToScreen(
-            FString::Printf(TEXT("角色%s未设置CharacterConfigPDataAsset"), *GetName()));
+			FString::Printf(TEXT("角色%s未设置CharacterConfigPDataAsset"), *GetName()));
 	}
 }
 
@@ -128,9 +131,24 @@ void AARPGCharacter::ReInitCharacterArtResources(UCharacterConfigPrimaryDataAsse
 }
 
 
-
 void AARPGCharacter::PlayFootStepSoundEffect(EGroundTypeEnum GroundType, float Volume)
 {
-	UGameplayStatics::PlaySoundAtLocation(this, FootstepSoundEffects.FindRef(GroundType), GetActorLocation() + FVector{0, 0, -50},
-	                                      Volume);
+	const auto FootstepSoundEffect = FootstepSoundEffects.FindByPredicate([=](FGroundTypeFootstepSoundPairStruct Pair)
+	{
+		return Pair.GroundType == GroundType;
+	})->FootstepSoundEffect;
+	FVector FootstepPlayLocation;
+	if (GetMesh() && GetMesh()->GetSocketLocation(TEXT("Root")) != FVector{0, 0, 0})
+	{
+		FootstepPlayLocation = GetMesh()->GetSocketLocation(TEXT("Root"));
+	}
+	else if (GetCapsuleComponent()->GetScaledCapsuleHalfHeight() > 0)
+	{
+		FootstepPlayLocation = GetActorLocation() + FVector{0, 0, -GetCapsuleComponent()->GetScaledCapsuleHalfHeight()};
+	}
+	else
+	{
+		FootstepPlayLocation = GetActorLocation() + FVector{0, 0, -50};
+	}
+	UGameplayStatics::PlaySoundAtLocation(this, FootstepSoundEffect, FootstepPlayLocation, Volume);
 }

@@ -39,6 +39,18 @@ enum class EGroundTypeEnum : uint8
 	Sand
 };
 
+USTRUCT(BlueprintType)
+struct FGroundTypeFootstepSoundPairStruct
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="CharacterFootstepSoundEffect")
+	EGroundTypeEnum GroundType;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="CharacterFootstepSoundEffect")
+	USoundBase* FootstepSoundEffect;
+};
+
 static const FString EnvironmentNames[] = {
 	TEXT("混凝土")
 };
@@ -91,11 +103,7 @@ protected:
 	USoundCue* ImpactSoundEffect;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPG Art Resource")
-	TMap<EGroundTypeEnum, USoundBase*> FootstepSoundEffects{
-		{EGroundTypeEnum::Concrete, nullptr}, {EGroundTypeEnum::Grass, nullptr}, {EGroundTypeEnum::Sand, nullptr},
-		{EGroundTypeEnum::Wood, nullptr}
-	};
-
+	TArray<FGroundTypeFootstepSoundPairStruct> FootstepSoundEffects;
 
 public:
 

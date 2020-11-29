@@ -115,7 +115,7 @@ void UARPGSpecialEffectsSubsystem::PlaySpecialEffectAtLocation(const UObject* Wo
 }
 
 
-void AARPGSpecialEffectCreature::SpawnARPGSpecialEffectCreature(TSubclassOf<AARPGSpecialEffectCreature> CreatureClass,
+AARPGSpecialEffectCreature* AARPGSpecialEffectCreature::SpawnARPGSpecialEffectCreature(TSubclassOf<AARPGSpecialEffectCreature> CreatureClass,
                                                                 FTransform Transform,
                                                                 AARPGCharacter* OwnerCharacter)
 {
@@ -128,6 +128,7 @@ void AARPGSpecialEffectCreature::SpawnARPGSpecialEffectCreature(TSubclassOf<AARP
     {
         SpecialEffectCreature->SetOwnerCharacter(OwnerCharacter);
     }
+    return SpecialEffectCreature; 
 }
 
 AARPGSimpleMovableCauseDamageSpecialEffectCreature::AARPGSimpleMovableCauseDamageSpecialEffectCreature()
@@ -165,9 +166,12 @@ void AARPGSimpleMovableCauseDamageSpecialEffectCreature::BindToActorBeginOverlap
         OtherActor, 1,
         nullptr, this, DamageType);
     }
+    if (UARPGBasicSettings* BasicSettings = UARPGBasicSettings::Get())
+    {
+        UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BasicSettings->DefaultImpactVisualEffect.LoadSynchronous(), GetActorLocation(),GetActorRotation(),GetActorScale());
+    }
     
-    const FVector ActorLocation = GetActorLocation();
+    UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), DestroyVisualEffect, GetActorLocation(),GetActorRotation(),GetActorScale());
+    UGameplayStatics::SpawnSoundAtLocation(GetWorld(), DestroySoundEffect, GetActorLocation());
     GetWorld()->DestroyActor(this);
-    UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), DestroyVisualEffect, ActorLocation);
-    UGameplayStatics::SpawnSoundAtLocation(GetWorld(), DestroySoundEffect, ActorLocation);
 }

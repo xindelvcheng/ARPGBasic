@@ -35,6 +35,146 @@ enum class EChoice:uint8
 	ChoiceB
 };
 
+UCLASS()
+class UARPGGameInstanceSubsystem : public UGameInstanceSubsystem
+{
+	GENERATED_BODY()
+	/*此三个变量在ARPG Player Controller的OnPosses回调中赋值，蓝图中可以获得*/
+	TWeakObjectPtr<AARPGMainCharacter> MainCharacter;
+	TWeakObjectPtr<AARPGPlayerController> MainCharacterController;
+	TWeakObjectPtr<UARPGStatusWidget> StatusWidget;
+
+protected:
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Deinitialize() override;
+	
+
+public:
+
+	DECLARE_MULTICAST_DELEGATE_OneParam(FPreLoadMapDelegate, const FString& /* MapName */);
+	FPreLoadMapDelegate PreLoadMap;
+	DECLARE_MULTICAST_DELEGATE_OneParam(FPostLoadMapDelegate, UWorld* /* LoadedWorld */);
+	FPostLoadMapDelegate PostLoadMap;
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPreLoadMapEvent,const FString&, MapName);
+	UPROPERTY(BlueprintAssignable,Category="ARPGGameInstanceSubsystem")
+	FPreLoadMapEvent OnLoadingMap;
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMapLoadedEvent,UWorld*, LoadedWorld);
+	UPROPERTY(BlueprintAssignable,Category="ARPGGameInstanceSubsystem")
+    FMapLoadedEvent OnMapLoaded;
+
+	UFUNCTION(BlueprintCallable,BlueprintPure,Category="ARPGGameInstanceSubsystem",meta=(WorldContext=WorldContextObject
+	))
+	static AARPGMainCharacter* GetMainCharacter(const UObject* WorldContextObject);
+
+	UFUNCTION(BlueprintCallable,BlueprintPure,Category="ARPGGameInstanceSubsystem",meta=(WorldContext=WorldContextObject
+	))
+	static AARPGPlayerController* GetMainCharacterController(const UObject* WorldContextObject);
+
+	UFUNCTION(BlueprintCallable,BlueprintPure,Category="ARPGGameInstanceSubsystem",meta=(WorldContext=WorldContextObject
+	))
+	static UARPGStatusWidget* GetMainCharacterStatusWidget(const UObject* WorldContextObject);
+
+	void SetMainCharacter(AARPGMainCharacter* NewMainCharacter) { MainCharacter = NewMainCharacter; }
+
+	void SetMainCharacterController(AARPGPlayerController* NewMainCharacterController)
+	{
+		MainCharacterController = NewMainCharacterController;
+	}
+
+	void SetMainCharacterStatusWidget(UARPGStatusWidget* NewARPGStatusWidget) { StatusWidget = NewARPGStatusWidget; }
+
+	DECLARE_MULTICAST_DELEGATE(FSetupPlayerEvent)
+	FSetupPlayerEvent OnPlayerSetupEnd;
+
+	void SetupPlayer(AARPGMainCharacter* NewMainCharacter, AARPGPlayerController* NewMainCharacterController,
+	                 UARPGStatusWidget* NewARPGStatusWidget)
+	{
+		MainCharacter = NewMainCharacter;
+		MainCharacterController = NewMainCharacterController;
+		StatusWidget = NewARPGStatusWidget;
+		OnPlayerSetupEnd.Broadcast();
+	}
+
+
+	UFUNCTION(BlueprintCallable,meta=(WorldContext=WorldContextObject))
+	static void ShowNotify(const UObject* WorldContextObject, UTexture2D* Icon, FText Title, FText Content);
+
+
+	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",meta=(ExpandEnumAsExecs="Choice"))
+	static void RandomChoice(float ChanceA, EChoice& Choice);
+
+	static void PrintLogToScreen(FString Message, float Time = 5, FColor Color = FColor::Yellow);
+	static void PrintLogToScreen(FText Message, float Time = 5, FColor Color = FColor::Yellow);
+	static void PrintLogToScreen(float Message, float Time = 5, FColor Color = FColor::Yellow);
+	static void PrintLogToScreen(UObject* Message, float Time = 5, FColor Color = FColor::Yellow);
+
+	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",BlueprintPure)
+	static FTransform GetActorNearPositionTransform(AActor* OriginActor,
+	                                                const FVector LocationOffset,
+	                                                const FRotator RotationOffset);
+
+	static UARPGGameInstanceSubsystem* Get(UWorld* World);
+
+	UFUNCTION()
+	bool Tick(float DeltaSeconds);
+
+	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",meta=(DefaultToSelf="Actor"))
+	static void MoveActorTowardsDirection(AActor* Actor, FVector Direction,
+	                                      FMoveFinishDelegate MoveFinishDelegate, float MoveRate = 1,
+	                                      float Duration = 5);
+
+	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",meta=(DefaultToSelf="Actor"))
+	static void MoveActorTowardsDirectionFinishOnCollision(AActor* Actor, FVector Direction,
+	                                                       TArray<AActor*> IgnoreActors,
+	                                                       FCollisionDelegate OnCollision, float MoveRate = 1,
+	                                                       float Duration = 5,
+	                                                       bool ShouldStopAfterFirstCollision = true);
+
+	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",meta=(DefaultToSelf="Actor"))
+	static void MoveActorTowardDirectionFinishOnCollisionWithScale(AActor* Actor, FVector Direction,
+	                                                               TArray<AActor*> IgnoreActors,
+	                                                               FCollisionDelegate OnCollision, float MoveRate = 1,
+	                                                               float ScaleRate = 1,
+	                                                               float Duration = 5,
+	                                                               bool ShouldStopAfterFirstCollision = true);
+
+	UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
+	static void MoveActorTowardActor(AActor* Actor, AActor* Target,
+	                                 FMoveFinishDelegate MoveFinishDelegate, float MoveRate = 1, float Duration = 5,
+	                                 float AcceptableRadius = 20);
+
+	UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
+	static void MoveActorTowardActorWithScale(AActor* Actor, AActor* Target,
+	                                          FMoveFinishDelegate MoveFinishDelegate, float MoveRate = 1,
+	                                          float ScaleRate = 1, float Duration = 5, float AcceptableRadius = 20);
+	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",meta=(DefaultToSelf="Actor"))
+	static void MoveActorComplex(AActor* Actor, FTransformFunctionOfTime TransformFunctionOfTime,
+	                             TArray<AActor*> IgnoreActors,
+	                             FCollisionDelegate OnCollision, float Duration = 5,
+	                             bool ShouldStopAfterFirstCollision = true);
+
+	UPROPERTY()
+	TArray<UActorMoveRecord*> MoveRecords;
+
+	UFUNCTION()
+	void BindToMoveFinish(UActorMoveRecord* Record) { MoveRecords.Remove(Record); }
+
+
+	template <typename T>
+	static T* SpawnActor(FTransform Transform, AARPGCharacter* OwnerCharacter)
+	{
+		FActorSpawnParameters ActorSpawnParameters;
+		ActorSpawnParameters.Instigator = OwnerCharacter;
+		ActorSpawnParameters.Owner = OwnerCharacter;
+		ActorSpawnParameters.SpawnCollisionHandlingOverride =
+			ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+		return OwnerCharacter->GetWorld()->SpawnActor<T>(Transform, ActorSpawnParameters);
+	}
+	
+};
+
 
 UCLASS()
 class UActorMoveRecord : public UObject
@@ -364,203 +504,6 @@ public:
 	}
 };
 
-UCLASS()
-class ATestActor : public AActor
-{
-	GENERATED_BODY()
-	UFUNCTION()
-	void BindToActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
-	{
-	}
-
-public:
-	virtual void BeginPlay() override
-	{
-		auto Record = NewObject<UMoveActorTowardDirectionFinishOnCollision>();
-		this->OnActorBeginOverlap.AddDynamic(
-			Record, &UMoveActorTowardDirectionFinishOnCollision::BindToActorBeginOverlap);
-	}
-};
-
 /**
  * 
  */
-UCLASS()
-class UARPGGameInstanceSubsystem : public UGameInstanceSubsystem
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	UAPRGArchiveManager* ArchiveManager;
-
-	UPROPERTY()
-	UAPRGGameSaver* GameSaver;
-
-	UFUNCTION()
-	void OnArchiveLoaded(const FString& SlotName, const int32 UserIndex, USaveGame* SaveGame);
-
-	UFUNCTION()
-	void OnLevelLoaded();
-
-	UPROPERTY()
-	TArray<FArchiveInfoStruct> ArchiveInfos;
-
-protected:
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-	virtual void Deinitialize() override;
-
-
-public:
-	FString ArchiveManageSlot = TEXT("ArchiveManageSlot");
-	int UserIndexInt32;
-
-	UFUNCTION(BlueprintCallable)
-	TArray<FArchiveInfoStruct> GetArchiveInfos() const;
-
-private:
-	/*此三个变量在ARPG Player Controller的OnPosses回调中赋值，蓝图中可以获得*/
-	TWeakObjectPtr<AARPGMainCharacter> MainCharacter;
-	TWeakObjectPtr<AARPGPlayerController> MainCharacterController;
-	TWeakObjectPtr<UARPGStatusWidget> StatusWidget;
-
-public:
-
-	UFUNCTION(BlueprintCallable,BlueprintPure,Category="ARPGGameInstanceSubsystem",meta=(WorldContext=WorldContextObject
-	))
-	static AARPGMainCharacter* GetMainCharacter(const UObject* WorldContextObject);
-
-	UFUNCTION(BlueprintCallable,BlueprintPure,Category="ARPGGameInstanceSubsystem",meta=(WorldContext=WorldContextObject
-	))
-	static AARPGPlayerController* GetMainCharacterController(const UObject* WorldContextObject);
-
-	UFUNCTION(BlueprintCallable,BlueprintPure,Category="ARPGGameInstanceSubsystem",meta=(WorldContext=WorldContextObject
-	))
-	static UARPGStatusWidget* GetMainCharacterStatusWidget(const UObject* WorldContextObject);
-
-	void SetMainCharacter(AARPGMainCharacter* NewMainCharacter) { MainCharacter = NewMainCharacter; }
-
-	void SetMainCharacterController(AARPGPlayerController* NewMainCharacterController)
-	{
-		MainCharacterController = NewMainCharacterController;
-	}
-
-	void SetMainCharacterStatusWidget(UARPGStatusWidget* NewARPGStatusWidget) { StatusWidget = NewARPGStatusWidget; }
-
-	DECLARE_MULTICAST_DELEGATE(FSetupPlayerEvent)
-	FSetupPlayerEvent OnPlayerSetupEnd;
-
-	void SetupPlayer(AARPGMainCharacter* NewMainCharacter, AARPGPlayerController* NewMainCharacterController,
-	                 UARPGStatusWidget* NewARPGStatusWidget)
-	{
-		MainCharacter = NewMainCharacter;
-		MainCharacterController = NewMainCharacterController;
-		StatusWidget = NewARPGStatusWidget;
-		OnPlayerSetupEnd.Broadcast();
-	}
-
-public:
-
-	UFUNCTION(BlueprintCallable,meta=(WorldContext=WorldContextObject))
-	static void ShowNotify(const UObject* WorldContextObject, UTexture2D* Icon, FText Title, FText Content);
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGBASIC")
-	FName CurrentStreamingLevelName = "";
-
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSaveGameEvent);
-
-	UPROPERTY(BlueprintAssignable)
-	FSaveGameEvent OnGameSaving;
-	UPROPERTY(BlueprintAssignable)
-	FSaveGameEvent OnGameSaveSuccess;
-	UPROPERTY(BlueprintAssignable)
-	FSaveGameEvent OnGameLoading;
-	UPROPERTY(BlueprintAssignable)
-	FSaveGameEvent OnGameLoadSuccess;
-
-	UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
-	bool SaveArchive(FString ArchiveName);
-
-
-	UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
-	void LoadArchive(FString ArchiveName);
-
-
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FLoadLevelEvent);
-
-	UPROPERTY(BlueprintAssignable)
-	FLoadLevelEvent OnLevelLoading;
-	UPROPERTY(BlueprintAssignable)
-	FLoadLevelEvent OnLevelLoadSuccess;
-
-	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",meta=(ExpandEnumAsExecs="Choice"))
-	static void RandomChoice(float ChanceA, EChoice& Choice);
-
-	static void PrintLogToScreen(FString Message, float Time = 5, FColor Color = FColor::Yellow);
-	static void PrintLogToScreen(FText Message, float Time = 5, FColor Color = FColor::Yellow);
-	static void PrintLogToScreen(float Message, float Time = 5, FColor Color = FColor::Yellow);
-	static void PrintLogToScreen(UObject* Message, float Time = 5, FColor Color = FColor::Yellow);
-
-	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",BlueprintPure)
-	static FTransform GetActorNearPositionTransform(AActor* OriginActor,
-	                                                const FVector LocationOffset,
-	                                                const FRotator RotationOffset);
-
-	static UARPGGameInstanceSubsystem* Get(UWorld* World);
-
-	UFUNCTION()
-	bool Tick(float DeltaSeconds);
-
-	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",meta=(DefaultToSelf="Actor"))
-	static void MoveActorTowardsDirection(AActor* Actor, FVector Direction,
-	                                      FMoveFinishDelegate MoveFinishDelegate, float MoveRate = 1,
-	                                      float Duration = 5);
-
-	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",meta=(DefaultToSelf="Actor"))
-	static void MoveActorTowardsDirectionFinishOnCollision(AActor* Actor, FVector Direction,
-	                                                       TArray<AActor*> IgnoreActors,
-	                                                       FCollisionDelegate OnCollision, float MoveRate = 1,
-	                                                       float Duration = 5,
-	                                                       bool ShouldStopAfterFirstCollision = true);
-
-	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",meta=(DefaultToSelf="Actor"))
-	static void MoveActorTowardDirectionFinishOnCollisionWithScale(AActor* Actor, FVector Direction,
-	                                                               TArray<AActor*> IgnoreActors,
-	                                                               FCollisionDelegate OnCollision, float MoveRate = 1,
-	                                                               float ScaleRate = 1,
-	                                                               float Duration = 5,
-	                                                               bool ShouldStopAfterFirstCollision = true);
-
-	UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
-	static void MoveActorTowardActor(AActor* Actor, AActor* Target,
-	                                 FMoveFinishDelegate MoveFinishDelegate, float MoveRate = 1, float Duration = 5,
-	                                 float AcceptableRadius = 20);
-
-	UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
-	static void MoveActorTowardActorWithScale(AActor* Actor, AActor* Target,
-	                                          FMoveFinishDelegate MoveFinishDelegate, float MoveRate = 1,
-	                                          float ScaleRate = 1, float Duration = 5, float AcceptableRadius = 20);
-	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",meta=(DefaultToSelf="Actor"))
-	static void MoveActorComplex(AActor* Actor, FTransformFunctionOfTime TransformFunctionOfTime,
-	                             TArray<AActor*> IgnoreActors,
-	                             FCollisionDelegate OnCollision, float Duration = 5,
-	                             bool ShouldStopAfterFirstCollision = true);
-
-	UPROPERTY()
-	TArray<UActorMoveRecord*> MoveRecords;
-
-	UFUNCTION()
-	void BindToMoveFinish(UActorMoveRecord* Record) { MoveRecords.Remove(Record); }
-
-
-	template <typename T>
-	static T* SpawnActor(FTransform Transform, AARPGCharacter* OwnerCharacter)
-	{
-		FActorSpawnParameters ActorSpawnParameters;
-		ActorSpawnParameters.Instigator = OwnerCharacter;
-		ActorSpawnParameters.Owner = OwnerCharacter;
-		ActorSpawnParameters.SpawnCollisionHandlingOverride =
-			ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-		return OwnerCharacter->GetWorld()->SpawnActor<T>(Transform, ActorSpawnParameters);
-	}
-	
-};
