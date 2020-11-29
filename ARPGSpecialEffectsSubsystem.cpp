@@ -136,9 +136,22 @@ AARPGSpecialEffectCreature* AARPGSpecialEffectCreature::SpawnARPGSpecialEffectCr
 
 AARPGSimpleMovableCauseDamageSpecialEffectCreature::AARPGSimpleMovableCauseDamageSpecialEffectCreature()
 {
+	PrimaryActorTick.bCanEverTick = false;
 	DamageDetectionCollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("DamageDetectionCollisionBox"));
 	RootComponent = DamageDetectionCollisionBox;
-	PrimaryActorTick.bCanEverTick = true;
+
+	if (UARPGBasicSettings::Get())
+	{
+		if (!DestroyVisualEffect)
+		{
+			DestroyVisualEffect = UARPGBasicSettings::Get()->DefaultCreatureDestroyVisualEffect.LoadSynchronous();
+		}
+		if (!DestroySoundEffect)
+		{
+			DestroySoundEffect = UARPGBasicSettings::Get()->DefaultCreatureDestroySoundEffect.LoadSynchronous();
+		}
+	}
+	
 }
 
 void AARPGSimpleMovableCauseDamageSpecialEffectCreature::BeginPlay()

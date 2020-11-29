@@ -12,8 +12,14 @@
 // Sets default values for this component's properties
 UARPGLockTargetComponent::UARPGLockTargetComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
-
+	
+	AttachedCharacter = Cast<AARPGCharacter>(GetOwner());
+	if (Cast<AARPGMainCharacter>(AttachedCharacter))
+	{
+		PrimaryComponentTick.bCanEverTick = true;
+	}
+	ActorsToIgnore.Emplace(AttachedCharacter);
+	
 	// ...
 	if (UARPGBasicSettings::Get())
 	{
@@ -28,8 +34,6 @@ void UARPGLockTargetComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	Widget->SetVisibility(ESlateVisibility::Hidden);
-	AttachedCharacter = Cast<AARPGCharacter>(GetOwner());
-	ActorsToIgnore.Emplace(AttachedCharacter);
 	MainCharacterPlayerController = Cast<AARPGPlayerController>(AttachedCharacter->GetController());
 }
 
@@ -67,6 +71,7 @@ AARPGCharacter* UARPGLockTargetComponent::ToggleLockTarget()
 			LockingTarget = CandidateTarget;
 			LockedTargets.Emplace(LockingTarget);
 			LockingTarget->GetCharacterLockTargetComponent()->Widget->SetVisibility(ESlateVisibility::Visible);
+			SetComponentTickEnabled(true);
 			return LockingTarget;
 		}
 	}
@@ -76,6 +81,7 @@ AARPGCharacter* UARPGLockTargetComponent::ToggleLockTarget()
 	{
 		LockingTarget->GetCharacterLockTargetComponent()->Widget->SetVisibility(ESlateVisibility::Hidden);
 		LockingTarget = nullptr;
+		SetComponentTickEnabled(false);
 	}
 	LockedTargets.Empty();
 	return nullptr;

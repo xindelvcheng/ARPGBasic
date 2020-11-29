@@ -34,6 +34,7 @@ public:
     {
         return GetMutableDefault<UARPGBasicSettings>();
     }
+    
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
     TSoftClassPtr<UARPGStatusWidget> LoadingWidgetClass;
 
@@ -61,27 +62,33 @@ public:
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Art Resource Config")
     TArray<TSoftObjectPtr<UTexture2D>> Icons;
     
-    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Sound Effect Config")
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
     TArray<TSoftObjectPtr<USoundCue>> PositiveSoundEffects;
 
-    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Sound Effect Config")
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
     TArray<TSoftObjectPtr<USoundCue>> NegativeSoundEffects;
 
-    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Sound Effect Config")
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
     TArray<TSoftObjectPtr<USoundCue>> NeutralSoundEffects;
 
-    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Visual Effect Config")
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
     TArray<TSoftObjectPtr<UParticleSystem>> PositiveVisualEffects;
 
-    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Visual Effect Config")
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
     TArray<TSoftObjectPtr<UParticleSystem>> NegativeVisualEffects;
 
-    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Visual Effect Config")
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
     TSoftObjectPtr<UParticleSystem> DefaultGameItemPickUpPromptVisualEffect;
 
-    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Visual Effect Config")
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
     TSoftObjectPtr<UParticleSystem> DefaultImpactVisualEffect;
 
-    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Visual Effect Config")
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
     TSoftObjectPtr<USoundCue> DefaultImpactSoundEffect;
+
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
+    TSoftObjectPtr<UParticleSystem> DefaultCreatureDestroyVisualEffect;
+
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
+    TSoftObjectPtr<USoundCue> DefaultCreatureDestroySoundEffect;
 };

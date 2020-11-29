@@ -89,7 +89,7 @@ protected:
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
     UParticleSystem* DestroyVisualEffect;
 
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect") 
     USoundBase* DestroySoundEffect;
 
 
@@ -113,7 +113,7 @@ class AARPGSimpleMovableCauseDamageSpecialEffectCreature : public AARPGSpecialEf
     GENERATED_BODY()
     
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect",meta=(AllowPrivateAccess))
-    float MoveRate = 10;
+    float MoveRate = 1;
 
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect",meta=(AllowPrivateAccess))
     UBoxComponent* DamageDetectionCollisionBox;
