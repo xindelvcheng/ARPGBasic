@@ -55,8 +55,6 @@ void UARPGProgressBar::SetPercent(float Current, float Total)
 
 	const float LengthFactor = 1 + log(Total);
 
-	UARPGGameInstanceSubsystem::PrintLogToScreen(LengthFactor);
-
 	if (UCanvasPanelSlot* CanvasPanelSlot = Cast<UCanvasPanelSlot>(this->Slot))
 	{
 		CanvasPanelSlot->SetSize(OriginalPixelSize * FVector2D{LengthFactor, 1});
