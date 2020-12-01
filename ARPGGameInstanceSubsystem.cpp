@@ -18,246 +18,267 @@
 #include "TranscendentalLawsSystem.h"
 
 
-
 void UARPGGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-    Super::Initialize(Collection);
-    
-    FTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateUObject(this, &UARPGGameInstanceSubsystem::Tick));
-    
-    FCoreUObjectDelegates::PreLoadMap.AddLambda([&](const FString& MapName)
-    {
-        PreLoadMap.Broadcast(MapName);
-        OnLoadingMap.Broadcast(MapName);
-    });
+	Super::Initialize(Collection);
 
-    FCoreUObjectDelegates::PostLoadMapWithWorld.AddLambda([&](UWorld* LoadedWorld)
-    {
-        PostLoadMap.Broadcast(LoadedWorld);
-        OnMapLoaded.Broadcast(LoadedWorld);
-    });
-    
+	FTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateUObject(this, &UARPGGameInstanceSubsystem::Tick));
+
+	FCoreUObjectDelegates::PreLoadMap.AddLambda([&](const FString& MapName)
+	{
+		PreLoadMap.Broadcast(MapName);
+		OnLoadingMap.Broadcast(MapName);
+	});
+
+	FCoreUObjectDelegates::PostLoadMapWithWorld.AddLambda([&](UWorld* LoadedWorld)
+	{
+		PostLoadMap.Broadcast(LoadedWorld);
+		OnMapLoaded.Broadcast(LoadedWorld);
+	});
 }
 
 void UARPGGameInstanceSubsystem::Deinitialize()
 {
-    Super::Deinitialize();
+	Super::Deinitialize();
 }
 
 AARPGMainCharacter* UARPGGameInstanceSubsystem::GetMainCharacter(const UObject* WorldContextObject)
 {
-    UWorld* World = GEngine->GetWorldFromContextObjectChecked(WorldContextObject);
-    if (UARPGGameInstanceSubsystem::Get(World))
-    {
-        return World->GetGameInstance()->GetSubsystem<UARPGGameInstanceSubsystem>()->MainCharacter.Get();
-    }
-    return nullptr;
+	UWorld* World = GEngine->GetWorldFromContextObjectChecked(WorldContextObject);
+	if (UARPGGameInstanceSubsystem::Get(World))
+	{
+		return World->GetGameInstance()->GetSubsystem<UARPGGameInstanceSubsystem>()->MainCharacter.Get();
+	}
+	return nullptr;
 }
 
 
 AARPGPlayerController* UARPGGameInstanceSubsystem::GetMainCharacterController(const UObject* WorldContextObject)
 {
-    UWorld* World = GEngine->GetWorldFromContextObjectChecked(WorldContextObject);
-    if (UARPGGameInstanceSubsystem::Get(World))
-    {
-        return UARPGGameInstanceSubsystem::Get(World)->MainCharacterController.Get();
-    }
-    return nullptr;
+	UWorld* World = GEngine->GetWorldFromContextObjectChecked(WorldContextObject);
+	if (UARPGGameInstanceSubsystem::Get(World))
+	{
+		return UARPGGameInstanceSubsystem::Get(World)->MainCharacterController.Get();
+	}
+	return nullptr;
 }
 
 UARPGStatusWidget* UARPGGameInstanceSubsystem::GetMainCharacterStatusWidget(const UObject* WorldContextObject)
 {
-    UWorld* World = GEngine->GetWorldFromContextObjectChecked(WorldContextObject);
-    if (UARPGGameInstanceSubsystem::Get(World))
-    {
-        return UARPGGameInstanceSubsystem::Get(World)->StatusWidget.Get();
-    }
-    return nullptr;
+	UWorld* World = GEngine->GetWorldFromContextObjectChecked(WorldContextObject);
+	if (UARPGGameInstanceSubsystem::Get(World))
+	{
+		return UARPGGameInstanceSubsystem::Get(World)->StatusWidget.Get();
+	}
+	return nullptr;
 }
 
 void UARPGGameInstanceSubsystem::ShowNotify(const UObject* WorldContextObject, UTexture2D* Icon, FText Title,
                                             FText Content)
 {
-    UWorld* World = GEngine->GetWorldFromContextObjectChecked(WorldContextObject);
-    if (UARPGGameInstanceSubsystem::Get(World))
-    {
-        const auto StatusWidget = UARPGGameInstanceSubsystem::Get(World)->GetMainCharacterStatusWidget(World);
-        if (StatusWidget)
-        {
-            StatusWidget->ShowNotify(Icon, Title, Content);
-        }
-        else
-        {
-            PrintLogToScreen(UKismetTextLibrary::Conv_TextToString(Title));
-        }
-    }
+	UWorld* World = GEngine->GetWorldFromContextObjectChecked(WorldContextObject);
+	if (UARPGGameInstanceSubsystem::Get(World))
+	{
+		const auto StatusWidget = UARPGGameInstanceSubsystem::Get(World)->GetMainCharacterStatusWidget(World);
+		if (StatusWidget)
+		{
+			StatusWidget->ShowNotify(Icon, Title, Content);
+		}
+		else
+		{
+			PrintLogToScreen(UKismetTextLibrary::Conv_TextToString(Title));
+		}
+	}
 }
 
 void UARPGGameInstanceSubsystem::RandomChoice(float chance, EChoice& Choice)
 {
-    if (chance >= FMath::FRand())
-    {
-        Choice = EChoice::ChoiceA;
-    }
-    else
-    {
-        Choice = EChoice::ChoiceB;
-    }
+	if (chance >= FMath::FRand())
+	{
+		Choice = EChoice::ChoiceA;
+	}
+	else
+	{
+		Choice = EChoice::ChoiceB;
+	}
 }
 
 void UARPGGameInstanceSubsystem::PrintLogToScreen(FString Message, float Time, FColor Color)
 {
-    if (GEngine)
-    {
-        GEngine->AddOnScreenDebugMessage(-1, Time, Color, Message);
-    }
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, Time, Color, Message);
+	}
 }
 
 void UARPGGameInstanceSubsystem::PrintLogToScreen(FText Message, float Time, FColor Color)
 {
-    PrintLogToScreen(Message.ToString(),Time,Color);
+	PrintLogToScreen(Message.ToString(), Time, Color);
 }
 
 void UARPGGameInstanceSubsystem::PrintLogToScreen(float Message, float Time, FColor Color)
 {
-    PrintLogToScreen(UKismetStringLibrary::Conv_FloatToString(Message),Time,Color);
+	PrintLogToScreen(UKismetStringLibrary::Conv_FloatToString(Message), Time, Color);
 }
 
 void UARPGGameInstanceSubsystem::PrintLogToScreen(UObject* Message, float Time, FColor Color)
 {
-    PrintLogToScreen(Message->GetFullName(),Time,Color);
+	PrintLogToScreen(Message->GetFullName(), Time, Color);
+}
+
+FVector2D UARPGGameInstanceSubsystem::GetRelativeSize(FVector2D RelativeSize)
+{
+	if (GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport)
+	{
+		return FVector2D{GEngine->GameViewport->Viewport->GetSizeXY()} * RelativeSize;
+	}
+	return RelativeSize * FVector2D{1920, 1080};
+}
+
+FVector2D UARPGGameInstanceSubsystem::GetScreenSize()
+{
+	if (GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport)
+	{
+		return FVector2D{GEngine->GameViewport->Viewport->GetSizeXY()};
+	}
+	return FVector2D(1920, 1080);
 }
 
 FTransform UARPGGameInstanceSubsystem::GetActorNearPositionTransform(AActor* OriginActor,
                                                                      const FVector LocationOffset,
                                                                      const FRotator RotationOffset)
 {
-    return FTransform{
-        OriginActor->GetActorRotation() + RotationOffset,
-        OriginActor->GetActorLocation() + OriginActor->GetActorForwardVector() * LocationOffset.X + OriginActor->
-        GetActorRightVector() * LocationOffset.Y + OriginActor->GetActorUpVector() * LocationOffset.Z
-    };
+	return FTransform{
+		OriginActor->GetActorRotation() + RotationOffset,
+		OriginActor->GetActorLocation() + OriginActor->GetActorForwardVector() * LocationOffset.X + OriginActor->
+		GetActorRightVector() * LocationOffset.Y + OriginActor->GetActorUpVector() * LocationOffset.Z
+	};
 }
 
 UARPGGameInstanceSubsystem* UARPGGameInstanceSubsystem::Get(UWorld* World)
 {
-    if (World && World->GetGameInstance() && World->GetGameInstance()->GetSubsystem<UARPGGameInstanceSubsystem>())
-    {
-        return World->GetGameInstance()->GetSubsystem<UARPGGameInstanceSubsystem>();
-    }
+	if (World && World->GetGameInstance() && World->GetGameInstance()->GetSubsystem<UARPGGameInstanceSubsystem>())
+	{
+		return World->GetGameInstance()->GetSubsystem<UARPGGameInstanceSubsystem>();
+	}
 
-    return nullptr;
+	return nullptr;
 }
 
 void UARPGGameInstanceSubsystem::MoveActorTowardsDirection(AActor* Actor, FVector Direction,
                                                            FMoveFinishDelegate MoveFinishDelegate, float MoveRate,
                                                            float Duration)
 {
-    if (!Actor)
-    {
-        return;
-    }
+	if (!Actor)
+	{
+		return;
+	}
 
-    if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
-    {
-        auto Record = UMoveActorTowardsDirectionRecord::CreateRecord(Actor, Direction, MoveFinishDelegate, MoveRate, Duration);
-        Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem,&UARPGGameInstanceSubsystem::BindToMoveFinish);
-        GameInstanceSubsystem->MoveRecords.Emplace(Record);
-    }
+	if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
+	{
+		auto Record = UMoveActorTowardsDirectionRecord::CreateRecord(Actor, Direction, MoveFinishDelegate, MoveRate,
+		                                                             Duration);
+		Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem, &UARPGGameInstanceSubsystem::BindToMoveFinish);
+		GameInstanceSubsystem->MoveRecords.Emplace(Record);
+	}
 }
 
-void UARPGGameInstanceSubsystem::MoveActorTowardsDirectionFinishOnCollision(AActor* Actor, FVector Direction,TArray<AActor*> IgnoreActors,
-                                                                            FCollisionDelegate OnCollision, float MoveRate, float Duration,bool ShouldStopAfterFirstCollision)
+void UARPGGameInstanceSubsystem::MoveActorTowardsDirectionFinishOnCollision(
+	AActor* Actor, FVector Direction, TArray<AActor*> IgnoreActors,
+	FCollisionDelegate OnCollision, float MoveRate, float Duration, bool ShouldStopAfterFirstCollision)
 {
-    if (!Actor)
-    {
-        return;
-    }
-    if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
-    {
-        auto Record = UMoveActorTowardDirectionFinishOnCollision::CreateRecord(
-            Actor, Direction,IgnoreActors, OnCollision,MoveRate, Duration,ShouldStopAfterFirstCollision);
-        Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem,&UARPGGameInstanceSubsystem::BindToMoveFinish);
-        GameInstanceSubsystem->MoveRecords.Emplace(Record);
-    }
+	if (!Actor)
+	{
+		return;
+	}
+	if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
+	{
+		auto Record = UMoveActorTowardDirectionFinishOnCollision::CreateRecord(
+			Actor, Direction, IgnoreActors, OnCollision, MoveRate, Duration, ShouldStopAfterFirstCollision);
+		Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem, &UARPGGameInstanceSubsystem::BindToMoveFinish);
+		GameInstanceSubsystem->MoveRecords.Emplace(Record);
+	}
 }
 
 void UARPGGameInstanceSubsystem::MoveActorTowardDirectionFinishOnCollisionWithScale(AActor* Actor, FVector Direction,
-    TArray<AActor*> IgnoreActors, FCollisionDelegate OnCollision, float MoveRate,float ScaleRate, float Duration,
-    bool ShouldStopAfterFirstCollision)
+	TArray<AActor*> IgnoreActors, FCollisionDelegate OnCollision, float MoveRate, float ScaleRate, float Duration,
+	bool ShouldStopAfterFirstCollision)
 {
-    if (!Actor)
-    {
-        return;
-    }
-    if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
-    {
-        auto Record = UMoveActorTowardDirectionFinishOnCollisionWithScale::CreateRecord(
-            Actor, Direction,IgnoreActors, OnCollision,MoveRate,ScaleRate, Duration,ShouldStopAfterFirstCollision);
-        Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem,&UARPGGameInstanceSubsystem::BindToMoveFinish);
-        GameInstanceSubsystem->MoveRecords.Emplace(Record);
-    }
+	if (!Actor)
+	{
+		return;
+	}
+	if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
+	{
+		auto Record = UMoveActorTowardDirectionFinishOnCollisionWithScale::CreateRecord(
+			Actor, Direction, IgnoreActors, OnCollision, MoveRate, ScaleRate, Duration, ShouldStopAfterFirstCollision);
+		Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem, &UARPGGameInstanceSubsystem::BindToMoveFinish);
+		GameInstanceSubsystem->MoveRecords.Emplace(Record);
+	}
 }
 
 void UARPGGameInstanceSubsystem::MoveActorTowardActor(AActor* Actor, AActor* Target,
                                                       FMoveFinishDelegate MoveFinishDelegate, float MoveRate,
-                                                      float Duration,float AcceptableRadius)
+                                                      float Duration, float AcceptableRadius)
 {
-    if (!Actor)
-    {
-        return;
-    }
+	if (!Actor)
+	{
+		return;
+	}
 
-    if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
-    {
-        auto Record = UMoveActorTowardActorRecord::CreateRecord(Actor, Target, MoveFinishDelegate, MoveRate, Duration,AcceptableRadius);
-        Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem,&UARPGGameInstanceSubsystem::BindToMoveFinish);
-        GameInstanceSubsystem->MoveRecords.Emplace(Record);
-    }
+	if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
+	{
+		auto Record = UMoveActorTowardActorRecord::CreateRecord(Actor, Target, MoveFinishDelegate, MoveRate, Duration,
+		                                                        AcceptableRadius);
+		Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem, &UARPGGameInstanceSubsystem::BindToMoveFinish);
+		GameInstanceSubsystem->MoveRecords.Emplace(Record);
+	}
 }
 
 void UARPGGameInstanceSubsystem::MoveActorTowardActorWithScale(AActor* Actor, AActor* Target,
                                                                FMoveFinishDelegate MoveFinishDelegate, float MoveRate,
                                                                float ScaleRate, float Duration, float AcceptableRadius)
 {
-    if (!Actor)
-    {
-        return;
-    }
+	if (!Actor)
+	{
+		return;
+	}
 
-    if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
-    {
-        auto Record = UMoveActorTowardActorWithScaleRecord::CreateRecord(Actor, Target, MoveFinishDelegate, MoveRate, ScaleRate,
-                                                                         Duration,AcceptableRadius);
-        Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem,&UARPGGameInstanceSubsystem::BindToMoveFinish);
-        GameInstanceSubsystem->MoveRecords.Emplace(Record);
-    }
+	if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
+	{
+		auto Record = UMoveActorTowardActorWithScaleRecord::CreateRecord(
+			Actor, Target, MoveFinishDelegate, MoveRate, ScaleRate,
+			Duration, AcceptableRadius);
+		Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem, &UARPGGameInstanceSubsystem::BindToMoveFinish);
+		GameInstanceSubsystem->MoveRecords.Emplace(Record);
+	}
 }
 
-void UARPGGameInstanceSubsystem::MoveActorComplex(AActor* Actor, FTransformFunctionOfTime TransformFunctionOfTime, TArray<AActor*> IgnoreActors,
-                                                  FCollisionDelegate OnCollision, float Duration, bool ShouldStopAfterFirstCollision)
+void UARPGGameInstanceSubsystem::MoveActorComplex(AActor* Actor, FTransformFunctionOfTime TransformFunctionOfTime,
+                                                  TArray<AActor*> IgnoreActors,
+                                                  FCollisionDelegate OnCollision, float Duration,
+                                                  bool ShouldStopAfterFirstCollision)
 {
-    if (!Actor)
-    {
-        return;
-    }
+	if (!Actor)
+	{
+		return;
+	}
 
-    if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
-    {
-        auto Record = UMoveActorComplex::CreateRecord(Actor, TransformFunctionOfTime,IgnoreActors, OnCollision, Duration,ShouldStopAfterFirstCollision);
-        Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem,&UARPGGameInstanceSubsystem::BindToMoveFinish);
-        GameInstanceSubsystem->MoveRecords.Emplace(Record);
-    }
+	if (UARPGGameInstanceSubsystem* GameInstanceSubsystem = Get(Actor->GetWorld()))
+	{
+		auto Record = UMoveActorComplex::CreateRecord(Actor, TransformFunctionOfTime, IgnoreActors, OnCollision,
+		                                              Duration, ShouldStopAfterFirstCollision);
+		Record->MoveFinishEvent.AddDynamic(GameInstanceSubsystem, &UARPGGameInstanceSubsystem::BindToMoveFinish);
+		GameInstanceSubsystem->MoveRecords.Emplace(Record);
+	}
 }
 
 bool UARPGGameInstanceSubsystem::Tick(float DeltaSeconds)
 {
-    for (int i = MoveRecords.Num()-1; i >=0; --i)
-    {
-        MoveRecords[i]->Move(DeltaSeconds);
-    }
-    
-    return true;
+	for (int i = MoveRecords.Num() - 1; i >= 0; --i)
+	{
+		MoveRecords[i]->Move(DeltaSeconds);
+	}
+
+	return true;
 }
-
-
