@@ -117,6 +117,9 @@ public:
 
 	static UARPGGameInstanceSubsystem* Get(UWorld* World);
 
+	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",BlueprintPure)
+	static FVector2D GetScreenSize();
+
 	UFUNCTION()
 	bool Tick(float DeltaSeconds);
 

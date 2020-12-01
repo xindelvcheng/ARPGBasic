@@ -8,6 +8,7 @@
 
 #include "Blueprint/UserWidget.h"
 #include "Components/ScrollBox.h"
+#include "Components/SizeBox.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
 
 #include "ARPGWidgetsLab.generated.h"
@@ -56,11 +57,25 @@ class UARPGProgressBar : public UUserWidget
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGProgressBar",meta=(BindWidget,AllowPrivateAccess))
     class UProgressBar* ProgressBar;
 
+    UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGProgressBar",meta=(BindWidget,AllowPrivateAccess))
+    USizeBox* SizeBox_ProgressBarContainer;
+
 protected:
+    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGProgressBar")
+    FVector2D OriginalPixelSize = {100,15};
+
+    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGProgressBar")
+    FVector2D OriginalRelativeSize = {0.2,0.01};
+    
     virtual bool Initialize() override;
     virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
+
 public:
+    virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+
+    void SetPercent(float Current, float Total);
+
     UFUNCTION(BlueprintCallable,Category="ARPGProgressBar")
     void SetPercent(int Current, int Total);
 };
