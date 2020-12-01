@@ -109,6 +109,12 @@ public:
 	static void PrintLogToScreen(FText Message, float Time = 5, FColor Color = FColor::Yellow);
 	static void PrintLogToScreen(float Message, float Time = 5, FColor Color = FColor::Yellow);
 	static void PrintLogToScreen(UObject* Message, float Time = 5, FColor Color = FColor::Yellow);
+	
+	UFUNCTION(BlueprintCallable,Category="ARPGGameInstanceSubsystem")
+    static FVector2D GetRelativeSize(FVector2D RelativeSize);
+
+	UFUNCTION(BlueprintCallable,Category="ARPGGameInstanceSubsystem")
+    static FVector2D GetScreenSize();
 
 	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",BlueprintPure)
 	static FTransform GetActorNearPositionTransform(AActor* OriginActor,
