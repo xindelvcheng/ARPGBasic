@@ -53,46 +53,11 @@ protected:
     TSubclassOf<UARPGLoadingScreenWidget> ARPGLoadingWidgetClass;
 
 
-    virtual bool Initialize() override
-    {
-        Super::Initialize();
+    virtual bool Initialize() override;
 
-        if (!Button_StartNewGame || !Button_ContinueGame || !Button_LoadGame || !Button_Config || !Button_QuitGame)
-        {
-            if (GEngine)
-            {
-                GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow, TEXT("蓝图类与C++类的按钮设置未对应"));
-                return false;
-            }
-        }
-        else if (!ARPGLoadingWidgetClass)
-        {
-            if (GEngine)
-            {
-                GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow, TEXT("未指定加载页面蓝图类"));
-                return false;
-            }
-        }
-        AttachedController = Cast<APlayerController>(GetOwningPlayer());
-        if (AttachedController)
-        {
-            UWidgetBlueprintLibrary::SetInputMode_UIOnlyEx(AttachedController,this,EMouseLockMode::DoNotLock);
-            AttachedController->bShowMouseCursor = true;
-        }
-       
-            
-        Button_StartNewGame->OnClicked.AddDynamic(this, &UARPGMainMenuWidget::OnClickButton_StartNewGame);
-        Button_QuitGame->OnClicked.AddDynamic(this, &UARPGMainMenuWidget::OnClickButton_QuitGame);
-
-        return true;
-    };
-
-    UFUNCTION(BlueprintImplementableEvent)
+    UFUNCTION()
     void OnClickButton_StartNewGame();
 
     UFUNCTION()
-    void OnClickButton_QuitGame()
-    {
-        UKismetSystemLibrary::QuitGame(GetWorld(),UGameplayStatics::GetPlayerController(GetWorld(),0),EQuitPreference::Quit,true);
-    }
+    void OnClickButton_QuitGame();
 };

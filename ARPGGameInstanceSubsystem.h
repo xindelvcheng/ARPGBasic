@@ -47,8 +47,9 @@ class UARPGGameInstanceSubsystem : public UGameInstanceSubsystem
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
-	
 
+	UPROPERTY()
+	UUserWidget* LoadingWidget;
 public:
 
 	DECLARE_MULTICAST_DELEGATE_OneParam(FPreLoadMapDelegate, const FString& /* MapName */);

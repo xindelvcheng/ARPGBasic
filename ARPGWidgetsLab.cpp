@@ -66,6 +66,25 @@ void UARPGProgressBar::SetPercent(int Current, int Total)
 	SetPercent(static_cast<float>(Current), static_cast<float>(Total));
 }
 
+void UARPGProgressBar::BindToCharacter(AARPGCharacter* Character)
+{
+	if (Character && Character->GetCharacterStatusComponent())
+	{
+		this->SetPercent(Character->GetCurrentHP() , Character->GetMaxHP());
+		Character->GetCharacterStatusComponent()->OnCharacterPropertyChanged.AddDynamic(
+            this, &UARPGProgressBar::OnCharacterStatusChanged);
+	}
+}
+
+void UARPGProgressBar::OnCharacterStatusChanged(ECharacterProperty ChangedProperty, int NewCurrentValue, int NewTotalValue,
+	int DeltaValue)
+{
+	if (ChangedProperty == ECharacterProperty::CurrentHP || ChangedProperty == ECharacterProperty::MaxHP)
+	{
+		SetPercent(NewCurrentValue, NewTotalValue);
+	}
+}
+
 void UARPGProgressBar::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	if (DummyValue != TrueValue)
@@ -77,6 +96,8 @@ void UARPGProgressBar::NativeTick(const FGeometry& MyGeometry, float InDeltaTime
 		}
 	}
 }
+
+#if WITH_EDITOR
 
 void UARPGProgressBar::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
@@ -97,6 +118,7 @@ void UARPGProgressBar::PostEditChangeProperty(FPropertyChangedEvent& PropertyCha
 		CanvasPanelSlot->SetSize(OriginalPixelSize);
 	}
 }
+#endif
 
 bool UARPGPromptWidget::Initialize()
 {

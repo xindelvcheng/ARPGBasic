@@ -23,6 +23,15 @@ class UARPGLockTargetComponent : public UWidgetComponent
 		
 	UPROPERTY(EditAnywhere,Category="Debug",meta=(AllowPrivateAccess))
 	bool bDrawDebug = false;
+
+	TArray<TEnumAsByte<	EObjectTypeQuery> > ObjectTypes = {ObjectTypeQuery3};
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGLockTargetComponent",meta=(AllowPrivateAccess))
+	float DetectDistance = 1500;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGLockTargetComponent",meta=(AllowPrivateAccess))
+	FVector DetectHalfSize{300,1000,150};
+
 public:	
 	// Sets default values for this component's properties
 	UARPGLockTargetComponent();
@@ -42,8 +51,8 @@ public:
 
 	TArray<AARPGCharacter*> CharactersInSight;
 
-	TArray<TEnumAsByte<	EObjectTypeQuery> > ObjectTypes = {ObjectTypeQuery3};
-	FVector HalfSize{300,150,150};
+	
+	
 	TArray<AActor*> ActorsToIgnore;
 
 	TArray<AARPGCharacter*> Targets;

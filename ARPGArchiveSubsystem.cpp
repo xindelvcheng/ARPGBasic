@@ -136,7 +136,7 @@ bool UARPGArchiveSubsystem::BPFunc_SaveArchive(UObject* WorldContextObject, int 
 	UARPGArchiveSubsystem* ArchiveSubsystem = Get(WorldContextObject->GetWorld());
 	if (ArchiveSubsystem)
 	{
-		FMath::Clamp(ArchiveIndex, 0, ArchiveSubsystem->ArchiveManager->ArchiveInfos.Num() - 1);
+		ArchiveIndex = FMath::Clamp(ArchiveIndex, 0, ArchiveSubsystem->ArchiveManager->ArchiveInfos.Num() - 1);
 		if (ArchiveSubsystem->ArchiveManager->ArchiveInfos.IsValidIndex(ArchiveIndex))
 		{
 			ArchiveSubsystem->SaveArchive(ArchiveSubsystem->ArchiveManager->ArchiveInfos[ArchiveIndex].SlotName, CompleteDelegate);
@@ -179,7 +179,7 @@ void UARPGArchiveSubsystem::BPFunc_LoadArchive(UObject* WorldContextObject, int 
 	UARPGArchiveSubsystem* ArchiveSubsystem = Get(WorldContextObject->GetWorld());
 	if (ArchiveSubsystem)
 	{
-		FMath::Clamp(ArchiveIndex, 0, ArchiveSubsystem->ArchiveManager->ArchiveInfos.Num() - 1);
+		ArchiveIndex = FMath::Clamp(ArchiveIndex, 0, ArchiveSubsystem->ArchiveManager->ArchiveInfos.Num() - 1);
 		if (ArchiveSubsystem->ArchiveManager->ArchiveInfos.IsValidIndex(ArchiveIndex))
 		{
 			ArchiveSubsystem->LoadArchive(ArchiveSubsystem->ArchiveManager->ArchiveInfos[ArchiveIndex].SlotName, CompleteDelegate);

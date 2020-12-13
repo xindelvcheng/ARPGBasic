@@ -72,12 +72,22 @@ protected:
 
 
 public:
-    virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-
     void SetPercent(float Current, float Total);
 
     UFUNCTION(BlueprintCallable,Category="ARPGProgressBar")
     void SetPercent(int Current, int Total);
+
+    UFUNCTION(BlueprintCallable,Category="ARPGProgressBar")
+    void BindToCharacter(AARPGCharacter* Character);
+
+    UFUNCTION()
+    void OnCharacterStatusChanged( ECharacterProperty ChangedProperty, int  NewCurrentValue, int  NewTotalValue,
+                                              int DeltaValue);
+
+#if WITH_EDITOR
+    virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
 };
 
 

@@ -14,6 +14,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "AIModule/Classes/BrainComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
+#include "AIController.h"
+#include "AIModule/Classes/BehaviorTree/BlackboardComponent.h"
 
 // Sets default values
 AARPGNonPlayerCharacter::AARPGNonPlayerCharacter()
@@ -112,6 +114,14 @@ float AARPGNonPlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const
     if (Cast<AARPGPlayerController>(EventInstigator))
     {
         ShowHPBar();
+
+        if (auto AIController = Cast<AAIController>(GetController()))
+        {
+            if (AIController->GetBlackboardComponent())
+            {
+                AIController->GetBlackboardComponent()->SetValueAsObject("Target",EventInstigator->GetCharacter());
+            }
+        }
     }   
     return DamageAmount;
 }
@@ -122,7 +132,7 @@ void AARPGNonPlayerCharacter::BindToSensePerceptionUpdated(AActor* Actor, FAISti
     GetWorldTimerManager().ClearTimer(ForgetTargetTimerHandle);
     if (Stimulus.WasSuccessfullySensed())
     {
-        if (Cast<AARPGMainCharacter>(Actor))
+        if (auto MainCharacter = Cast<AARPGMainCharacter>(Actor))
         {
             if (FVector::Distance(GetActorLocation(), Actor->GetActorLocation()) > 1500 && Actor->GetVelocity().Size() <
                 500)
@@ -132,7 +142,14 @@ void AARPGNonPlayerCharacter::BindToSensePerceptionUpdated(AActor* Actor, FAISti
             }
             else
             {
-                LastHitBy = Cast<AARPGMainCharacter>(Actor)->GetController();
+                LastHitBy = MainCharacter->GetController();
+                if (auto AIController = Cast<AAIController>(GetController()))
+                {
+                    if (AIController->GetBlackboardComponent())
+                    {
+                        AIController->GetBlackboardComponent()->SetValueAsObject("Target",MainCharacter);
+                    }
+                }
             }
         }
     }

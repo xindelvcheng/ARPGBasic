@@ -78,7 +78,7 @@ protected:
     AARPGCharacter* OwnerCharacter;
 
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-    float DamageWeight = 0;
+    float DamageWeight = 1;
 
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
     float DamageBias = 10;

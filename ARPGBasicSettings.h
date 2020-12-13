@@ -36,7 +36,7 @@ public:
     }
     
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
-    TSoftClassPtr<UARPGStatusWidget> LoadingWidgetClass;
+    TSoftClassPtr<UUserWidget> LoadingWidgetClass;
 
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
     TSoftClassPtr<UARPGStatusWidget> StatusWidgetClass;

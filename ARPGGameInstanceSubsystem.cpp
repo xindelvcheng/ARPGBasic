@@ -10,12 +10,14 @@
 
 
 #include "APRGGameSaver.h"
+#include "ARPGBasicSettings.h"
 #include "GameItemWidget.h"
 #include "ARPGPlayerController.h"
 #include "ARPGGameItemsManagerComponent.h"
 
 #include "TranscendentalCombatComponent.h"
 #include "TranscendentalLawsSystem.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 
 
 void UARPGGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -26,12 +28,25 @@ void UARPGGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collection
 
 	FCoreUObjectDelegates::PreLoadMap.AddLambda([&](const FString& MapName)
 	{
+		if (UARPGBasicSettings::Get())
+		{
+			if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(),0))
+			{
+				LoadingWidget = CreateWidget(PlayerController,UARPGBasicSettings::Get()->LoadingWidgetClass.LoadSynchronous());
+				LoadingWidget->AddToViewport();
+            }
+		}
 		PreLoadMap.Broadcast(MapName);
 		OnLoadingMap.Broadcast(MapName);
 	});
 
 	FCoreUObjectDelegates::PostLoadMapWithWorld.AddLambda([&](UWorld* LoadedWorld)
 	{
+		if (LoadingWidget)
+		{
+			LoadingWidget->RemoveFromParent();
+		}
+		
 		PostLoadMap.Broadcast(LoadedWorld);
 		OnMapLoaded.Broadcast(LoadedWorld);
 	});

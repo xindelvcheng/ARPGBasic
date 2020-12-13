@@ -33,7 +33,7 @@ UARPGLockTargetComponent::UARPGLockTargetComponent()
 void UARPGLockTargetComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	Widget->SetVisibility(ESlateVisibility::Hidden);
+	GetWidget()->SetVisibility(ESlateVisibility::Hidden);
 	MainCharacterPlayerController = Cast<AARPGPlayerController>(AttachedCharacter->GetController());
 }
 
@@ -55,8 +55,8 @@ AARPGCharacter* UARPGLockTargetComponent::ToggleLockTarget()
 {
 	UKismetSystemLibrary::BoxTraceMultiForObjects(GetWorld(), AttachedCharacter->GetActorLocation(),
 	                                              AttachedCharacter->GetActorLocation() + AttachedCharacter->
-	                                              GetActorForwardVector() * 500,
-	                                              HalfSize,
+	                                              GetActorForwardVector() * DetectDistance,
+	                                              DetectHalfSize,
 	                                              AttachedCharacter->GetActorRotation(), ObjectTypes, false,
 	                                              ActorsToIgnore,
 	                                              bDrawDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
@@ -70,7 +70,7 @@ AARPGCharacter* UARPGLockTargetComponent::ToggleLockTarget()
 		{
 			LockingTarget = CandidateTarget;
 			LockedTargets.Emplace(LockingTarget);
-			LockingTarget->GetCharacterLockTargetComponent()->Widget->SetVisibility(ESlateVisibility::Visible);
+			LockingTarget->GetCharacterLockTargetComponent()->GetWidget()->SetVisibility(ESlateVisibility::Visible);
 			SetComponentTickEnabled(true);
 			return LockingTarget;
 		}
@@ -79,7 +79,7 @@ AARPGCharacter* UARPGLockTargetComponent::ToggleLockTarget()
 	//未找到满足条件的对象，视为玩家想解除当前锁定
 	if (LockingTarget && LockingTarget->GetCharacterLockTargetComponent())
 	{
-		LockingTarget->GetCharacterLockTargetComponent()->Widget->SetVisibility(ESlateVisibility::Hidden);
+		LockingTarget->GetCharacterLockTargetComponent()->GetWidget()->SetVisibility(ESlateVisibility::Hidden);
 		LockingTarget = nullptr;
 		SetComponentTickEnabled(false);
 	}

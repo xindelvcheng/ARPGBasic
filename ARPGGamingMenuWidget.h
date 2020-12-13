@@ -13,6 +13,7 @@
 #include "Components/ScrollBox.h"
 #include "Components/TextBlock.h"
 #include "Kismet/KismetTextLibrary.h"
+#include "functional"
 
 
 
