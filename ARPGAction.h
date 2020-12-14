@@ -14,11 +14,7 @@ UCLASS(Blueprintable)
 class AARPGAction : public AActor
 {
     GENERATED_BODY()
-
 protected:
-
-    UPROPERTY(BlueprintReadOnly,Category="ARPGAction")
-    AARPGCharacter* OwningCharacter;
 
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGAction")
     int ExclusiveGroupID = 0;
@@ -27,6 +23,9 @@ protected:
     void BPFunc_Active();
 
 public:
+    UPROPERTY(BlueprintReadOnly,Category="ARPGAction")
+    AARPGCharacter* OwnerCharacter;
+    
     int GetActionExclusiveGroupID()const{return ExclusiveGroupID;}
 
     virtual void InitWithOwningCharacter(AARPGCharacter* NewOwningCharacter);
@@ -40,6 +39,14 @@ public:
     virtual void Interrupt(AARPGCharacter* Causer);
 
     UFUNCTION(BlueprintCallable,Category="ARPGAction")
+    static AARPGAction* CreateARPGAction(UObject* WorldContextObject, TSubclassOf<AARPGAction> ActionClass,
+                                         AARPGCharacter* ActionOwnerCharacter, int ActionExclusiveGroupID);
+
+    template<typename  T>
+    static T* CreateARPGAction(UObject* WorldContextObject,
+                                         AARPGCharacter* ActionOwnerCharacter, int ActionExclusiveGroupID);
+
+    UFUNCTION(BlueprintCallable,Category="ARPGAction")
     void FinishAction();
 
     bool CheckConditionAndPayCost();
@@ -50,6 +57,9 @@ public:
     DECLARE_DELEGATE_OneParam(FActionFinishDelegate, AARPGAction*);
     FActionFinishDelegate OnActionFinished;
 };
+
+
+
 
 UCLASS(Blueprintable)
 class AARPGMontageAction : public AARPGAction

@@ -10,11 +10,11 @@ bool AARPGAction::CheckConditionAndPayCost()
 
 bool AARPGAction::BPFunc_CheckConditionAndPayCost_Implementation()
 {
-	const int SPCost = static_cast<int>(static_cast<float>(OwningCharacter->GetMaxSP()) / 4);
+	const int SPCost = static_cast<int>(static_cast<float>(OwnerCharacter->GetMaxSP()) / 4);
 
-	if (OwningCharacter->GetCurrentSP() > SPCost)
+	if (OwnerCharacter->GetCurrentSP() > SPCost)
 	{
-		OwningCharacter->UpdateCurrentSP(-SPCost);
+		OwnerCharacter->UpdateCurrentSP(-SPCost);
 		return true;
 	}
 	return false;
@@ -22,21 +22,23 @@ bool AARPGAction::BPFunc_CheckConditionAndPayCost_Implementation()
 
 void AARPGAction::FinishAction()
 {
+	SetActorTickEnabled(false);
+
 	OnActionFinished.ExecuteIfBound(this);
 }
 
 void AARPGAction::InitWithOwningCharacter(AARPGCharacter* NewOwningCharacter)
 {
-	OwningCharacter = NewOwningCharacter;
+	OwnerCharacter = NewOwningCharacter;
 }
 
 bool AARPGAction::TryToActivateAction(AARPGCharacter* User, AARPGCharacter* Target)
 {
-	if (OwningCharacter != User)
+	if (OwnerCharacter != User)
 	{
 		InitWithOwningCharacter(User);
 	}
-	verifyf(OwningCharacter, TEXT("未显式调用InitWithOwningCharacter，也没有在激活Actor时指定OwningCharacter"));
+	verifyf(OwnerCharacter, TEXT("未显式调用InitWithOwningCharacter，也没有在激活Actor时指定OwningCharacter"));
 
 	if (CheckConditionAndPayCost())
 	{
@@ -57,10 +59,35 @@ void AARPGAction::Interrupt(AARPGCharacter* Causer)
 	FinishAction();
 }
 
+AARPGAction* AARPGAction::CreateARPGAction(UObject* WorldContextObject, TSubclassOf<AARPGAction> ActionClass,
+                                           AARPGCharacter* ActionOwnerCharacter, int ActionExclusiveGroupID)
+{
+	FActorSpawnParameters ActorSpawnParameters;
+	ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	ActorSpawnParameters.Instigator = ActionOwnerCharacter;
+	ActorSpawnParameters.Owner = ActionOwnerCharacter;
+	if (AARPGAction* Action = Cast<AARPGAction>(
+		WorldContextObject->GetWorld()->SpawnActor<AARPGAction>(ActionClass, ActorSpawnParameters)))
+	{
+		Action->OwnerCharacter = ActionOwnerCharacter;
+		Action->ExclusiveGroupID = ActionExclusiveGroupID;
+		return Action;
+	}
+	UARPGGameInstanceSubsystem::PrintLogToScreen("生成Action出现错误");
+	return nullptr;
+}
+
+template <typename T>
+T* AARPGAction::CreateARPGAction(UObject* WorldContextObject,
+                                 AARPGCharacter* ActionOwnerCharacter, int ActionExclusiveGroupID)
+{
+	return Cast<T>(CreateARPGAction(WorldContextObject, T::StaticClass(), ActionOwnerCharacter, ActionExclusiveGroupID));
+}
+
 void AARPGMontageAction::OnActionActivate()
 {
 	Super::OnActionActivate();
-	OwningCharacter->PlayAnimMontage(ActionMontage, PlayRate, StartSectionName);
+	OwnerCharacter->PlayAnimMontage(ActionMontage, PlayRate, StartSectionName);
 }
 
 void AARPGMontageAction::BindToMontageBegin(UAnimMontage* Montage)
@@ -76,7 +103,7 @@ void AARPGMontageAction::BindToMontageBegin(UAnimMontage* Montage)
 		MontageInstanceID = MontageInstance->GetInstanceID();
 	}
 	OnMontageBegin(Montage);
-	BPFunc_OnMontageBegin(OwningCharacter);
+	BPFunc_OnMontageBegin(OwnerCharacter);
 }
 
 void AARPGMontageAction::BindToMontageNotify(FName NotifyName,
@@ -87,7 +114,7 @@ void AARPGMontageAction::BindToMontageNotify(FName NotifyName,
 		return;
 	}
 	OnMontageNotify(NotifyName, BranchingPointPayload);
-	BPFunc_OnMontageNotify(NotifyName, OwningCharacter);
+	BPFunc_OnMontageNotify(NotifyName, OwnerCharacter);
 }
 
 void AARPGMontageAction::BindToMontageStop(UAnimMontage* Montage, bool bInterrupted)
@@ -97,14 +124,14 @@ void AARPGMontageAction::BindToMontageStop(UAnimMontage* Montage, bool bInterrup
 		return;
 	}
 	OnMontageStop(Montage, bInterrupted);
-	BPFunc_OnMontageStop(OwningCharacter);
+	BPFunc_OnMontageStop(OwnerCharacter);
 }
 
 void AARPGMontageAction::Interrupt(AARPGCharacter* Causer)
 {
 	AttachedCharacterAnimInstance->Montage_Stop(0.2, ActionMontage);
 	Super::Interrupt(Causer);
-	BPFunc_Interrupt(OwningCharacter);
+	BPFunc_Interrupt(OwnerCharacter);
 }
 
 
@@ -112,9 +139,9 @@ void AARPGMontageAction::InitWithOwningCharacter(AARPGCharacter* NewOwningCharac
 {
 	Super::InitWithOwningCharacter(NewOwningCharacter);
 
-	if (OwningCharacter && OwningCharacter->GetMesh())
+	if (OwnerCharacter && OwnerCharacter->GetMesh())
 	{
-		AttachedCharacterAnimInstance = OwningCharacter->GetMesh()->GetAnimInstance();
+		AttachedCharacterAnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
 		if (AttachedCharacterAnimInstance)
 		{
 			AttachedCharacterAnimInstance->OnMontageStarted.AddDynamic(

@@ -58,14 +58,14 @@ void AAction_MoveToTarget::Tick(float DeltaSeconds)
     {
         return;
     }
-    const FVector Vector = Target->GetActorLocation() - OwningCharacter->GetActorLocation();
+    const FVector Vector = Target->GetActorLocation() - OwnerCharacter->GetActorLocation();
     if (Vector.Size() <= KeepDistance)
     {
         FinishAction();
         return;
     }
     
-    OwningCharacter->AddMovementInput(Vector);
+    OwnerCharacter->AddMovementInput(Vector);
 
 
 }

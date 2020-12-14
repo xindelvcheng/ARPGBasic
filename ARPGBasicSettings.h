@@ -91,4 +91,7 @@ public:
 
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
     TSoftObjectPtr<USoundCue> DefaultCreatureDestroySoundEffect;
+
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Gameplay Config")
+    TSoftObjectPtr<UDataTable> AbilityConfigDataTable;
 };
