@@ -17,7 +17,7 @@ class UMeleeDamageState : public UAnimNotifyState
 {
     GENERATED_BODY()
 
-    TArray<FHitResult> HitResult;
+    TArray<FHitResult> HitResults;
 
     UPROPERTY()
     TArray<AActor*> HitActors;

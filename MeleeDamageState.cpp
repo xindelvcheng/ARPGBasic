@@ -56,7 +56,7 @@ void UMeleeDamageState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequen
                                                       CurrentRotation1, ObjectTypes,
                                                       false, ActorsToIgnore,
                                                       bDrawDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
-                                                      HitResult,
+                                                      HitResults,
                                                       true);
 
         if (StatusComponent)
@@ -67,9 +67,9 @@ void UMeleeDamageState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequen
         const float BaseDamage = DamageWeight * BaseAttack + DamageBias + Player->GetVelocity().Size() *
             VelocityDamageBonusWeight;
 
-        for (int i = 0; i < HitResult.Num(); i++)
+        for (int i = 0; i < HitResults.Num(); i++)
         {
-            AActor* HitActor = HitResult[i].GetActor();
+            AActor* HitActor = HitResults[i].GetActor();
             if (!HitActors.Contains(HitActor))
             {
                 HitActors.Add(HitActor);
@@ -77,7 +77,7 @@ void UMeleeDamageState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequen
                 {
                     UGameplayStatics::ApplyPointDamage(
                         HitActor, BaseDamage,
-                        HitResult[i].Location, HitResult[i],
+                        HitResults[i].Location, HitResults[i],
                         EventInstigator,
                         Player, DamageTypeClass
                                     ? DamageTypeClass
@@ -85,7 +85,7 @@ void UMeleeDamageState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequen
                 }
                 if (StatusComponent)
                 {
-                    StatusComponent->OnAttackHitActor.Broadcast(HitResult[i]);
+                    StatusComponent->OnAttackHitActor.Broadcast(HitResults[i]);
                 }
             }
         }

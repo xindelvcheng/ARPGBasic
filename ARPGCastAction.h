@@ -8,50 +8,8 @@
 
 #include "ARPGCastAction.generated.h"
 
-struct FSimpleTaskStruct;
-class UTask;
-struct FGridLayoutStruct;
-
-
-
+class AARPGCastAction;
 DECLARE_DYNAMIC_DELEGATE(FTaskDelegate);
-
-/**
- * 
- */
-UCLASS()
-class AARPGCastAction : public AARPGAction
-{
-	GENERATED_BODY()
-
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCastAction")
-	USceneComponent* DefaultSceneComponent;
-
-public:
-	AARPGCastAction();
-
-	UPROPERTY(BlueprintReadOnly,Category="ARPGSpell")
-	TArray<UTask*> Tasks;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell")
-	TArray<FSimpleTaskStruct> ActionTaskStructs;
-
-protected:
-	virtual void BeginPlay() override;
-
-public:
-	virtual void Tick(float DeltaSeconds) override;
-
-	void InitTaskObjects();
-
-	UFUNCTION(BlueprintCallable,meta=(WorldContext=WorldContextObject))
-	static AARPGCastAction* CreateARPGCastAction(UObject* WorldContextObject, FName AbilityName,
-	                                             AARPGCharacter* ActionOwnerCharacter, int ActionExclusiveGroupID);
-
-#if WITH_EDITOR
-	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-#endif
-};
 
 UCLASS()
 class UTask : public UObject
@@ -200,7 +158,6 @@ struct FSimpleTaskStruct
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
 	USoundBase* SoundEffect = nullptr;
-
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
 	FGridLayoutStruct LayoutDescription;
@@ -213,5 +170,41 @@ struct FSimpleTaskDataTableLine : public FTableRowBase
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
 	TArray<FSimpleTaskStruct> SpellTasks;
-	
+};
+
+/**
+ * 
+ */
+UCLASS()
+class AARPGCastAction : public AARPGAction
+{
+	GENERATED_BODY()
+
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	USceneComponent* DefaultSceneComponent;
+
+public:
+	AARPGCastAction();
+
+	UPROPERTY(BlueprintReadOnly,Category="ARPGSpell")
+	TArray<UTask*> Tasks;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell")
+	TArray<FSimpleTaskStruct> ActionTaskStructs;
+
+protected:
+	virtual void BeginPlay() override;
+
+public:
+	virtual void Tick(float DeltaSeconds) override;
+
+	void InitTaskObjects();
+
+	UFUNCTION(BlueprintCallable,meta=(WorldContext=WorldContextObject))
+	static AARPGCastAction* CreateARPGCastAction(UObject* WorldContextObject, FName AbilityName,
+	                                             AARPGCharacter* ActionOwnerCharacter, int ActionExclusiveGroupID);
+
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 };
