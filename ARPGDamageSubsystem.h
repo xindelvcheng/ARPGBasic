@@ -6,6 +6,7 @@
 
 
 
+#include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Subsystems/GameInstanceSubsystem.h"
@@ -52,10 +53,7 @@ public:
 	TArray<AActor*> ActorsToIgnore;
 
 	TArray<TEnumAsByte<EObjectTypeQuery>> DetectObjectTypes{ObjectTypeQuery1, ObjectTypeQuery2, ObjectTypeQuery3};
-	EDrawDebugTrace::Type DrawDebugType{EDrawDebugTrace::None};
-#if WITH_EDITOR
 	bool bDrawDebug = false;
-#endif
 
 	float BaseAttack;
 	FDamageDetectDescriptionStruct DamageDetectDescriptionStruct;
@@ -81,6 +79,7 @@ class TESTPROJECT_API UARPGDamageSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 
+	UPROPERTY()
 	TArray<UDamageDetectRecord*> Records;
 protected:
 	UFUNCTION()

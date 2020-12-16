@@ -40,18 +40,11 @@ void UDamageDetectRecord::Tick(float)
 
 	if (DamageDetectDescriptionStruct.bUseDamageCenterComponentCurrentBoundsAsDetectBound)
 	{
-		FVector DamageOrigin;
-		FVector DamageBounds;
-		float SphereRadius;
-		UKismetSystemLibrary::GetComponentBounds(DamageCenterComponent.Get(), DamageOrigin, DamageBounds, SphereRadius);
-		
-		DamageDetectDescriptionStruct.DamageBoxHalfSizeInTrace = DamageBounds;
-		CurrentFrameDamageCenterTransform.SetLocation(DamageOrigin);
+		const FBoxSphereBounds Bounds = DamageCenterComponent->CalcLocalBounds();
+		DamageDetectDescriptionStruct.DamageBoxHalfSizeInTrace = Bounds.BoxExtent*DamageCenterComponent->GetComponentScale();
+		CurrentFrameDamageCenterTransform.SetLocation(Bounds.Origin+DamageCenterComponent->GetComponentLocation());
 	}
 
-#ifdef WITH_EDITOR
-	DrawDebugType = bDrawDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
-#endif
 	
 	UKismetSystemLibrary::BoxTraceMultiForObjects(Instigator->GetWorld(), LastFrameDamageCenterTransform.GetLocation(),
 	                                              CurrentFrameDamageCenterTransform.GetLocation(),
@@ -60,7 +53,7 @@ void UDamageDetectRecord::Tick(float)
 	                                              DetectObjectTypes,
 	                                              false,
 	                                              ActorsToIgnore,
-	                                              DrawDebugType,
+	                                              bDrawDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
 	                                              HitResults,
 	                                              true);
 	for (int i = 0; i < HitResults.Num(); i++)

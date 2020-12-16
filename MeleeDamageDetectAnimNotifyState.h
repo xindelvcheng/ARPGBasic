@@ -4,8 +4,12 @@
 
 #include "CoreMinimal.h"
 
+
+#include "ARPGDamageSubsystem.h"
 #include "Animation/AnimNotifies/AnimNotifyState.h"
-#include "MeleeDamageState.generated.h"
+#include "Components/BoxComponent.h"
+
+#include "MeleeDamageDetectAnimNotifyState.generated.h"
 
 class AARPGCharacter;
 class UCharacterStatusComponent;
@@ -13,30 +17,13 @@ class UCharacterStatusComponent;
  * 
  */
 UCLASS()
-class UMeleeDamageState : public UAnimNotifyState
+class UMeleeDamageDetectAnimNotifyState : public UAnimNotifyState
 {
     GENERATED_BODY()
 
     TArray<FHitResult> HitResults;
+    UDamageDetectRecord* DamageDetectRecord;
 
-    UPROPERTY()
-    TArray<AActor*> HitActors;
-
-    UPROPERTY()
-    AController* EventInstigator;
-
-    FVector LastLocation1;
-
-    UPROPERTY()
-    AARPGCharacter* Player;
-    FVector CurrentLocation1;
-    FRotator CurrentRotation1;
-
-    UPROPERTY()
-    UCharacterStatusComponent* StatusComponent;
-
-    UPROPERTY()
-    float BaseAttack;
 
 protected:
     UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Melee Damage Trace")
@@ -57,8 +44,7 @@ public:
     FVector DamageBoxHalfSizeInTrace = FVector(10, 10, 100);
 
     UPROPERTY(EditAnywhere,Category="Custom")
-    USkeletalMeshComponent* Weapon;
-
+    UBoxComponent* WeaponDamageBoxCollision;
 
     //招式伤害加成系数
     UPROPERTY(EditAnywhere,Category="Custom")
@@ -81,7 +67,5 @@ public:
 protected:
     virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
                              float TotalDuration) override;
-    virtual void NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
-                            float FrameDeltaTime) override;
     virtual void NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
 };

@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 
 #include "ARPGCharacter.h"
+#include "Components/BoxComponent.h"
+
 #include "ARPGMainCharacter.generated.h"
 
 UCLASS()
