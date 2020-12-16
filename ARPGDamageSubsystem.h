@@ -5,24 +5,33 @@
 #include "CoreMinimal.h"
 
 
+
+#include "Components/CapsuleComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "ARPGDamageSubsystem.generated.h"
 
+class UDamageDetectRecord;
+
 class AARPGCharacter;
 class UCharacterStatusComponent;
+
+DECLARE_MULTICAST_DELEGATE_TwoParams(FDamageDetectedEvent, UDamageDetectRecord*, FHitResult);
+DECLARE_DELEGATE_TwoParams(FDamageDetectedDelegate, UDamageDetectRecord*, FHitResult);
 
 USTRUCT()
 struct FDamageDetectDescriptionStruct
 {
 	GENERATED_BODY()
 
+	bool bUseDamageCenterComponentCurrentBoundsAsDetectBound = true;
+	/*DamageBoxHalfSizeInTrace在bUseDamageCenterComponentCurrentBoundsAsDetectBound = true（默认）时无效*/
 	FVector DamageBoxHalfSizeInTrace = FVector(100, 100, 100);
+	bool CauseDamage = true;
 	float DamageWeight = 1;
 	float DamageBias = 0;
 	float VelocityDamageBonusWeight = 0.01;
 	TSubclassOf<UDamageType> DamageTypeClass;
-	TArray<AActor*> ActorsToIgnore;
 };
 
 UCLASS()
@@ -31,35 +40,37 @@ class UDamageDetectRecord : public UObject
 	GENERATED_BODY()
 
 public:
-	
+
 	TArray<FHitResult> HitResults;
 	TWeakObjectPtr<AARPGCharacter> Instigator;
-	TWeakObjectPtr<USceneComponent> DamageCenter;
+	TWeakObjectPtr<USceneComponent> DamageCenterComponent;
 	TWeakObjectPtr<UCharacterStatusComponent> InstigatorStatusComponent;
 	TWeakObjectPtr<AController> InstigatorPlayerController;
 	TArray<AActor*> HitActors;
 	FTransform LastFrameDamageCenterTransform;
 	FTransform CurrentFrameDamageCenterTransform;
+	TArray<AActor*> ActorsToIgnore;
 
 	TArray<TEnumAsByte<EObjectTypeQuery>> DetectObjectTypes{ObjectTypeQuery1, ObjectTypeQuery2, ObjectTypeQuery3};
 	EDrawDebugTrace::Type DrawDebugType{EDrawDebugTrace::None};
-#if WITH_EDITOR	
+#if WITH_EDITOR
 	bool bDrawDebug = false;
 #endif
-	bool CauseDamage = true;
-	float BaseAttack;
-	FDamageDetectDescriptionStruct 	DamageDetectDescriptionStruct;
 
-	static UDamageDetectRecord* Create(TWeakObjectPtr<USceneComponent> DamageCenterSceneComponent,AARPGCharacter* InstigatorCharacter,FDamageDetectDescriptionStruct DamageDetectDescription = {});
+	float BaseAttack;
+	FDamageDetectDescriptionStruct DamageDetectDescriptionStruct;
+
+	static UDamageDetectRecord* Create(TWeakObjectPtr<USceneComponent> DamageCenterSceneComponent,
+	                                   AARPGCharacter* InstigatorCharacter,
+	                                   FDamageDetectedDelegate DamageDetectedDelegate,
+	                                   FDamageDetectDescriptionStruct DamageDetectDescription = {});
 
 	void Tick(float);
 
-	DECLARE_DELEGATE_TwoParams(FDamageDetectedDelegate,UDamageDetectRecord*,FHitResult);
-	FDamageDetectedDelegate DamageDetectedDelegate;
+	FDamageDetectedEvent DamageDetectedEvent;
 
 	virtual void OnDamageDetected(FHitResult HitResult);
 };
-
 
 
 /**
@@ -73,20 +84,21 @@ class TESTPROJECT_API UARPGDamageSubsystem : public UGameInstanceSubsystem
 	TArray<UDamageDetectRecord*> Records;
 protected:
 	UFUNCTION()
-    bool Tick(float DeltaSeconds);
+	bool Tick(float DeltaSeconds);
 
 public:
 	static UARPGDamageSubsystem* Get(UWorld* World);
-	
+
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-	UDamageDetectRecord* RegisterToDamageDetect(TWeakObjectPtr<USceneComponent> DamageCenterSceneComponent, AARPGCharacter* InstigatorCharacter,FDamageDetectDescriptionStruct DamageDetectDescription = {});
-	UDamageDetectRecord* RegisterToDamageDetect(TWeakObjectPtr<AActor> DamageCenter, AARPGCharacter* InstigatorCharacter,FDamageDetectDescriptionStruct DamageDetectDescription = {});
+	UDamageDetectRecord* RegisterToDamageDetect(USceneComponent* DamageCenterSceneComponent,
+	                                            AARPGCharacter* InstigatorCharacter,
+	                                            FDamageDetectedDelegate DelegateOnDamageDetected,
+	                                            FDamageDetectDescriptionStruct DamageDetectDescription = {});
+	UDamageDetectRecord* RegisterToDamageDetect(AActor* DamageCenter,
+	                                            AARPGCharacter* InstigatorCharacter,
+	                                            FDamageDetectedDelegate DelegateOnDamageDetected,
+	                                            FDamageDetectDescriptionStruct DamageDetectDescription = {});
 
 	void UnRegisterToDamageDetect(UDamageDetectRecord* Record);
-
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FDamageDetectedEvent,UDamageDetectRecord*,Record,FHitResult,HitResult);
-
-	UPROPERTY(BlueprintAssignable,Category="ARPGDamageSubsystem",DisplayName="OnDamageDetected")
-	FDamageDetectedEvent DamageDetectedEvent;
 };
