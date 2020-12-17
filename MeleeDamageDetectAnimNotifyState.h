@@ -22,7 +22,9 @@ class UMeleeDamageDetectAnimNotifyState : public UAnimNotifyState
     GENERATED_BODY()
 
     TArray<FHitResult> HitResults;
-    UDamageDetectRecord* DamageDetectRecord;
+
+    UPROPERTY()
+    TWeakObjectPtr<UDamageDetectRecord> DamageDetectRecord;
 
 
 protected:

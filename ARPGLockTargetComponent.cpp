@@ -76,7 +76,7 @@ AARPGCharacter* UARPGLockTargetComponent::ToggleLockTarget()
 		}
 	}
 
-	//未找到满足条件的对象，视为玩家想解除当前锁定
+	//未找到下一个满足条件的可锁定对象，视为玩家想解除当前锁定
 	if (LockingTarget && LockingTarget->GetCharacterLockTargetComponent())
 	{
 		LockingTarget->GetCharacterLockTargetComponent()->GetWidget()->SetVisibility(ESlateVisibility::Hidden);

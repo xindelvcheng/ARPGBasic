@@ -8,6 +8,7 @@
 
 #include "ARPGCastAction.generated.h"
 
+class AARPGSpecialEffectCreature;
 class AARPGCastAction;
 DECLARE_DYNAMIC_DELEGATE(FTaskDelegate);
 
@@ -55,14 +56,15 @@ class UARPGSimpleTask : public UTask
 	GENERATED_BODY()
 
 	UPROPERTY()
-	UParticleSystem* VisualEffect;
+	TSubclassOf<AARPGSpecialEffectCreature> SpecialEffectCreatureClass;
+	
 	UPROPERTY()
-	USoundBase* SoundEffect;
+	AARPGSpecialEffectCreature* SpecialEffectCreature;
 public:
 
 	UFUNCTION(BlueprintCallable,Category="ARPGSpell")
 	static UARPGSimpleTask* CreateSimpleTask(AARPGCastAction* TaskOwnerAction, float TaskStartTime, float TaskDuration,
-	                                         UParticleSystem* NewVisualEffect, USoundBase* NewSoundEffect,
+											TSubclassOf<AARPGSpecialEffectCreature> TaskCreateSpecialEffectCreatureClass,
 	                                         FTransform RelativeTransform);
 
 	virtual void OnTaskExecuted() override;
@@ -154,10 +156,7 @@ struct FSimpleTaskStruct
 	float Duration = 0;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
-	UParticleSystem* VisualEffect = nullptr;
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
-	USoundBase* SoundEffect = nullptr;
+	TSubclassOf<AARPGSpecialEffectCreature> SpecialEffectCreatureClass;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
 	FGridLayoutStruct LayoutDescription;

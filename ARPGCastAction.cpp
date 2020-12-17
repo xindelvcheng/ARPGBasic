@@ -54,7 +54,7 @@ void AARPGCastAction::InitTaskObjects()
 	for (FSimpleTaskStruct ActionTaskStruct : ActionTaskStructs)
 	{
 		Tasks.Emplace(UARPGSimpleTask::CreateSimpleTask(this, ActionTaskStruct.StartTime, ActionTaskStruct.Duration,
-		                                                ActionTaskStruct.VisualEffect, ActionTaskStruct.SoundEffect,
+		                                                ActionTaskStruct.SpecialEffectCreatureClass,
 		                                                ActionTaskStruct.LayoutDescription.GetAbsoluteTransform(
 			                                                this->GetActorLocation())));
 	}
@@ -67,7 +67,7 @@ AARPGCastAction* AARPGCastAction::CreateARPGCastAction(UObject* WorldContextObje
 	{
 		if (ConfigSubsystem->AbilityConfigDataTable)
 		{
-			if (auto AbilityConfig = ConfigSubsystem->AbilityConfigDataTable->FindRow<FSimpleTaskDataTableLine>(
+			if (const auto AbilityConfig = ConfigSubsystem->AbilityConfigDataTable->FindRow<FSimpleTaskDataTableLine>(
 				AbilityName, "Row"))
 			{
 				AARPGCastAction* Action = CreateARPGAction<AARPGCastAction>(
@@ -97,15 +97,15 @@ void AARPGCastAction::PostEditChangeProperty(FPropertyChangedEvent& PropertyChan
 
 
 UARPGSimpleTask* UARPGSimpleTask::CreateSimpleTask(AARPGCastAction* TaskOwnerAction, float TaskStartTime,
-                                                   float TaskDuration, UParticleSystem* NewVisualEffect,
-                                                   USoundBase* NewSoundEffect, FTransform RelativeTransform)
+                                                   float TaskDuration,
+                                                   TSubclassOf<AARPGSpecialEffectCreature> TaskCreateSpecialEffectCreatureClass,
+                                                   FTransform RelativeTransform)
 {
 	UARPGSimpleTask* Task = NewObject<UARPGSimpleTask>();
 	Task->OwnerAction = TaskOwnerAction;
 	Task->StartTime = TaskStartTime;
 	Task->TimeRemaining = TaskDuration;
-	Task->VisualEffect = NewVisualEffect;
-	Task->SoundEffect = NewSoundEffect;
+	Task->SpecialEffectCreatureClass = TaskCreateSpecialEffectCreatureClass;
 	Task->Transform = RelativeTransform;
 	return Task;
 }
@@ -114,11 +114,8 @@ void UARPGSimpleTask::OnTaskExecuted()
 {
 	Super::OnTaskExecuted();
 
-	UParticleSystemComponent* Emitter = UGameplayStatics::SpawnEmitterAttached(
-		VisualEffect, OwnerAction->GetRootComponent());
-	Emitter->SetWorldTransform(Transform);
-	UGameplayStatics::PlaySoundAtLocation(OwnerAction, SoundEffect,
-	                                      OwnerAction->GetActorLocation() + Transform.GetLocation());
+	SpecialEffectCreature = UARPGGameInstanceSubsystem::SpawnActor<AARPGSpecialEffectCreature>(
+        SpecialEffectCreatureClass, Transform, OwnerAction->OwnerCharacter);
 }
 
 void UARPGSimpleTask::OnTaskFinished()

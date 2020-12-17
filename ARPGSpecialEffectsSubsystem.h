@@ -69,13 +69,44 @@ public:
     static void PlaySpecialEffectAtLocation(const UObject* WorldContextObject, EEffectCategory EffectCategory, int Index, FVector Location);
 };
 
+
+
+USTRUCT(BlueprintType)
+struct FARPGCreatureTimeLineTaskStruct
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect") 
+    float DamageStartTime = 0.3;
+    
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect") 
+    float Duration = 0.2;
+
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect") 
+    USoundBase* SoundEffectAsset;
+    
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
+    UParticleSystem* VisualEffectAsset;
+
+    TWeakObjectPtr<UParticleSystemComponent> ParticleSystemComponent;
+    TWeakObjectPtr<UAudioComponent> AudioComponent;
+
+    float DamageEndTime;
+
+    UPROPERTY()
+    class UDamageDetectRecord* DamageDetectRecord;
+};
+
 UCLASS(Blueprintable)
 class AARPGSpecialEffectCreature : public AActor
 {
     GENERATED_BODY()
 
 protected:
-    AARPGCharacter* OwnerCharacter;
+    TWeakObjectPtr<AARPGCharacter> OwnerCharacter;
+
+    UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect",meta=(AllowPrivateAccess))
+    UBoxComponent* DamageDetectionCollisionBox;
 
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
     float DamageWeight = 1;
@@ -86,42 +117,25 @@ protected:
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
     TSubclassOf<UDamageType> DamageType;
 
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-    UParticleSystem* DestroyVisualEffect;
 
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect") 
-    USoundBase* DestroySoundEffect;
+public:
+    AARPGSpecialEffectCreature();
 
 
+protected:
+    virtual void BeginPlay() override;
 public:
     UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffect")
     void SetOwnerCharacter(AARPGCharacter* NewOwnerCharacter) { OwnerCharacter = NewOwnerCharacter; }
 
     UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffect")
-    AARPGCharacter* GetOwnerCharacter() const { return OwnerCharacter; }
+    AARPGCharacter* GetOwnerCharacter() const { return OwnerCharacter.Get(); }
 
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
+    TArray<FARPGCreatureTimeLineTaskStruct> TimeLineTasks;
    
 
     UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffectCreature")
     static AARPGSpecialEffectCreature* SpawnARPGSpecialEffectCreature(TSubclassOf<AARPGSpecialEffectCreature> CreatureClass,
                                                FTransform Transform, AARPGCharacter* OwnerCharacter);
-};
-
-UCLASS(Blueprintable)
-class AARPGSimpleMovableCauseDamageSpecialEffectCreature : public AARPGSpecialEffectCreature
-{
-    GENERATED_BODY()
-    
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect",meta=(AllowPrivateAccess))
-    float MoveRate = 1;
-
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect",meta=(AllowPrivateAccess))
-    UBoxComponent* DamageDetectionCollisionBox;
-public:
-    AARPGSimpleMovableCauseDamageSpecialEffectCreature();
-
-    UFUNCTION()
-    void BindToActorBeginOverlap(AActor* OtherActor) ;
-
-    virtual void BeginPlay() override;
 };

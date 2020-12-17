@@ -6,7 +6,7 @@
 #include "ARPGCharacter.h"
 #include "ARPGGameInstanceSubsystem.h"
 
-UDamageDetectRecord* UDamageDetectRecord::Create(TWeakObjectPtr<USceneComponent> DamageCenterSceneComponent,
+UDamageDetectRecord* UDamageDetectRecord::Create(USceneComponent* DamageCenterSceneComponent,
                                                  AARPGCharacter* InstigatorCharacter,
                                                  FDamageDetectedDelegate DelegateOnDamageDetected,
                                                  FDamageDetectDescriptionStruct DamageDetectDescription)

@@ -8,6 +8,9 @@
 #include "CharacterStatusComponent.h"
 #include "CoreMinimal.h"
 
+#include <vector>
+
+
 #include "ARPGMainCharacter.h"
 #include "ARPGPlayerController.h"
 
@@ -57,13 +60,15 @@ public:
 	DECLARE_MULTICAST_DELEGATE_OneParam(FPostLoadMapDelegate, UWorld* /* LoadedWorld */);
 	FPostLoadMapDelegate PostLoadMap;
 
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPreLoadMapEvent,const FString&, MapName);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPreLoadMapEvent, const FString&, MapName);
+
 	UPROPERTY(BlueprintAssignable,Category="ARPGGameInstanceSubsystem")
 	FPreLoadMapEvent OnLoadingMap;
 
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMapLoadedEvent,UWorld*, LoadedWorld);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMapLoadedEvent, UWorld*, LoadedWorld);
+
 	UPROPERTY(BlueprintAssignable,Category="ARPGGameInstanceSubsystem")
-    FMapLoadedEvent OnMapLoaded;
+	FMapLoadedEvent OnMapLoaded;
 
 	UFUNCTION(BlueprintCallable,BlueprintPure,Category="ARPGGameInstanceSubsystem",meta=(WorldContext=WorldContextObject
 	))
@@ -110,7 +115,7 @@ public:
 	static void PrintLogToScreen(FText Message, float Time = 5, FColor Color = FColor::Yellow);
 	static void PrintLogToScreen(float Message, float Time = 5, FColor Color = FColor::Yellow);
 	static void PrintLogToScreen(UObject* Message, float Time = 5, FColor Color = FColor::Yellow);
-	
+
 
 	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",BlueprintPure)
 	static FTransform GetActorNearPositionTransform(AActor* OriginActor,
@@ -168,16 +173,15 @@ public:
 
 
 	template <typename T>
-	static T* SpawnActor(FTransform Transform, AARPGCharacter* OwnerCharacter)
+	static T* SpawnActor(TSubclassOf<T> ActorClass,FTransform Transform, AARPGCharacter* OwnerCharacter)
 	{
 		FActorSpawnParameters ActorSpawnParameters;
 		ActorSpawnParameters.Instigator = OwnerCharacter;
 		ActorSpawnParameters.Owner = OwnerCharacter;
 		ActorSpawnParameters.SpawnCollisionHandlingOverride =
 			ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-		return OwnerCharacter->GetWorld()->SpawnActor<T>(Transform, ActorSpawnParameters);
+		return OwnerCharacter->GetWorld()->SpawnActor<T>(ActorClass,Transform, ActorSpawnParameters);
 	}
-	
 };
 
 

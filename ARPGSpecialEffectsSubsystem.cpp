@@ -3,9 +3,13 @@
 
 #include "ARPGSpecialEffectsSubsystem.h"
 
+#include "particles/ParticleSystemComponent.h"
+#include "Components/AudioComponent.h"
+
 #include "ARPGBasicSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "ARPGCharacter.h"
+#include "ARPGDamageSubsystem.h"
 #include "ARPGGameInstanceSubsystem.h"
 
 template <typename T>
@@ -115,6 +119,51 @@ void UARPGSpecialEffectsSubsystem::PlaySpecialEffectAtLocation(const UObject* Wo
 }
 
 
+AARPGSpecialEffectCreature::AARPGSpecialEffectCreature()
+{
+	PrimaryActorTick.bCanEverTick = false;
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("DefaultRootSceneComponent"));
+	DamageDetectionCollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("DamageDetectionCollisionBox"));
+	DamageDetectionCollisionBox->SetupAttachment(RootComponent);
+}
+
+void AARPGSpecialEffectCreature::BeginPlay()
+{
+	Super::BeginPlay();
+
+	for (FARPGCreatureTimeLineTaskStruct& Task : TimeLineTasks)
+	{
+		FTimerHandle StartTimerHandle;
+
+		//显示特效
+		Task.ParticleSystemComponent = UGameplayStatics::SpawnEmitterAttached(
+			Task.VisualEffectAsset, RootComponent);
+		Task.AudioComponent = UGameplayStatics::SpawnSoundAttached(Task.SoundEffectAsset, RootComponent);
+
+		//进行伤害判定
+		GetWorldTimerManager().SetTimer(StartTimerHandle, FTimerDelegate::CreateLambda([&]()
+		{
+			if (UARPGDamageSubsystem* DamageSubsystem = UARPGDamageSubsystem::Get(GetWorld()))
+			{
+				Task.DamageDetectRecord = DamageSubsystem->RegisterToDamageDetect(
+					DamageDetectionCollisionBox, OwnerCharacter.Get(),
+					FDamageDetectedDelegate{});
+			}
+		}), Task.DamageStartTime, false);
+
+		//取消伤害判定
+		FTimerHandle EndTimerHandle;
+		Task.DamageEndTime = Task.DamageStartTime + Task.Duration;
+		GetWorldTimerManager().SetTimer(EndTimerHandle, FTimerDelegate::CreateLambda([&]()
+		{
+			if (UARPGDamageSubsystem* DamageSubsystem = UARPGDamageSubsystem::Get(GetWorld()))
+			{
+				DamageSubsystem->UnRegisterToDamageDetect(Task.DamageDetectRecord);
+			}
+		}), Task.DamageEndTime, false);
+	}
+}
+
 AARPGSpecialEffectCreature* AARPGSpecialEffectCreature::SpawnARPGSpecialEffectCreature(
 	TSubclassOf<AARPGSpecialEffectCreature> CreatureClass,
 	FTransform Transform,
@@ -132,70 +181,4 @@ AARPGSpecialEffectCreature* AARPGSpecialEffectCreature::SpawnARPGSpecialEffectCr
 		SpecialEffectCreature->SetOwnerCharacter(OwnerCharacter);
 	}
 	return SpecialEffectCreature;
-}
-
-AARPGSimpleMovableCauseDamageSpecialEffectCreature::AARPGSimpleMovableCauseDamageSpecialEffectCreature()
-{
-	PrimaryActorTick.bCanEverTick = false;
-	DamageDetectionCollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("DamageDetectionCollisionBox"));
-	RootComponent = DamageDetectionCollisionBox;
-
-	if (UARPGBasicSettings::Get())
-	{
-		if (!DestroyVisualEffect)
-		{
-			DestroyVisualEffect = UARPGBasicSettings::Get()->DefaultCreatureDestroyVisualEffect.LoadSynchronous();
-		}
-		if (!DestroySoundEffect)
-		{
-			DestroySoundEffect = UARPGBasicSettings::Get()->DefaultCreatureDestroySoundEffect.LoadSynchronous();
-		}
-	}
-	
-}
-
-void AARPGSimpleMovableCauseDamageSpecialEffectCreature::BeginPlay()
-{
-	Super::BeginPlay();
-	FCollisionDelegate CollisionDelegate;
-	CollisionDelegate.BindDynamic(this, &AARPGSimpleMovableCauseDamageSpecialEffectCreature::BindToActorBeginOverlap);
-	if (GetInstigator())
-	{
-		UARPGGameInstanceSubsystem::MoveActorTowardsDirectionFinishOnCollision(
-			this, GetInstigator()->GetActorForwardVector(), {}, CollisionDelegate, MoveRate);
-	}
-	else
-	{
-		UARPGGameInstanceSubsystem::PrintLogToScreen(
-			FString::Printf(TEXT("实例化类%s时未使用SpawnCreature，且没有指定拥有者，将不会移动。"), *GetFullName()));
-	}
-	SetLifeSpan(1);
-}
-
-void AARPGSimpleMovableCauseDamageSpecialEffectCreature::BindToActorBeginOverlap(AActor* OtherActor)
-{
-	if (OwnerCharacter)
-	{
-		UGameplayStatics::ApplyDamage(
-			OtherActor, OwnerCharacter->GetCharacterStatusComponent()->GetAttack() * DamageWeight + DamageBias,
-			OwnerCharacter->GetController(), this, DamageType);
-	}
-	else
-	{
-		UGameplayStatics::ApplyDamage(
-			OtherActor, 1,
-			nullptr, this, DamageType);
-	}
-	if (UARPGBasicSettings* BasicSettings = UARPGBasicSettings::Get())
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BasicSettings->DefaultImpactVisualEffect.LoadSynchronous(),
-		                                         GetActorLocation(), GetActorRotation(), GetActorScale());
-		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), BasicSettings->DefaultImpactSoundEffect.LoadSynchronous(),
-		                                       GetActorLocation(), GetActorRotation());
-	}
-
-	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), DestroyVisualEffect, GetActorLocation(), GetActorRotation(),
-	                                         GetActorScale());
-	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), DestroySoundEffect, GetActorLocation());
-	GetWorld()->DestroyActor(this);
 }

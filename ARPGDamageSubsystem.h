@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 
 
-
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -58,7 +57,7 @@ public:
 	float BaseAttack;
 	FDamageDetectDescriptionStruct DamageDetectDescriptionStruct;
 
-	static UDamageDetectRecord* Create(TWeakObjectPtr<USceneComponent> DamageCenterSceneComponent,
+	static UDamageDetectRecord* Create(USceneComponent* DamageCenterSceneComponent,
 	                                   AARPGCharacter* InstigatorCharacter,
 	                                   FDamageDetectedDelegate DamageDetectedDelegate,
 	                                   FDamageDetectDescriptionStruct DamageDetectDescription = {});
@@ -100,4 +99,50 @@ public:
 	                                            FDamageDetectDescriptionStruct DamageDetectDescription = {});
 
 	void UnRegisterToDamageDetect(UDamageDetectRecord* Record);
+};
+
+UENUM()
+enum class EElementOverlapResultEnum:uint8
+{
+	Irrelevant,Enhance,Weaken
+};
+
+UCLASS()
+class UARPGDamageType : public UDamageType
+{
+	GENERATED_BODY()
+
+public:
+	virtual EElementOverlapResultEnum ReinforceResult(EElementOverlapResultEnum ElementType){return EElementOverlapResultEnum::Irrelevant;}; 
+};
+
+
+UCLASS()
+class UFireDamage : public UARPGDamageType
+{
+	GENERATED_BODY()
+};
+
+UCLASS()
+class UStoneDamage : public UDamageType
+{
+	GENERATED_BODY()
+};
+
+UCLASS()
+class UMetalDamage : public UDamageType
+{
+	GENERATED_BODY()
+};
+
+UCLASS()
+class UWaterDamage : public UDamageType
+{
+	GENERATED_BODY()
+};
+
+UCLASS()
+class UElectricityDamage : public UDamageType
+{
+	GENERATED_BODY()
 };

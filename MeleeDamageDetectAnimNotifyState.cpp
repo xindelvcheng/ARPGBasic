@@ -8,11 +8,7 @@
 #include "ARPGDamageSubsystem.h"
 #include "ARPGGameInstanceSubsystem.h"
 #include "CharacterStatusComponent.h"
-#include "Kismet/KismetSystemLibrary.h"
-#include "GameFramework/Character.h"
-#include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Kismet/KismetMathLibrary.h"
 
 void UMeleeDamageDetectAnimNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
                                                     float TotalDuration)
@@ -51,6 +47,6 @@ void UMeleeDamageDetectAnimNotifyState::NotifyEnd(USkeletalMeshComponent* MeshCo
 
 	if (UARPGDamageSubsystem::Get(MeshComp->GetWorld()))
 	{
-		UARPGDamageSubsystem::Get(MeshComp->GetWorld())->UnRegisterToDamageDetect(DamageDetectRecord);
+		UARPGDamageSubsystem::Get(MeshComp->GetWorld())->UnRegisterToDamageDetect(DamageDetectRecord.Get());
 	}
 }
