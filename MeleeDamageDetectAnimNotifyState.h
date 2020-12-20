@@ -39,31 +39,31 @@ protected:
 
 public:
 
-    UPROPERTY(EditAnywhere,Category="Custom")
+    UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState")
     FName DamageCenterSocketName = "DamageCenter";
 
-    UPROPERTY(EditAnywhere,Category="Custom")
+    UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState")
     FVector DamageBoxHalfSizeInTrace = FVector(10, 10, 100);
 
-    UPROPERTY(EditAnywhere,Category="Custom")
-    UBoxComponent* WeaponDamageBoxCollision;
+    UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState")
+    UARPGDamageBoxComponent* WeaponDamageBoxCollision;
 
     //招式伤害加成系数
-    UPROPERTY(EditAnywhere,Category="Custom")
+    UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState")
     float DamageWeight = 1;
 
     //招式伤害加成偏置
-    UPROPERTY(EditAnywhere,Category="Custom")
+    UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState")
     float DamageBias = 0;
 
     //速度伤害加成系数
-    UPROPERTY(EditAnywhere,Category="Custom")
+    UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState")
     float VelocityDamageBonusWeight = 0.01;
 
-    UPROPERTY(EditAnywhere,Category="Custom")
+    UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState")
     TSubclassOf<UDamageType> DamageTypeClass;
 
-    UPROPERTY(EditAnywhere,Category="Custom")
+    UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState")
     TArray<AActor*> ActorsToIgnore;
 
 protected:

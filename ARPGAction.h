@@ -1,17 +1,16 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
+
+#include "ARPGActor.h"
+
 #include "ARPGAction.generated.h"
 
 class AARPGCharacter;
 class AARPGAction;
 
-class FARPGGroupIDActionMap : public TMap<int, AARPGAction*>
-{
-};
-
 UCLASS(Blueprintable)
-class AARPGAction : public AActor
+class AARPGAction : public AARPGActor
 {
     GENERATED_BODY()
 protected:
@@ -23,8 +22,6 @@ protected:
     void BPFunc_Active();
 
 public:
-    UPROPERTY(BlueprintReadOnly,Category="ARPGAction")
-    AARPGCharacter* OwnerCharacter;
     
     int GetActionExclusiveGroupID()const{return ExclusiveGroupID;}
 
@@ -43,11 +40,13 @@ public:
                                          AARPGCharacter* ActionOwnerCharacter, int ActionExclusiveGroupID);
 
     template<typename  T>
-    static T* CreateARPGAction(UObject* WorldContextObject,
+    static T* CreateARPGAction(UObject* WorldContextObject,TSubclassOf<AARPGAction> ARPGActionClass,
                                          AARPGCharacter* ActionOwnerCharacter, int ActionExclusiveGroupID);
 
     UFUNCTION(BlueprintCallable,Category="ARPGAction")
     void FinishAction();
+
+    virtual void OnActionFinished(AARPGAction* Action){};
 
     bool CheckConditionAndPayCost();
 
@@ -55,7 +54,7 @@ public:
     bool BPFunc_CheckConditionAndPayCost();
 
     DECLARE_DELEGATE_OneParam(FActionFinishDelegate, AARPGAction*);
-    FActionFinishDelegate OnActionFinished;
+    FActionFinishDelegate OnActionFinishedDelegate;
 };
 
 

@@ -31,7 +31,7 @@ void UARPGCharacterCombatComponent::SpawnActionActors(const TArray<TSubclassOf<T
         {
             Action->InitWithOwningCharacter(AttachedCharacter);
             ActionActors.Add(Action);
-            Action->OnActionFinished.BindUObject(this, &UARPGCharacterCombatComponent::BindToOnActionFinished);
+            Action->OnActionFinishedDelegate.BindUObject(this, &UARPGCharacterCombatComponent::BindToOnActionFinished);
         }
     }
 }

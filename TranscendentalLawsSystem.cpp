@@ -85,7 +85,7 @@ void ATranscendentalLawsSystem::SpawnActionActors(const TArray<TSubclassOf<AARPG
         check(Action);
         Action->InitWithOwningCharacter(AttachedCharacter);
         ActionActors.Add(Action);
-        Action->OnActionFinished.BindUObject(AttachedCharacterCombatComponent,
+        Action->OnActionFinishedDelegate.BindUObject(AttachedCharacterCombatComponent,
                                              &UARPGCharacterCombatComponent::BindToOnActionFinished);
     }
 }

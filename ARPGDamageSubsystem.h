@@ -15,6 +15,7 @@ class UDamageDetectRecord;
 
 class AARPGCharacter;
 class UCharacterStatusComponent;
+class UARPGDamageBoxComponent;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FDamageDetectedEvent, UDamageDetectRecord*, FHitResult);
 DECLARE_DELEGATE_TwoParams(FDamageDetectedDelegate, UDamageDetectRecord*, FHitResult);
@@ -43,7 +44,7 @@ public:
 
 	TArray<FHitResult> HitResults;
 	TWeakObjectPtr<AARPGCharacter> Instigator;
-	TWeakObjectPtr<USceneComponent> DamageCenterComponent;
+	TWeakObjectPtr<UARPGDamageBoxComponent> DamageCenterComponent;
 	TWeakObjectPtr<UCharacterStatusComponent> InstigatorStatusComponent;
 	TWeakObjectPtr<AController> InstigatorPlayerController;
 	TArray<AActor*> HitActors;
@@ -57,7 +58,7 @@ public:
 	float BaseAttack;
 	FDamageDetectDescriptionStruct DamageDetectDescriptionStruct;
 
-	static UDamageDetectRecord* Create(USceneComponent* DamageCenterSceneComponent,
+	static UDamageDetectRecord* Create(UARPGDamageBoxComponent* DamageCenterSceneComponent,
 	                                   AARPGCharacter* InstigatorCharacter,
 	                                   FDamageDetectedDelegate DamageDetectedDelegate,
 	                                   FDamageDetectDescriptionStruct DamageDetectDescription = {});
@@ -89,7 +90,7 @@ public:
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-	UDamageDetectRecord* RegisterToDamageDetect(USceneComponent* DamageCenterSceneComponent,
+	UDamageDetectRecord* RegisterToDamageDetect(UARPGDamageBoxComponent* DamageCenterSceneComponent,
 	                                            AARPGCharacter* InstigatorCharacter,
 	                                            FDamageDetectedDelegate DelegateOnDamageDetected,
 	                                            FDamageDetectDescriptionStruct DamageDetectDescription = {});
@@ -107,41 +108,37 @@ enum class EElementOverlapResultEnum:uint8
 	Irrelevant,Enhance,Weaken
 };
 
-UCLASS()
-class UARPGDamageType : public UDamageType
-{
-	GENERATED_BODY()
-
-public:
-	virtual EElementOverlapResultEnum ReinforceResult(EElementOverlapResultEnum ElementType){return EElementOverlapResultEnum::Irrelevant;}; 
-};
-
-
-UCLASS()
-class UFireDamage : public UARPGDamageType
-{
-	GENERATED_BODY()
-};
-
-UCLASS()
-class UStoneDamage : public UDamageType
-{
-	GENERATED_BODY()
-};
-
-UCLASS()
+UCLASS(BlueprintType)
 class UMetalDamage : public UDamageType
 {
 	GENERATED_BODY()
 };
 
-UCLASS()
+UCLASS(BlueprintType)
+class UWoodDamage : public UDamageType
+{
+	GENERATED_BODY()
+};
+
+UCLASS(BlueprintType)
 class UWaterDamage : public UDamageType
 {
 	GENERATED_BODY()
 };
 
-UCLASS()
+UCLASS(BlueprintType)
+class UFireDamage : public UDamageType
+{
+	GENERATED_BODY()
+};
+
+UCLASS(BlueprintType)
+class UStoneDamage : public UDamageType
+{
+	GENERATED_BODY()
+};
+
+UCLASS(BlueprintType)
 class UElectricityDamage : public UDamageType
 {
 	GENERATED_BODY()

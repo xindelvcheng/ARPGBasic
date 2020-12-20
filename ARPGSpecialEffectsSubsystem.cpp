@@ -9,6 +9,7 @@
 #include "ARPGBasicSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "ARPGCharacter.h"
+#include "ARPGDamageBoxComponent.h"
 #include "ARPGDamageSubsystem.h"
 #include "ARPGGameInstanceSubsystem.h"
 
@@ -123,8 +124,13 @@ AARPGSpecialEffectCreature::AARPGSpecialEffectCreature()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("DefaultRootSceneComponent"));
-	DamageDetectionCollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("DamageDetectionCollisionBox"));
-	DamageDetectionCollisionBox->SetupAttachment(RootComponent);
+	DamageDetectionBox = CreateDefaultSubobject<UARPGDamageBoxComponent>(TEXT("DamageDetectionBox"));
+	DamageDetectionBox->SetupAttachment(RootComponent);
+
+	if (DamageType != nullptr)
+	{
+		DamageDetectionBox->SetDamageType(DamageType);
+	}
 }
 
 void AARPGSpecialEffectCreature::BeginPlay()
@@ -146,7 +152,7 @@ void AARPGSpecialEffectCreature::BeginPlay()
 			if (UARPGDamageSubsystem* DamageSubsystem = UARPGDamageSubsystem::Get(GetWorld()))
 			{
 				Task.DamageDetectRecord = DamageSubsystem->RegisterToDamageDetect(
-					DamageDetectionCollisionBox, OwnerCharacter.Get(),
+					DamageDetectionBox, OwnerCharacter.Get(),
 					FDamageDetectedDelegate{});
 			}
 		}), Task.DamageStartTime, false);
@@ -164,7 +170,7 @@ void AARPGSpecialEffectCreature::BeginPlay()
 	}
 }
 
-AARPGSpecialEffectCreature* AARPGSpecialEffectCreature::SpawnARPGSpecialEffectCreature(
+AARPGSpecialEffectCreature* AARPGSpecialEffectCreature::Create(
 	TSubclassOf<AARPGSpecialEffectCreature> CreatureClass,
 	FTransform Transform,
 	AARPGCharacter* OwnerCharacter)
@@ -176,9 +182,15 @@ AARPGSpecialEffectCreature* AARPGSpecialEffectCreature::SpawnARPGSpecialEffectCr
 		ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 	auto SpecialEffectCreature = OwnerCharacter->GetWorld()->SpawnActor<AARPGSpecialEffectCreature>(
 		CreatureClass, Transform, ActorSpawnParameters);
-	if (SpecialEffectCreature)
+
+	if (SpecialEffectCreature && OwnerCharacter)
 	{
 		SpecialEffectCreature->SetOwnerCharacter(OwnerCharacter);
 	}
+	else
+	{
+		UARPGGameInstanceSubsystem::PrintLogToScreen(FString::Printf(TEXT("ARPGSpecialEffectCreature初始化出现错误")));
+	}
+
 	return SpecialEffectCreature;
 }

@@ -5,8 +5,9 @@
 
 #include "ARPGCharacter.h"
 #include "ARPGGameInstanceSubsystem.h"
+#include "ARPGDamageBoxComponent.h"
 
-UDamageDetectRecord* UDamageDetectRecord::Create(USceneComponent* DamageCenterSceneComponent,
+UDamageDetectRecord* UDamageDetectRecord::Create(UARPGDamageBoxComponent* DamageCenterSceneComponent,
                                                  AARPGCharacter* InstigatorCharacter,
                                                  FDamageDetectedDelegate DelegateOnDamageDetected,
                                                  FDamageDetectDescriptionStruct DamageDetectDescription)
@@ -41,11 +42,12 @@ void UDamageDetectRecord::Tick(float)
 	if (DamageDetectDescriptionStruct.bUseDamageCenterComponentCurrentBoundsAsDetectBound)
 	{
 		const FBoxSphereBounds Bounds = DamageCenterComponent->CalcLocalBounds();
-		DamageDetectDescriptionStruct.DamageBoxHalfSizeInTrace = Bounds.BoxExtent*DamageCenterComponent->GetComponentScale();
-		CurrentFrameDamageCenterTransform.SetLocation(Bounds.Origin+DamageCenterComponent->GetComponentLocation());
+		DamageDetectDescriptionStruct.DamageBoxHalfSizeInTrace = Bounds.BoxExtent * DamageCenterComponent->
+			GetComponentScale();
+		CurrentFrameDamageCenterTransform.SetLocation(Bounds.Origin + DamageCenterComponent->GetComponentLocation());
 	}
 
-	
+
 	UKismetSystemLibrary::BoxTraceMultiForObjects(Instigator->GetWorld(), LastFrameDamageCenterTransform.GetLocation(),
 	                                              CurrentFrameDamageCenterTransform.GetLocation(),
 	                                              DamageDetectDescriptionStruct.DamageBoxHalfSizeInTrace,
@@ -59,7 +61,7 @@ void UDamageDetectRecord::Tick(float)
 	for (int i = 0; i < HitResults.Num(); i++)
 	{
 		AActor* HitActor = HitResults[i].GetActor();
-		if (!HitActors.Contains(HitActor))
+		if (HitResults[i].GetComponent() != DamageCenterComponent && !HitActors.Contains(HitActor))
 		{
 			HitActors.Add(HitActor);
 			OnDamageDetected(HitResults[i]);
@@ -77,6 +79,12 @@ void UDamageDetectRecord::OnDamageDetected(FHitResult HitResult)
 	const float BaseDamage = DamageDetectDescriptionStruct.DamageWeight * BaseAttack + DamageDetectDescriptionStruct.
 		DamageBias + Instigator->GetVelocity().Size() *
 		DamageDetectDescriptionStruct.VelocityDamageBonusWeight;
+
+	if (UARPGDamageBoxComponent* DamageBoxComponent = Cast<UARPGDamageBoxComponent>(HitResult.GetComponent()))
+	{
+		DamageCenterComponent->ElementInteract(DamageBoxComponent);
+	}
+
 	if (DamageDetectDescriptionStruct.CauseDamage)
 	{
 		AActor* HitActor = HitResult.GetActor();
@@ -118,7 +126,7 @@ void UARPGDamageSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 }
 
 UDamageDetectRecord* UARPGDamageSubsystem::RegisterToDamageDetect(
-	USceneComponent* DamageCenterSceneComponent, AARPGCharacter* InstigatorCharacter,
+	UARPGDamageBoxComponent* DamageCenterSceneComponent, AARPGCharacter* InstigatorCharacter,
 	FDamageDetectedDelegate DelegateOnDamageDetected,
 	FDamageDetectDescriptionStruct DamageDetectDescription)
 {
@@ -129,18 +137,21 @@ UDamageDetectRecord* UARPGDamageSubsystem::RegisterToDamageDetect(
 	return Record;
 }
 
-UDamageDetectRecord* UARPGDamageSubsystem::RegisterToDamageDetect(AActor* DamageCenter,
+UDamageDetectRecord* UARPGDamageSubsystem::RegisterToDamageDetect(AActor* DamageCenterActor,
                                                                   AARPGCharacter* InstigatorCharacter,
                                                                   FDamageDetectedDelegate DelegateOnDamageDetected,
                                                                   FDamageDetectDescriptionStruct
                                                                   DamageDetectDescription)
 {
-	if (!DamageCenter->GetRootComponent())
+	if (UARPGDamageBoxComponent* DamageBoxComponent = Cast<UARPGDamageBoxComponent>(
+		DamageCenterActor->GetComponentByClass(UARPGDamageBoxComponent::StaticClass())))
 	{
-		UARPGGameInstanceSubsystem::PrintLogToScreen(TEXT("错误，DamageDetect的没有RootComponent"), 15, FColor::Red);
+		return RegisterToDamageDetect(DamageBoxComponent,
+		                              InstigatorCharacter, DelegateOnDamageDetected,
+		                              DamageDetectDescription);
 	}
-	return RegisterToDamageDetect(DamageCenter->GetRootComponent(), InstigatorCharacter, DelegateOnDamageDetected,
-	                              DamageDetectDescription);
+	UARPGGameInstanceSubsystem::PrintLogToScreen(TEXT("错误，DamageDetect的没有UARPGDamageBoxComponent"), 15, FColor::Red);
+	return nullptr;
 }
 
 void UARPGDamageSubsystem::UnRegisterToDamageDetect(UDamageDetectRecord* Record)

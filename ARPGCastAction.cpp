@@ -10,10 +10,13 @@
 #include "ARPGConfigSubsystem.h"
 #include "ARPGGameInstanceSubsystem.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "ARPGSpecialEffectsSubsystem.h"
 
 AARPGCastAction::AARPGCastAction()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	SetActorTickEnabled(false);
+
 	DefaultSceneComponent = CreateDefaultSubobject<USceneComponent>("DefaultSceneComponent");
 	SetRootComponent(DefaultSceneComponent);
 }
@@ -29,55 +32,43 @@ void AARPGCastAction::BeginPlay()
 void AARPGCastAction::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (Tasks.Num() == 0)
-	{
-		return;
-	}
+}
 
-	for (int i = Tasks.Num() - 1; i >= 0; --i)
-	{
-		UTask* Task = Tasks[i];
-		if (Task->TimeElapsed >= Task->StartTime)
-		{
-			Task->Tick(DeltaTime);
-			if (Task->TimeRemaining <= 0)
-			{
-				Tasks.RemoveAt(i);
-			}
-		}
-	}
+void AARPGCastAction::OnActionActivate()
+{
+	verifyf(MeleeAttackMontages.Num()>0, TEXT("AARPGCastAction没有设置施法动作"));
+
+	SetActorTickEnabled(true);
+	Super::OnActionActivate();
+}
+
+void AARPGCastAction::OnActionFinished(AARPGAction* Action)
+{
+	Super::OnActionFinished(Action);
+
+	SetActorTickEnabled(false);
 }
 
 void AARPGCastAction::InitTaskObjects()
 {
 	Tasks.Empty();
-	for (FSimpleTaskStruct ActionTaskStruct : ActionTaskStructs)
+	for (const FSimpleTaskStruct ActionTaskStruct : ActionTaskStructs)
 	{
-		Tasks.Emplace(UARPGSimpleTask::CreateSimpleTask(this, ActionTaskStruct.StartTime, ActionTaskStruct.Duration,
-		                                                ActionTaskStruct.SpecialEffectCreatureClass,
-		                                                ActionTaskStruct.LayoutDescription.GetAbsoluteTransform(
-			                                                this->GetActorLocation())));
+		Tasks.Emplace(UARPGSimpleTask::Create(this, ActionTaskStruct,GetActorTransform()));
 	}
 }
 
-AARPGCastAction* AARPGCastAction::CreateARPGCastAction(UObject* WorldContextObject, FName AbilityName,
+AARPGCastAction* AARPGCastAction::CreateARPGCastAction(UObject* WorldContextObject,
+                                                       TSubclassOf<AARPGCastAction> ARPGCastActionClass,
                                                        AARPGCharacter* ActionOwnerCharacter, int ActionExclusiveGroupID)
 {
-	if (UARPGConfigSubsystem* ConfigSubsystem = UARPGConfigSubsystem::Get(WorldContextObject->GetWorld()))
+	if (AARPGCastAction* Action = CreateARPGAction<AARPGCastAction>(
+		WorldContextObject, ARPGCastActionClass, ActionOwnerCharacter, ActionExclusiveGroupID))
 	{
-		if (ConfigSubsystem->AbilityConfigDataTable)
-		{
-			if (const auto AbilityConfig = ConfigSubsystem->AbilityConfigDataTable->FindRow<FSimpleTaskDataTableLine>(
-				AbilityName, "Row"))
-			{
-				AARPGCastAction* Action = CreateARPGAction<AARPGCastAction>(
-					WorldContextObject, ActionOwnerCharacter, ActionExclusiveGroupID);
-				Action->ActionTaskStructs = AbilityConfig->SpellTasks;
-				Action->InitTaskObjects();
-				return Action;
-			}
-		}
-	}
+		Action->InitTaskObjects();
+		return Action;
+	};
+
 	UARPGGameInstanceSubsystem::PrintLogToScreen(TEXT("CreateARPGCastAction出错"));
 	return nullptr;
 }
@@ -96,41 +87,57 @@ void AARPGCastAction::PostEditChangeProperty(FPropertyChangedEvent& PropertyChan
 #endif
 
 
-UARPGSimpleTask* UARPGSimpleTask::CreateSimpleTask(AARPGCastAction* TaskOwnerAction, float TaskStartTime,
-                                                   float TaskDuration,
-                                                   TSubclassOf<AARPGSpecialEffectCreature> TaskCreateSpecialEffectCreatureClass,
-                                                   FTransform RelativeTransform)
+UARPGSimpleTask* UARPGSimpleTask::Create(AARPGCastAction* TaskOwnerAction, FSimpleTaskStruct ActionTaskStruct,
+                                                   FTransform TaskTransform)
 {
 	UARPGSimpleTask* Task = NewObject<UARPGSimpleTask>();
 	Task->OwnerAction = TaskOwnerAction;
-	Task->StartTime = TaskStartTime;
-	Task->TimeRemaining = TaskDuration;
-	Task->SpecialEffectCreatureClass = TaskCreateSpecialEffectCreatureClass;
-	Task->Transform = RelativeTransform;
+	Task->SpecialEffectCreatureClass = ActionTaskStruct.SpecialEffectCreatureClass;
+	Task->Transform = ActionTaskStruct.LayoutDescription.GetAbsoluteTransform(TaskTransform.GetLocation());
+	Task->StartTime = ActionTaskStruct.CreateEffectCreatureTime;
+	Task->Duration = ActionTaskStruct.Duration;
+	Task->EndTime = Task->StartTime + Task->Duration;
+
+	FTimerHandle StartTimerHandle;
+	TaskOwnerAction->GetWorldTimerManager().SetTimer(StartTimerHandle, FTimerDelegate::CreateLambda([Task]()
+	{
+		Task->OnTaskExecuted();
+	}), Task->StartTime, false);
+
+	FTimerHandle EndTimerHandle;
+	TaskOwnerAction->GetWorldTimerManager().SetTimer(EndTimerHandle, FTimerDelegate::CreateLambda([Task]()
+	{
+		Task->OnTaskFinished();
+	}), Task->EndTime, false);
 	return Task;
 }
 
 void UARPGSimpleTask::OnTaskExecuted()
 {
 	Super::OnTaskExecuted();
-
-	SpecialEffectCreature = UARPGGameInstanceSubsystem::SpawnActor<AARPGSpecialEffectCreature>(
-        SpecialEffectCreatureClass, Transform, OwnerAction->OwnerCharacter);
+	SpecialEffectCreature = AARPGSpecialEffectCreature::Create(SpecialEffectCreatureClass, Transform,
+	                                                           OwnerAction->GetOwnerCharacter());
 }
 
 void UARPGSimpleTask::OnTaskFinished()
 {
 	Super::OnTaskFinished();
+
+	if (SpecialEffectCreature)
+	{
+		SpecialEffectCreature->Destroy();
+	}
 }
 
 
-UTask* UTask::CreateTask(AARPGCastAction* TaskOwnerAction, float TaskStartTime, float TaskDuration,
+UTask* UTask::Create(AARPGCastAction* TaskOwnerAction, float TaskStartTime, float TaskDuration,
                          FTaskDelegate TaskOnTaskExecuted, FTaskDelegate TaskOnTaskFinished)
 {
 	if (UTask* Task = NewObject<UTask>(TaskOwnerAction))
 	{
 		Task->StartTime = TaskStartTime;
-		Task->TimeRemaining = TaskDuration;
+		Task->Duration = TaskDuration;
+		Task->EndTime = TaskStartTime + TaskDuration;
 		Task->OnTaskExecutedDelegate = TaskOnTaskExecuted;
 		Task->OnTaskFinishedDelegate = TaskOnTaskFinished;
 		Task->OwnerAction = TaskOwnerAction;

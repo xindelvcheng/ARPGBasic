@@ -10,11 +10,11 @@ bool AARPGAction::CheckConditionAndPayCost()
 
 bool AARPGAction::BPFunc_CheckConditionAndPayCost_Implementation()
 {
-	const int SPCost = static_cast<int>(static_cast<float>(OwnerCharacter->GetMaxSP()) / 4);
+	const int SPCost = static_cast<int>(static_cast<float>(GetOwnerCharacter()->GetMaxSP()) / 4);
 
-	if (OwnerCharacter->GetCurrentSP() > SPCost)
+	if (GetOwnerCharacter() && GetOwnerCharacter()->GetCurrentSP() > SPCost)
 	{
-		OwnerCharacter->UpdateCurrentSP(-SPCost);
+		GetOwnerCharacter()->UpdateCurrentSP(-SPCost);
 		return true;
 	}
 	return false;
@@ -24,21 +24,22 @@ void AARPGAction::FinishAction()
 {
 	SetActorTickEnabled(false);
 
-	OnActionFinished.ExecuteIfBound(this);
+	OnActionFinished(this);
+	OnActionFinishedDelegate.ExecuteIfBound(this);
 }
 
 void AARPGAction::InitWithOwningCharacter(AARPGCharacter* NewOwningCharacter)
 {
-	OwnerCharacter = NewOwningCharacter;
+	SetOwnerCharacter(NewOwningCharacter);
 }
 
 bool AARPGAction::TryToActivateAction(AARPGCharacter* User, AARPGCharacter* Target)
 {
-	if (OwnerCharacter != User)
+	if (GetOwnerCharacter() != User)
 	{
 		InitWithOwningCharacter(User);
 	}
-	verifyf(OwnerCharacter, TEXT("未显式调用InitWithOwningCharacter，也没有在激活Actor时指定OwningCharacter"));
+	verifyf(GetOwnerCharacter(), TEXT("未显式调用InitWithOwningCharacter，也没有在激活Actor时指定OwningCharacter"));
 
 	if (CheckConditionAndPayCost())
 	{
@@ -69,7 +70,7 @@ AARPGAction* AARPGAction::CreateARPGAction(UObject* WorldContextObject, TSubclas
 	if (AARPGAction* Action = Cast<AARPGAction>(
 		WorldContextObject->GetWorld()->SpawnActor<AARPGAction>(ActionClass, ActorSpawnParameters)))
 	{
-		Action->OwnerCharacter = ActionOwnerCharacter;
+		Action->SetOwnerCharacter(ActionOwnerCharacter);
 		Action->ExclusiveGroupID = ActionExclusiveGroupID;
 		return Action;
 	}
@@ -78,16 +79,16 @@ AARPGAction* AARPGAction::CreateARPGAction(UObject* WorldContextObject, TSubclas
 }
 
 template <typename T>
-T* AARPGAction::CreateARPGAction(UObject* WorldContextObject,
+T* AARPGAction::CreateARPGAction(UObject* WorldContextObject,TSubclassOf<AARPGAction> ARPGActionClass,
                                  AARPGCharacter* ActionOwnerCharacter, int ActionExclusiveGroupID)
 {
-	return Cast<T>(CreateARPGAction(WorldContextObject, T::StaticClass(), ActionOwnerCharacter, ActionExclusiveGroupID));
+	return Cast<T>(CreateARPGAction(WorldContextObject, ARPGActionClass, ActionOwnerCharacter, ActionExclusiveGroupID));
 }
 
 void AARPGMontageAction::OnActionActivate()
 {
 	Super::OnActionActivate();
-	OwnerCharacter->PlayAnimMontage(ActionMontage, PlayRate, StartSectionName);
+	GetOwnerCharacter()->PlayAnimMontage(ActionMontage, PlayRate, StartSectionName);
 }
 
 void AARPGMontageAction::BindToMontageBegin(UAnimMontage* Montage)
@@ -103,7 +104,7 @@ void AARPGMontageAction::BindToMontageBegin(UAnimMontage* Montage)
 		MontageInstanceID = MontageInstance->GetInstanceID();
 	}
 	OnMontageBegin(Montage);
-	BPFunc_OnMontageBegin(OwnerCharacter);
+	BPFunc_OnMontageBegin(GetOwnerCharacter());
 }
 
 void AARPGMontageAction::BindToMontageNotify(FName NotifyName,
@@ -114,7 +115,7 @@ void AARPGMontageAction::BindToMontageNotify(FName NotifyName,
 		return;
 	}
 	OnMontageNotify(NotifyName, BranchingPointPayload);
-	BPFunc_OnMontageNotify(NotifyName, OwnerCharacter);
+	BPFunc_OnMontageNotify(NotifyName, GetOwnerCharacter());
 }
 
 void AARPGMontageAction::BindToMontageStop(UAnimMontage* Montage, bool bInterrupted)
@@ -124,14 +125,14 @@ void AARPGMontageAction::BindToMontageStop(UAnimMontage* Montage, bool bInterrup
 		return;
 	}
 	OnMontageStop(Montage, bInterrupted);
-	BPFunc_OnMontageStop(OwnerCharacter);
+	BPFunc_OnMontageStop(GetOwnerCharacter());
 }
 
 void AARPGMontageAction::Interrupt(AARPGCharacter* Causer)
 {
 	AttachedCharacterAnimInstance->Montage_Stop(0.2, ActionMontage);
 	Super::Interrupt(Causer);
-	BPFunc_Interrupt(OwnerCharacter);
+	BPFunc_Interrupt(GetOwnerCharacter());
 }
 
 
@@ -139,9 +140,9 @@ void AARPGMontageAction::InitWithOwningCharacter(AARPGCharacter* NewOwningCharac
 {
 	Super::InitWithOwningCharacter(NewOwningCharacter);
 
-	if (OwnerCharacter && OwnerCharacter->GetMesh())
+	if (GetOwnerCharacter() && GetOwnerCharacter()->GetMesh())
 	{
-		AttachedCharacterAnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
+		AttachedCharacterAnimInstance = GetOwnerCharacter()->GetMesh()->GetAnimInstance();
 		if (AttachedCharacterAnimInstance)
 		{
 			AttachedCharacterAnimInstance->OnMontageStarted.AddDynamic(

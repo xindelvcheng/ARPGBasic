@@ -20,24 +20,19 @@ class UTask : public UObject
 	FTaskDelegate OnTaskExecutedDelegate;
 	FTaskDelegate OnTaskFinishedDelegate;
 public:
-	float StartTime;
-	float TimeRemaining;
-	float TimeElapsed;
+
+	float StartTime = 0.1;
+	float Duration = 0.5;
+	float EndTime = 0.6;
 
 	FTransform Transform;
 
 	UPROPERTY()
 	AARPGCastAction* OwnerAction;
 
-	UFUNCTION(BlueprintCallable,Category="ARPGSpell")
-	static UTask* CreateTask(AARPGCastAction* TaskOwnerAction, float TaskStartTime, float TaskDuration,
+	UFUNCTION(BlueprintCallable,Category="ARPGSpell",DisplayName="CreateARPGSpellTask")
+	static UTask* Create(AARPGCastAction* TaskOwnerAction, float TaskStartTime, float TaskDuration,
 	                         FTaskDelegate TaskOnTaskExecuted, FTaskDelegate TaskOnTaskFinished);
-
-	virtual void Tick(float DeltaTime)
-	{
-		TimeRemaining -= DeltaTime;
-		TimeElapsed += DeltaTime;
-	};
 
 	virtual void OnTaskExecuted()
 	{
@@ -50,6 +45,8 @@ public:
 	};
 };
 
+struct FSimpleTaskStruct;
+
 UCLASS(BlueprintType)
 class UARPGSimpleTask : public UTask
 {
@@ -57,14 +54,12 @@ class UARPGSimpleTask : public UTask
 
 	UPROPERTY()
 	TSubclassOf<AARPGSpecialEffectCreature> SpecialEffectCreatureClass;
-	
+
 	UPROPERTY()
 	AARPGSpecialEffectCreature* SpecialEffectCreature;
 public:
 
-	UFUNCTION(BlueprintCallable,Category="ARPGSpell")
-	static UARPGSimpleTask* CreateSimpleTask(AARPGCastAction* TaskOwnerAction, float TaskStartTime, float TaskDuration,
-											TSubclassOf<AARPGSpecialEffectCreature> TaskCreateSpecialEffectCreatureClass,
+	static UARPGSimpleTask* Create(AARPGCastAction* TaskOwnerAction, FSimpleTaskStruct ActionTaskStruct,
 	                                         FTransform RelativeTransform);
 
 	virtual void OnTaskExecuted() override;
@@ -72,11 +67,12 @@ public:
 };
 
 
-
 UENUM(BlueprintType)
 enum class ERotationTypeEnum:uint8
 {
-	NoRotation,CircleFaceInner,CircleFaceOuter
+	NoRotation,
+	CircleFaceInner,
+	CircleFaceOuter
 };
 
 USTRUCT(BlueprintType)
@@ -110,21 +106,21 @@ struct FGridLayoutStruct
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
 	float LayerIndex = 0;
-	
+
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
 	ERotationTypeEnum RotationType = ERotationTypeEnum::NoRotation;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
-	FVector Scale = FVector{1,1,1};
+	FVector Scale = FVector{1, 1, 1};
 
 	FVector GetRelativeLocation() const
 	{
 		return (FVector{RowsNumber, ColumnsNumber, LayersNumber} / 2 - FVector{
-            RowIndex + 0.5f, ColumnIndex + 0.5f, LayerIndex + 0.5f
-        }) * FVector{(Width / RowsNumber),-(Length / ColumnsNumber),(Height / LayersNumber)};
+			RowIndex + 0.5f, ColumnIndex + 0.5f, LayerIndex + 0.5f
+		}) * FVector{(Width / RowsNumber), -(Length / ColumnsNumber), (Height / LayersNumber)};
 	}
 
-	FRotator GetAbsoluteRotation()const
+	FRotator GetAbsoluteRotation() const
 	{
 		switch (RotationType)
 		{
@@ -133,14 +129,14 @@ struct FGridLayoutStruct
 		case ERotationTypeEnum::CircleFaceInner:
 			return (-GetRelativeLocation()).Rotation();
 		case ERotationTypeEnum::CircleFaceOuter:
-			return  GetRelativeLocation().Rotation();
+			return GetRelativeLocation().Rotation();
 		}
 		return FRotator{};
 	};
 
 	FTransform GetAbsoluteTransform(FVector Origin) const
 	{
-		return FTransform{GetAbsoluteRotation(),Origin+GetRelativeLocation(),Scale};
+		return FTransform{GetAbsoluteRotation(), Origin + GetRelativeLocation(), Scale};
 	}
 };
 
@@ -150,14 +146,16 @@ struct FSimpleTaskStruct
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
-	float StartTime = 0.1;
+	float CreateEffectCreatureTime = 0.1;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
-	float Duration = 0;
+	float Duration = 0.5;
+
+	float DestroyEffectCreatureTime = 0.6;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
 	TSubclassOf<AARPGSpecialEffectCreature> SpecialEffectCreatureClass;
-	
+
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
 	FGridLayoutStruct LayoutDescription;
 };
@@ -175,10 +173,11 @@ struct FSimpleTaskDataTableLine : public FTableRowBase
  * 
  */
 UCLASS()
-class AARPGCastAction : public AARPGAction
+class AARPGCastAction : public AARPGMeleeAttackAction
 {
 	GENERATED_BODY()
 
+	/*ARPGCastAction的位置是定向法术的原点*/
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
 	USceneComponent* DefaultSceneComponent;
 
@@ -197,11 +196,15 @@ protected:
 public:
 	virtual void Tick(float DeltaSeconds) override;
 
+
+	virtual void OnActionActivate() override;
+	virtual void OnActionFinished(AARPGAction* Action) override;
+
 	void InitTaskObjects();
 
 	UFUNCTION(BlueprintCallable,meta=(WorldContext=WorldContextObject))
-	static AARPGCastAction* CreateARPGCastAction(UObject* WorldContextObject, FName AbilityName,
-	                                             AARPGCharacter* ActionOwnerCharacter, int ActionExclusiveGroupID);
+	static AARPGCastAction* CreateARPGCastAction(UObject* WorldContextObject, TSubclassOf<AARPGCastAction> ARPGCastActionClass,AARPGCharacter* ActionOwnerCharacter,
+	                                             int ActionExclusiveGroupID);
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;

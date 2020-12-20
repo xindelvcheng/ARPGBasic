@@ -11,16 +11,17 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "ARPGSpecialEffectsSubsystem.generated.h"
 
+class UARPGDamageBoxComponent;
 class AARPGCharacter;
 
 UENUM(BlueprintType)
 enum class EEffectCategory:uint8
 {
-    PositiveSoundEffects,
-    NegativeSoundEffects,
-    NeutralSoundEffects,
-    PositiveVisualEffects,
-    NegativeVisualEffects
+	PositiveSoundEffects,
+	NegativeSoundEffects,
+	NeutralSoundEffects,
+	PositiveVisualEffects,
+	NegativeVisualEffects
 };
 
 /**
@@ -29,113 +30,111 @@ enum class EEffectCategory:uint8
 UCLASS()
 class UARPGSpecialEffectsSubsystem : public UGameInstanceSubsystem
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
-    template <typename T>
-    void LoadEffectsAssets(TArray<T*>& Effects, TArray<TSoftObjectPtr<T>> EffectSoftObjectPtrs);
+	template <typename T>
+	void LoadEffectsAssets(TArray<T*>& Effects, TArray<TSoftObjectPtr<T>> EffectSoftObjectPtrs);
 
 public:
-    virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-    UPROPERTY(BlueprintReadOnly,Category="ARPGSpecialEffectsSubsystem")
-    TArray<USoundCue*> PositiveSoundEffects;
+	UPROPERTY(BlueprintReadOnly,Category="ARPGSpecialEffectsSubsystem")
+	TArray<USoundCue*> PositiveSoundEffects;
 
-    UPROPERTY(BlueprintReadOnly,Category="ARPGSpecialEffectsSubsystem")
-    TArray<USoundCue*> NegativeSoundEffects;
-    
-    UPROPERTY(BlueprintReadOnly,Category="ARPGSpecialEffectsSubsystem")
-    TArray<USoundCue*> NeutralSoundEffects;
+	UPROPERTY(BlueprintReadOnly,Category="ARPGSpecialEffectsSubsystem")
+	TArray<USoundCue*> NegativeSoundEffects;
 
-    UPROPERTY(BlueprintReadOnly,Category="ARPGSpecialEffectsSubsystem")
-    TArray<UParticleSystem*> PositiveVisualEffects;
+	UPROPERTY(BlueprintReadOnly,Category="ARPGSpecialEffectsSubsystem")
+	TArray<USoundCue*> NeutralSoundEffects;
 
-    UPROPERTY(BlueprintReadOnly,Category="ARPGSpecialEffectsSubsystem")
-    TArray<UParticleSystem*> NegativeVisualEffects;
+	UPROPERTY(BlueprintReadOnly,Category="ARPGSpecialEffectsSubsystem")
+	TArray<UParticleSystem*> PositiveVisualEffects;
 
-    static UARPGSpecialEffectsSubsystem* Get(UWorld* World)
-    {
-        if (World && World->GetGameInstance() && World->GetGameInstance()->GetSubsystem<UARPGSpecialEffectsSubsystem>())
-        {
-            return World->GetGameInstance()->GetSubsystem<UARPGSpecialEffectsSubsystem>();
-        }
+	UPROPERTY(BlueprintReadOnly,Category="ARPGSpecialEffectsSubsystem")
+	TArray<UParticleSystem*> NegativeVisualEffects;
 
-        return nullptr;
-    }
+	static UARPGSpecialEffectsSubsystem* Get(UWorld* World)
+	{
+		if (World && World->GetGameInstance() && World->GetGameInstance()->GetSubsystem<UARPGSpecialEffectsSubsystem>())
+		{
+			return World->GetGameInstance()->GetSubsystem<UARPGSpecialEffectsSubsystem>();
+		}
 
-    UFUNCTION(BlueprintCallable,meta=(WorldContext=WorldContextObject))
-    static void PlaySoundEffect2D(const UObject* WorldContextObject,EEffectCategory EffectCategory,int Index);
+		return nullptr;
+	}
 
-    UFUNCTION(BlueprintCallable,meta=(WorldContext=WorldContextObject))
-    static void PlaySpecialEffectAtLocation(const UObject* WorldContextObject, EEffectCategory EffectCategory, int Index, FVector Location);
+	UFUNCTION(BlueprintCallable,meta=(WorldContext=WorldContextObject))
+	static void PlaySoundEffect2D(const UObject* WorldContextObject, EEffectCategory EffectCategory, int Index);
+
+	UFUNCTION(BlueprintCallable,meta=(WorldContext=WorldContextObject))
+	static void PlaySpecialEffectAtLocation(const UObject* WorldContextObject, EEffectCategory EffectCategory,
+	                                        int Index, FVector Location);
 };
-
 
 
 USTRUCT(BlueprintType)
 struct FARPGCreatureTimeLineTaskStruct
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect") 
-    float DamageStartTime = 0.3;
-    
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect") 
-    float Duration = 0.2;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
+	float DamageStartTime = 0.3;
 
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect") 
-    USoundBase* SoundEffectAsset;
-    
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-    UParticleSystem* VisualEffectAsset;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
+	float Duration = 0.2;
 
-    TWeakObjectPtr<UParticleSystemComponent> ParticleSystemComponent;
-    TWeakObjectPtr<UAudioComponent> AudioComponent;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
+	USoundBase* SoundEffectAsset;
 
-    float DamageEndTime;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
+	UParticleSystem* VisualEffectAsset;
 
-    UPROPERTY()
-    class UDamageDetectRecord* DamageDetectRecord;
+	TWeakObjectPtr<UParticleSystemComponent> ParticleSystemComponent;
+	TWeakObjectPtr<UAudioComponent> AudioComponent;
+
+	float DamageEndTime;
+
+	UPROPERTY()
+	class UDamageDetectRecord* DamageDetectRecord;
 };
 
 UCLASS(Blueprintable)
 class AARPGSpecialEffectCreature : public AActor
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 protected:
-    TWeakObjectPtr<AARPGCharacter> OwnerCharacter;
+	TWeakObjectPtr<AARPGCharacter> OwnerCharacter;
 
-    UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect",meta=(AllowPrivateAccess))
-    UBoxComponent* DamageDetectionCollisionBox;
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
+	UARPGDamageBoxComponent* DamageDetectionBox;
 
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-    float DamageWeight = 1;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
+	float DamageWeight = 1;
 
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-    float DamageBias = 10;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
+	float DamageBias = 10;
 
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-    TSubclassOf<UDamageType> DamageType;
+	virtual void BeginPlay() override;
 
 
 public:
-    AARPGSpecialEffectCreature();
+	AARPGSpecialEffectCreature();
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
+	TSubclassOf<UDamageType> DamageType;
+
+	UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffect")
+	void SetOwnerCharacter(AARPGCharacter* NewOwnerCharacter) { OwnerCharacter = NewOwnerCharacter; }
+
+	UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffect")
+	AARPGCharacter* GetOwnerCharacter() const { return OwnerCharacter.Get(); }
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
+	TArray<FARPGCreatureTimeLineTaskStruct> TimeLineTasks;
 
 
-protected:
-    virtual void BeginPlay() override;
-public:
-    UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffect")
-    void SetOwnerCharacter(AARPGCharacter* NewOwnerCharacter) { OwnerCharacter = NewOwnerCharacter; }
-
-    UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffect")
-    AARPGCharacter* GetOwnerCharacter() const { return OwnerCharacter.Get(); }
-
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-    TArray<FARPGCreatureTimeLineTaskStruct> TimeLineTasks;
-   
-
-    UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffectCreature")
-    static AARPGSpecialEffectCreature* SpawnARPGSpecialEffectCreature(TSubclassOf<AARPGSpecialEffectCreature> CreatureClass,
-                                               FTransform Transform, AARPGCharacter* OwnerCharacter);
+	UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffectCreature",DisplayName="CreateARPGSpecialEffectCreature")
+	static AARPGSpecialEffectCreature* Create(TSubclassOf<AARPGSpecialEffectCreature> CreatureClass,
+	                                          FTransform Transform, AARPGCharacter* OwnerCharacter);
 };
