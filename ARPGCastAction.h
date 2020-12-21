@@ -19,11 +19,16 @@ class UTask : public UObject
 
 	FTaskDelegate OnTaskExecutedDelegate;
 	FTaskDelegate OnTaskFinishedDelegate;
+
+	
 public:
 
 	float StartTime = 0.1;
 	float Duration = 0.5;
 	float EndTime = 0.6;
+	
+	FTimerHandle StartTimerHandle;
+	FTimerHandle EndTimerHandle;
 
 	FTransform Transform;
 
@@ -169,8 +174,14 @@ struct FSimpleTaskDataTableLine : public FTableRowBase
 	TArray<FSimpleTaskStruct> SpellTasks;
 };
 
-/**
- * 
+UENUM()
+enum ESpellTypeEnum
+{
+	Direction,Target
+};
+
+/*
+ * 施法型技能
  */
 UCLASS()
 class AARPGCastAction : public AARPGMeleeAttackAction
@@ -180,6 +191,9 @@ class AARPGCastAction : public AARPGMeleeAttackAction
 	/*ARPGCastAction的位置是定向法术的原点*/
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
 	USceneComponent* DefaultSceneComponent;
+
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	ESpellTypeEnum* SpellTypeEnum;
 
 public:
 	AARPGCastAction();
@@ -200,11 +214,9 @@ public:
 	virtual void OnActionActivate() override;
 	virtual void OnActionFinished(AARPGAction* Action) override;
 
-	void InitTaskObjects();
+	void StartAllTask();
 
-	UFUNCTION(BlueprintCallable,meta=(WorldContext=WorldContextObject))
-	static AARPGCastAction* CreateARPGCastAction(UObject* WorldContextObject, TSubclassOf<AARPGCastAction> ARPGCastActionClass,AARPGCharacter* ActionOwnerCharacter,
-	                                             int ActionExclusiveGroupID);
+	void StopAllTask();
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;

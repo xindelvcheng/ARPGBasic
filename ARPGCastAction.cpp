@@ -24,8 +24,6 @@ AARPGCastAction::AARPGCastAction()
 void AARPGCastAction::BeginPlay()
 {
 	Super::BeginPlay();
-
-	InitTaskObjects();
 }
 
 // Called every frame
@@ -37,19 +35,20 @@ void AARPGCastAction::Tick(float DeltaTime)
 void AARPGCastAction::OnActionActivate()
 {
 	verifyf(MeleeAttackMontages.Num()>0, TEXT("AARPGCastAction没有设置施法动作"));
-
-	SetActorTickEnabled(true);
+	StartAllTask();
+	
 	Super::OnActionActivate();
 }
 
 void AARPGCastAction::OnActionFinished(AARPGAction* Action)
 {
 	Super::OnActionFinished(Action);
+	StopAllTask();
 
 	SetActorTickEnabled(false);
 }
 
-void AARPGCastAction::InitTaskObjects()
+void AARPGCastAction::StartAllTask()
 {
 	Tasks.Empty();
 	for (const FSimpleTaskStruct ActionTaskStruct : ActionTaskStructs)
@@ -58,30 +57,20 @@ void AARPGCastAction::InitTaskObjects()
 	}
 }
 
-AARPGCastAction* AARPGCastAction::CreateARPGCastAction(UObject* WorldContextObject,
-                                                       TSubclassOf<AARPGCastAction> ARPGCastActionClass,
-                                                       AARPGCharacter* ActionOwnerCharacter, int ActionExclusiveGroupID)
+void AARPGCastAction::StopAllTask()
 {
-	if (AARPGCastAction* Action = CreateARPGAction<AARPGCastAction>(
-		WorldContextObject, ARPGCastActionClass, ActionOwnerCharacter, ActionExclusiveGroupID))
+	for (UTask* Task : Tasks)
 	{
-		Action->InitTaskObjects();
-		return Action;
-	};
-
-	UARPGGameInstanceSubsystem::PrintLogToScreen(TEXT("CreateARPGCastAction出错"));
-	return nullptr;
+		GetWorldTimerManager().ClearTimer(Task->StartTimerHandle);
+		GetWorldTimerManager().ClearTimer(Task->EndTimerHandle);
+	}
+	Tasks.Empty();
 }
 
 #if WITH_EDITOR
 void AARPGCastAction::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
-
-	if (PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(AARPGCastAction, ActionTaskStructs))
-	{
-		InitTaskObjects();
-	}
 }
 
 #endif
@@ -98,14 +87,12 @@ UARPGSimpleTask* UARPGSimpleTask::Create(AARPGCastAction* TaskOwnerAction, FSimp
 	Task->Duration = ActionTaskStruct.Duration;
 	Task->EndTime = Task->StartTime + Task->Duration;
 
-	FTimerHandle StartTimerHandle;
-	TaskOwnerAction->GetWorldTimerManager().SetTimer(StartTimerHandle, FTimerDelegate::CreateLambda([Task]()
+	TaskOwnerAction->GetWorldTimerManager().SetTimer(Task->StartTimerHandle, FTimerDelegate::CreateLambda([Task]()
 	{
 		Task->OnTaskExecuted();
 	}), Task->StartTime, false);
 
-	FTimerHandle EndTimerHandle;
-	TaskOwnerAction->GetWorldTimerManager().SetTimer(EndTimerHandle, FTimerDelegate::CreateLambda([Task]()
+	TaskOwnerAction->GetWorldTimerManager().SetTimer(Task->EndTimerHandle, FTimerDelegate::CreateLambda([Task]()
 	{
 		Task->OnTaskFinished();
 	}), Task->EndTime, false);

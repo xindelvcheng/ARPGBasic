@@ -13,6 +13,11 @@ UCLASS(Blueprintable)
 class AARPGAction : public AARPGActor
 {
     GENERATED_BODY()
+
+    DECLARE_DELEGATE_OneParam(FActionFinishDelegate, AARPGAction*);
+
+    DECLARE_MULTICAST_DELEGATE_OneParam(FActionFinishEvent, AARPGAction*);
+    FActionFinishEvent ActionFinishedEvent;
 protected:
 
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGAction")
@@ -20,6 +25,18 @@ protected:
 
     UFUNCTION(BlueprintImplementableEvent,DisplayName="ActionActive")
     void BPFunc_Active();
+
+    virtual void OnActionActivate();
+
+    UFUNCTION(BlueprintCallable,Category="ARPGAction")
+    void FinishAction();
+    
+    virtual void OnActionFinished(AARPGAction* Action){};
+
+    bool CheckConditionAndPayCost();
+
+    UFUNCTION(BlueprintNativeEvent,DisplayName="CheckConditionAndPayCost")
+    bool BPFunc_CheckConditionAndPayCost();
 
 public:
     
@@ -30,34 +47,22 @@ public:
     UFUNCTION(BlueprintCallable,Category="ARPGAction")
     bool TryToActivateAction(AARPGCharacter* User = nullptr, AARPGCharacter* Target = nullptr);
 
-    virtual void OnActionActivate();
-
     UFUNCTION(BlueprintCallable,Category="ARPGAction")
     virtual void Interrupt(AARPGCharacter* Causer);
 
-    UFUNCTION(BlueprintCallable,Category="ARPGAction")
-    static AARPGAction* CreateARPGAction(UObject* WorldContextObject, TSubclassOf<AARPGAction> ActionClass,
-                                         AARPGCharacter* ActionOwnerCharacter, int ActionExclusiveGroupID);
+    template<typename  T>
+    static T* CreateARPGAction(TSubclassOf<AARPGAction> ActionClass,
+                                         AARPGCharacter* ActionOwnerCharacter,FActionFinishDelegate ActionFinishedDelegate, int ActionExclusiveGroupID=0);
 
     template<typename  T>
-    static T* CreateARPGAction(UObject* WorldContextObject,TSubclassOf<AARPGAction> ARPGActionClass,
-                                         AARPGCharacter* ActionOwnerCharacter, int ActionExclusiveGroupID);
+    static T* CreateARPGAction(TSubclassOf<AARPGAction> ActionClass,
+                                         AARPGCharacter* ActionOwnerCharacter,FActionFinishDelegate ActionFinishedDelegate, FTransform Transform,int ActionExclusiveGroupID=0);
 
-    UFUNCTION(BlueprintCallable,Category="ARPGAction")
-    void FinishAction();
-
-    virtual void OnActionFinished(AARPGAction* Action){};
-
-    bool CheckConditionAndPayCost();
-
-    UFUNCTION(BlueprintNativeEvent,DisplayName="CheckConditionAndPayCost")
-    bool BPFunc_CheckConditionAndPayCost();
-
-    DECLARE_DELEGATE_OneParam(FActionFinishDelegate, AARPGAction*);
-    FActionFinishDelegate OnActionFinishedDelegate;
+    virtual FActionFinishEvent& OnActionFinishedEvent()
+    {
+        return ActionFinishedEvent;
+    }
 };
-
-
 
 
 UCLASS(Blueprintable)

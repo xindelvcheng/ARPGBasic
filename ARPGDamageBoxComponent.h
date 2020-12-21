@@ -16,8 +16,6 @@ class UARPGDamageBoxComponent : public UBoxComponent
 {
 	GENERATED_BODY()
 
-	float ActualDamage;
-
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGDamageBoxComponent",meta=(AllowPrivateAccess))
 	TSubclassOf<UDamageType> DamageType;
 
@@ -54,15 +52,9 @@ public:
 	float BaseDamage;
 
 	UFUNCTION(BlueprintCallable,Category="ARPGDamageBoxComponent")
-	FORCEINLINE float GetActualDamage() const { return ActualDamage; }
-
-	UFUNCTION(BlueprintCallable,Category="ARPGDamageBoxComponent")
 	void SetDamageType(TSubclassOf<UDamageType> DefaultDamageType) { DamageType = DefaultDamageType; }
 
-	UFUNCTION(BlueprintCallable,Category="ARPGDamageBoxComponent")
-	FORCEINLINE TSubclassOf<UDamageType> GetDamageType() const { return DamageType; };
-
-	/*和其他伤害类型的伤害盒子重叠时自己的反应（增强或减弱）*/
+	/*和其他伤害类型的伤害盒子重叠时自己的反应（元素相生相克）*/
 	void ElementInteract(UARPGDamageBoxComponent* OtherDamageBoxComponent);
 
 	virtual void Activate(bool bReset) override;

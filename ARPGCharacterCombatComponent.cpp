@@ -31,7 +31,7 @@ void UARPGCharacterCombatComponent::SpawnActionActors(const TArray<TSubclassOf<T
         {
             Action->InitWithOwningCharacter(AttachedCharacter);
             ActionActors.Add(Action);
-            Action->OnActionFinishedDelegate.BindUObject(this, &UARPGCharacterCombatComponent::BindToOnActionFinished);
+            Action->OnActionFinishedEvent().AddUObject(this, &UARPGCharacterCombatComponent::BindToOnActionFinished);
         }
     }
 }
@@ -41,15 +41,8 @@ void UARPGCharacterCombatComponent::SpawnActionActors(const TArray<TSubclassOf<T
 void UARPGCharacterCombatComponent::BeginPlay()
 {
     Super::BeginPlay();
-
-    check(MeleeAttackCollectionClasses.Num()>0);
-
-    // ...
+    
     AttachedCharacter = Cast<AARPGCharacter>(GetOwner());
-
-    check(AttachedCharacter);
-
-
     ReInitCharacterActions();
 }
 

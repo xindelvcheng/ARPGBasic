@@ -25,7 +25,7 @@ void AARPGAction::FinishAction()
 	SetActorTickEnabled(false);
 
 	OnActionFinished(this);
-	OnActionFinishedDelegate.ExecuteIfBound(this);
+	ActionFinishedEvent.Broadcast(this);
 }
 
 void AARPGAction::InitWithOwningCharacter(AARPGCharacter* NewOwningCharacter)
@@ -60,29 +60,27 @@ void AARPGAction::Interrupt(AARPGCharacter* Causer)
 	FinishAction();
 }
 
-AARPGAction* AARPGAction::CreateARPGAction(UObject* WorldContextObject, TSubclassOf<AARPGAction> ActionClass,
-                                           AARPGCharacter* ActionOwnerCharacter, int ActionExclusiveGroupID)
+
+template <typename T>
+T* AARPGAction::CreateARPGAction(TSubclassOf<AARPGAction> ActionClass,
+	AARPGCharacter* ActionOwnerCharacter, FActionFinishDelegate ActionFinishedDelegate,int ActionExclusiveGroupID)
 {
-	FActorSpawnParameters ActorSpawnParameters;
-	ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	ActorSpawnParameters.Instigator = ActionOwnerCharacter;
-	ActorSpawnParameters.Owner = ActionOwnerCharacter;
-	if (AARPGAction* Action = Cast<AARPGAction>(
-		WorldContextObject->GetWorld()->SpawnActor<AARPGAction>(ActionClass, ActorSpawnParameters)))
+	return CreateARPGAction<T>(ActionClass,ActionOwnerCharacter,ActionFinishedDelegate,FTransform{},ActionExclusiveGroupID);
+}
+
+template <typename T>
+T* AARPGAction::CreateARPGAction(TSubclassOf<AARPGAction> ActionClass, AARPGCharacter* ActionOwnerCharacter,
+    FActionFinishDelegate ActionFinishedDelegate, FTransform Transform, int ActionExclusiveGroupID)
+{
+	if (T* Action = UARPGGameInstanceSubsystem::SpawnActor<T>(ActionClass,Transform,ActionOwnerCharacter))
 	{
 		Action->SetOwnerCharacter(ActionOwnerCharacter);
 		Action->ExclusiveGroupID = ActionExclusiveGroupID;
+		Action->ActionFinishedEvent.Add(ActionFinishedDelegate);
 		return Action;
 	}
 	UARPGGameInstanceSubsystem::PrintLogToScreen("生成Action出现错误");
 	return nullptr;
-}
-
-template <typename T>
-T* AARPGAction::CreateARPGAction(UObject* WorldContextObject,TSubclassOf<AARPGAction> ARPGActionClass,
-                                 AARPGCharacter* ActionOwnerCharacter, int ActionExclusiveGroupID)
-{
-	return Cast<T>(CreateARPGAction(WorldContextObject, ARPGActionClass, ActionOwnerCharacter, ActionExclusiveGroupID));
 }
 
 void AARPGMontageAction::OnActionActivate()

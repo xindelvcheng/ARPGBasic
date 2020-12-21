@@ -76,7 +76,7 @@ void AGameItem::NativeUseGameItem(AARPGCharacter* User)
     if (EffectAction)
     {
         EffectAction->InitWithOwningCharacter(User);
-        EffectAction->OnActionFinishedDelegate.BindUObject(User->GetCharacterCombatComponent(),
+        EffectAction->OnActionFinishedEvent().AddUObject(User->GetCharacterCombatComponent(),
                                                    &UARPGCharacterCombatComponent::BindToOnActionFinished);
     }
 
