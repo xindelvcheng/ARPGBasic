@@ -47,8 +47,8 @@ protected:
     UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="TranscendentalLawsComponent")
     ETranscendentalLawsAttainment Attainment = ETranscendentalLawsAttainment::Low;
 
-    AARPGCharacter* AttachedCharacter;
-    UARPGCharacterCombatComponent* AttachedCharacterCombatComponent;
+    TWeakObjectPtr<AARPGCharacter> AttachedCharacter;
+    TWeakObjectPtr<UARPGCharacterCombatComponent> AttachedCharacterCombatComponent;
 
 
 public:

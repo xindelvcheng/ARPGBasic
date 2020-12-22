@@ -8,13 +8,12 @@
 
 class AARPGCharacter;
 class AARPGAction;
+DECLARE_DELEGATE_OneParam(FActionFinishDelegate, AARPGAction*);
 
 UCLASS(Blueprintable)
 class AARPGAction : public AARPGActor
 {
     GENERATED_BODY()
-
-    DECLARE_DELEGATE_OneParam(FActionFinishDelegate, AARPGAction*);
 
     DECLARE_MULTICAST_DELEGATE_OneParam(FActionFinishEvent, AARPGAction*);
     FActionFinishEvent ActionFinishedEvent;
@@ -23,22 +22,30 @@ protected:
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGAction")
     int ExclusiveGroupID = 0;
 
-    UFUNCTION(BlueprintImplementableEvent,DisplayName="ActionActive")
-    void BPFunc_Active();
-
     virtual void OnActionActivate();
 
-    UFUNCTION(BlueprintCallable,Category="ARPGAction")
-    void FinishAction();
-    
     virtual void OnActionFinished(AARPGAction* Action){};
 
-    bool CheckConditionAndPayCost();
+    UFUNCTION(BlueprintCallable,Category="ARPGAction")
+    virtual void OnActionInterrupted(AARPGCharacter* Causer){};
+
+    bool CheckActionActivateConditionAndPayCost();
 
     UFUNCTION(BlueprintNativeEvent,DisplayName="CheckConditionAndPayCost")
-    bool BPFunc_CheckConditionAndPayCost();
+    bool BPFunc_CheckActionActivateConditionAndPayCost();
+
+    UFUNCTION(BlueprintImplementableEvent,DisplayName="OnActionActive")
+    void BPFunc_OnActionActivate();
+
+    UFUNCTION(BlueprintImplementableEvent,DisplayName="OnInterrupt")
+    void BPFunc_OnActionInterrupted(AARPGCharacter* Character);
 
 public:
+    UFUNCTION(BlueprintCallable,Category="ARPGAction")
+    void FinishAction();
+
+    UFUNCTION(BlueprintCallable,Category="ARPGAction")
+    void InterruptAction(AARPGCharacter* Causer);
     
     int GetActionExclusiveGroupID()const{return ExclusiveGroupID;}
 
@@ -47,16 +54,13 @@ public:
     UFUNCTION(BlueprintCallable,Category="ARPGAction")
     bool TryToActivateAction(AARPGCharacter* User = nullptr, AARPGCharacter* Target = nullptr);
 
-    UFUNCTION(BlueprintCallable,Category="ARPGAction")
-    virtual void Interrupt(AARPGCharacter* Causer);
-
     template<typename  T>
     static T* CreateARPGAction(TSubclassOf<AARPGAction> ActionClass,
                                          AARPGCharacter* ActionOwnerCharacter,FActionFinishDelegate ActionFinishedDelegate, int ActionExclusiveGroupID=0);
 
     template<typename  T>
     static T* CreateARPGAction(TSubclassOf<AARPGAction> ActionClass,
-                                         AARPGCharacter* ActionOwnerCharacter,FActionFinishDelegate ActionFinishedDelegate, FTransform Transform,int ActionExclusiveGroupID=0);
+                                         AARPGCharacter* ActionOwnerCharacter,FTransform Transform,FActionFinishDelegate ActionFinishedDelegate, int ActionExclusiveGroupID=0);
 
     virtual FActionFinishEvent& OnActionFinishedEvent()
     {
@@ -76,6 +80,9 @@ protected:
 
     virtual void OnActionActivate() override;
 
+
+    virtual void BeginPlay() override;
+    
     UFUNCTION()
     void BindToMontageBegin(UAnimMontage* Montage);
     UFUNCTION()
@@ -95,9 +102,7 @@ protected:
     {
     };
 
-    virtual void Interrupt(AARPGCharacter* Causer) override;
-
-    virtual void InitWithOwningCharacter(AARPGCharacter* NewOwningCharacter) override;
+    virtual void OnActionInterrupted(AARPGCharacter* Causer) override;
 
 public:
     UPROPERTY(BlueprintReadWrite,Category="ARPGMontageAction")
@@ -117,8 +122,7 @@ public:
     void BPFunc_OnMontageNotify(FName NotifyName, AARPGCharacter* Character);
     UFUNCTION(BlueprintImplementableEvent,DisplayName="OnMontageStop")
     void BPFunc_OnMontageStop(AARPGCharacter* Character);
-    UFUNCTION(BlueprintImplementableEvent,DisplayName="OnInterrupt")
-    void BPFunc_Interrupt(AARPGCharacter* Character);
+    
 };
 
 UCLASS(Blueprintable)
@@ -154,7 +158,7 @@ public:
 
     virtual void OnMontageStop(UAnimMontage* Montage, bool bInterrupted) override;
 
-    virtual void Interrupt(AARPGCharacter* Causer) override;
+    virtual void OnActionInterrupted(AARPGCharacter* Causer) override;
 };
 
 UCLASS(Blueprintable)

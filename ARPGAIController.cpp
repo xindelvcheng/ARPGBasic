@@ -12,83 +12,80 @@
 
 void AARPGAIController::OnPossess(APawn* InPawn)
 {
-    Super::OnPossess(InPawn);
+	Super::OnPossess(InPawn);
 
-    ControlledCharacter = Cast<AARPGCharacter>(InPawn);
-    checkf(ControlledCharacter.Get(), TEXT("ARPGAIContoller only can possess AARPGCharacter"));
+	ControlledCharacter = Cast<AARPGCharacter>(InPawn);
+	checkf(ControlledCharacter.Get(), TEXT("ARPGAIContoller only can possess AARPGCharacter"));
 
-    MainCharacter = UARPGGameInstanceSubsystem::GetMainCharacter(GetWorld());
-    if (!MainCharacter.IsValid() && UARPGGameInstanceSubsystem::Get(GetWorld()))
-    {
-        UARPGGameInstanceSubsystem::Get(GetWorld())->OnPlayerSetupEnd.AddLambda([&]()
-        {
-            MainCharacter = UARPGGameInstanceSubsystem::GetMainCharacter(GetWorld());
-        });
-    }
+	MainCharacter = UARPGGameInstanceSubsystem::GetMainCharacter(GetWorld());
+	if (!MainCharacter.IsValid() && UARPGGameInstanceSubsystem::Get(GetWorld()))
+	{
+		UARPGGameInstanceSubsystem::Get(GetWorld())->OnPlayerSetupEnd.AddLambda([&]()
+		{
+			MainCharacter = UARPGGameInstanceSubsystem::GetMainCharacter(GetWorld());
+		});
+	}
 }
 
 AAction_MoveToTarget::AAction_MoveToTarget()
 {
-    PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 void AAction_MoveToTarget::SetKeepDistance(float NewDistance)
 {
-    KeepDistance = NewDistance;
+	KeepDistance = NewDistance;
 }
 
 void AAction_MoveToTarget::BeginPlay()
 {
-    Super::BeginPlay();
-    
+	Super::BeginPlay();
 
-    TimerDelegate = FTimerDelegate::CreateLambda([&]()
-    {
-       Target = nullptr;
-       GetWorldTimerManager().ClearTimer(TimerHandle);
-       FinishAction();
-    });
+
+	TimerDelegate = FTimerDelegate::CreateLambda([&]()
+	{
+		Target = nullptr;
+		GetWorldTimerManager().ClearTimer(TimerHandle);
+		FinishAction();
+	});
 }
 
 void AAction_MoveToTarget::Tick(float DeltaSeconds)
 {
-    Super::Tick(DeltaSeconds);
-    
-    if (!Target)
-    {
-        return;
-    }
-    const FVector Vector = Target->GetActorLocation() - GetOwnerCharacter()->GetActorLocation();
-    if (Vector.Size() <= KeepDistance)
-    {
-        FinishAction();
-        return;
-    }
-    
-    GetOwnerCharacter()->AddMovementInput(Vector);
+	Super::Tick(DeltaSeconds);
 
+	if (!Target)
+	{
+		return;
+	}
+	const FVector Vector = Target->GetActorLocation() - GetOwnerCharacter()->GetActorLocation();
+	if (Vector.Size() <= KeepDistance)
+	{
+		FinishAction();
+		return;
+	}
 
+	GetOwnerCharacter()->AddMovementInput(Vector);
 }
 
 void AAction_MoveToTarget::OnActionActivate()
 {
-    Super::OnActionActivate();
+	Super::OnActionActivate();
 
-    if (!GetWorldTimerManager().IsTimerActive(TimerHandle))
-    {
-        GetWorldTimerManager().SetTimer(TimerHandle,TimerDelegate,0.5,false);
-    }
+	if (!GetWorldTimerManager().IsTimerActive(TimerHandle))
+	{
+		GetWorldTimerManager().SetTimer(TimerHandle, TimerDelegate, 0.5, false);
+	}
 }
 
 void AARPGSimpleAIController::BeginPlay()
 {
-    Super::BeginPlay();
+	Super::BeginPlay();
 
-    Action_MoveToTarget = GetWorld()->SpawnActor<AAction_MoveToTarget>();
-    Action_MoveToTarget->InitWithOwningCharacter(ControlledCharacter.Get());
+	Action_MoveToTarget = UARPGGameInstanceSubsystem::SpawnActor<AAction_MoveToTarget>(ControlledCharacter.Get());
 }
 
 void AARPGSimpleAIController::Tick(float DeltaSeconds)
 {
-    Super::Tick(DeltaSeconds);
+	Super::Tick(DeltaSeconds);
 }

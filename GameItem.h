@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 
+
+#include "ARPGActor.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameItem.generated.h"
@@ -15,7 +17,7 @@ class AARPGAction;
 class UBillboardComponent;
 
 UCLASS()
-class  AGameItem : public AActor
+class  AGameItem : public AARPGActor
 {
 	GENERATED_BODY()
 	

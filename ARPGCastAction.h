@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "ARPGAction.h"
+#include "ARPGGameInstanceSubsystem.h"
 #include "Engine/DataTable.h"
 
 #include "ARPGCastAction.generated.h"
@@ -20,13 +21,19 @@ class UTask : public UObject
 	FTaskDelegate OnTaskExecutedDelegate;
 	FTaskDelegate OnTaskFinishedDelegate;
 
-	
+protected:
+	virtual void OnTaskExecuted()
+	{
+		OnTaskExecutedDelegate.ExecuteIfBound();
+	};
+
+	virtual void OnTaskFinished();
 public:
 
 	float StartTime = 0.1;
 	float Duration = 0.5;
 	float EndTime = 0.6;
-	
+
 	FTimerHandle StartTimerHandle;
 	FTimerHandle EndTimerHandle;
 
@@ -35,41 +42,20 @@ public:
 	UPROPERTY()
 	AARPGCastAction* OwnerAction;
 
-	UFUNCTION(BlueprintCallable,Category="ARPGSpell",DisplayName="CreateARPGSpellTask")
-	static UTask* Create(AARPGCastAction* TaskOwnerAction, float TaskStartTime, float TaskDuration,
-	                         FTaskDelegate TaskOnTaskExecuted, FTaskDelegate TaskOnTaskFinished);
+	template <typename T>
+	static T* Create(TSubclassOf<UTask> TaskClass, AARPGCastAction* TaskOwnerAction, float TaskStartTime,
+	                 float TaskDuration,
+	                 FTaskDelegate TaskOnTaskExecuted, FTaskDelegate TaskOnTaskFinished);
 
-	virtual void OnTaskExecuted()
-	{
-		OnTaskExecutedDelegate.ExecuteIfBound();
-	};
-
-	virtual void OnTaskFinished()
-	{
-		OnTaskFinishedDelegate.ExecuteIfBound();
-	};
+	UFUNCTION(BlueprintCallable,Category="SpellTask")
+	void ExecutedTask();
+	UFUNCTION(BlueprintCallable,Category="SpellTask")
+	void FinishTask();
 };
 
 struct FSimpleTaskStruct;
 
-UCLASS(BlueprintType)
-class UARPGSimpleTask : public UTask
-{
-	GENERATED_BODY()
 
-	UPROPERTY()
-	TSubclassOf<AARPGSpecialEffectCreature> SpecialEffectCreatureClass;
-
-	UPROPERTY()
-	AARPGSpecialEffectCreature* SpecialEffectCreature;
-public:
-
-	static UARPGSimpleTask* Create(AARPGCastAction* TaskOwnerAction, FSimpleTaskStruct ActionTaskStruct,
-	                                         FTransform RelativeTransform);
-
-	virtual void OnTaskExecuted() override;
-	virtual void OnTaskFinished() override;
-};
 
 
 UENUM(BlueprintType)
@@ -86,19 +72,19 @@ struct FGridLayoutStruct
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
-	float Length = 300;
+	float Length = 1500;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
-	float Width = 300;
+	float Width = 1500;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
 	float Height = 300;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
-	float RowsNumber = 1;
+	float RowsNumber = 3;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
-	float ColumnsNumber = 1;
+	float ColumnsNumber = 3;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
 	float LayersNumber = 1;
@@ -107,7 +93,7 @@ struct FGridLayoutStruct
 	float RowIndex = 0;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
-	float ColumnIndex = 0;
+	float ColumnIndex = 1;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
 	float LayerIndex = 0;
@@ -139,11 +125,12 @@ struct FGridLayoutStruct
 		return FRotator{};
 	};
 
-	FTransform GetAbsoluteTransform(FVector Origin) const
+	FTransform CalculateAbsoluteTransform(FVector Origin) const
 	{
 		return FTransform{GetAbsoluteRotation(), Origin + GetRelativeLocation(), Scale};
 	}
 };
+
 
 USTRUCT(BlueprintType)
 struct FSimpleTaskStruct
@@ -165,20 +152,50 @@ struct FSimpleTaskStruct
 	FGridLayoutStruct LayoutDescription;
 };
 
+UENUM()
+enum class ESpellTypeEnum:uint8
+{
+	Direction,
+	Target
+};
+
 USTRUCT(BlueprintType)
-struct FSimpleTaskDataTableLine : public FTableRowBase
+struct FSimpleCastActionDescriptionStruct : public FTableRowBase
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
-	TArray<FSimpleTaskStruct> SpellTasks;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpellDefinition")
+	TArray<FSimpleTaskStruct> ActionTaskStructs;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpellDefinition")
+	ESpellTypeEnum SpellTypeEnum;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpellDefinition")
+	float MaxDistance = 1500;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpellDefinition")
+	float Duration = 1.5;
 };
 
-UENUM()
-enum ESpellTypeEnum
+UCLASS(BlueprintType)
+class UARPGSimpleTask : public UTask
 {
-	Direction,Target
+	GENERATED_BODY()
+
+	TSubclassOf<AARPGSpecialEffectCreature> SpecialEffectCreatureClass;
+
+	UPROPERTY()
+	AARPGSpecialEffectCreature* SpecialEffectCreature;
+
+	FGridLayoutStruct LayoutDescription;
+protected:
+	virtual void OnTaskExecuted() override;
+	virtual void OnTaskFinished() override;
+public:
+	static UARPGSimpleTask* Create(AARPGCastAction* TaskOwnerAction, FSimpleTaskStruct ActionTaskStruct,
+                                   FTransform RelativeTransform);
 };
+
 
 /*
  * 施法型技能
@@ -192,17 +209,53 @@ class AARPGCastAction : public AARPGMeleeAttackAction
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
 	USceneComponent* DefaultSceneComponent;
 
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
-	ESpellTypeEnum* SpellTypeEnum;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	ESpellTypeEnum SpellTypeEnum;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	float MaxDistance;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	float Duration = 1.5;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	TArray<FSimpleTaskStruct> ActionTaskStructs;
+
+	UPROPERTY()
+	TArray<UTask*> Tasks;
+
+	void InitTasks();
 
 public:
 	AARPGCastAction();
 
-	UPROPERTY(BlueprintReadOnly,Category="ARPGSpell")
-	TArray<UTask*> Tasks;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell")
-	TArray<FSimpleTaskStruct> ActionTaskStructs;
+	virtual TArray<FSimpleTaskStruct>& GetActionTaskStructs()
+	{
+		return ActionTaskStructs;
+	}
+
+	virtual void SetActionTaskStructs(const TArray<FSimpleTaskStruct>& NewActionTaskStructs)
+	{
+		this->ActionTaskStructs = NewActionTaskStructs;
+		InitTasks();
+	}
+
+	
+
+	static AARPGCastAction* Create(AARPGCharacter* ActionOwnerCharacter,
+	                               const FSimpleCastActionDescriptionStruct& CastActionDescription,
+	                               TArray<UAnimMontage*> CastAnimMontages,
+	                               FActionFinishDelegate ActionFinishedDelegate);
+
+	static AARPGCastAction* Create(AARPGCharacter* ActionOwnerCharacter, const FName& SpellName,
+	                               FActionFinishDelegate ActionFinishedDelegate);
+
+
+	virtual float GetMaxDistance()
+	{
+		return MaxDistance;
+	}
 
 protected:
 	virtual void BeginPlay() override;

@@ -11,6 +11,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "ARPGDamageSubsystem.generated.h"
 
+class UARPGDamageSubsystem;
 class UDamageDetectRecord;
 
 class AARPGCharacter;
@@ -51,6 +52,7 @@ public:
 	FTransform LastFrameDamageCenterTransform;
 	FTransform CurrentFrameDamageCenterTransform;
 	TArray<AActor*> ActorsToIgnore;
+	TWeakObjectPtr<UARPGDamageSubsystem> ARPGDamageSubsystem;
 
 	TArray<TEnumAsByte<EObjectTypeQuery>> DetectObjectTypes{ObjectTypeQuery1, ObjectTypeQuery2, ObjectTypeQuery3};
 	bool bDrawDebug = false;

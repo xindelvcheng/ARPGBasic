@@ -23,6 +23,8 @@
 class USaveGame;
 class UActorMoveRecord;
 
+DECLARE_DELEGATE(FActorInitializeDelegate);
+
 DECLARE_DYNAMIC_DELEGATE(FMoveFinishDelegate);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMoveFinishEvent, UActorMoveRecord*, Record);
@@ -173,14 +175,19 @@ public:
 
 
 	template <typename T>
-	static T* SpawnActor(TSubclassOf<T> ActorClass,FTransform Transform, AARPGCharacter* OwnerCharacter)
+	static T* SpawnActor(UClass* ActorClass, FTransform Transform, AARPGCharacter* OwnerCharacter,FActorInitializeDelegate ActorInitializeDelegate={})
 	{
-		FActorSpawnParameters ActorSpawnParameters;
-		ActorSpawnParameters.Instigator = OwnerCharacter;
-		ActorSpawnParameters.Owner = OwnerCharacter;
-		ActorSpawnParameters.SpawnCollisionHandlingOverride =
-			ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-		return OwnerCharacter->GetWorld()->SpawnActor<T>(ActorClass,Transform, ActorSpawnParameters);
+		T* Actor = OwnerCharacter->GetWorld()->SpawnActorDeferred<T>(ActorClass, Transform, OwnerCharacter, OwnerCharacter,
+			ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
+		ActorInitializeDelegate.ExecuteIfBound();
+		UGameplayStatics::FinishSpawningActor(Actor,Transform);
+		return Actor;
+	}
+
+	template <typename T>
+	static T* SpawnActor(AARPGCharacter* OwnerCharacter, FTransform Transform = {})
+	{
+		return SpawnActor<T>(T::StaticClass(), Transform, OwnerCharacter);
 	}
 };
 

@@ -12,6 +12,7 @@
 
 class UCharacterConfigPrimaryDataAsset;
 class AARPGAction;
+class AARPGCastAction;
 class AARPGCharacter;
 
 
@@ -35,7 +36,7 @@ public:
     TArray<TSubclassOf<AARPGAction>> RemoteAttackClasses;
 
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
-    TArray<TSubclassOf<AARPGAction>> AbilityClasses;
+    TArray<TSubclassOf<AARPGCastAction>> AbilityClasses;
 
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     TArray<TSubclassOf<AARPGBuff>> BuffClasses;
@@ -44,7 +45,7 @@ protected:
     // Called when the game starts
     virtual void BeginPlay() override;
 
-    AARPGCharacter* AttachedCharacter;
+    TWeakObjectPtr<AARPGCharacter> OwnerCharacter;
 
     bool IsRigid;
 
@@ -78,9 +79,12 @@ public:
     UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     TArray<AARPGAction*> RemoteAttackActions;
     UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
-    TArray<AARPGAction*> AbilityActions;
+    TArray<AARPGCastAction*> AbilityActions;
     UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     TArray<AARPGBuff*> BuffActions;
+    UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
+    TArray<FName> SpellNames;
+    
     UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     AARPGAction* CurrentActiveAction;
 

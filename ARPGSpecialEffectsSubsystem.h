@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 
 
+
+#include "ARPGActor.h"
 #include "Components/BoxComponent.h"
 #include "Sound/SoundCue.h"
 #include "particles/ParticleSystem.h"
@@ -99,12 +101,11 @@ struct FARPGCreatureTimeLineTaskStruct
 };
 
 UCLASS(Blueprintable)
-class AARPGSpecialEffectCreature : public AActor
+class AARPGSpecialEffectCreature : public AARPGActor
 {
 	GENERATED_BODY()
 
 protected:
-	TWeakObjectPtr<AARPGCharacter> OwnerCharacter;
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
 	UARPGDamageBoxComponent* DamageDetectionBox;
@@ -124,17 +125,11 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
 	TSubclassOf<UDamageType> DamageType;
 
-	UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffect")
-	void SetOwnerCharacter(AARPGCharacter* NewOwnerCharacter) { OwnerCharacter = NewOwnerCharacter; }
-
-	UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffect")
-	AARPGCharacter* GetOwnerCharacter() const { return OwnerCharacter.Get(); }
-
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
 	TArray<FARPGCreatureTimeLineTaskStruct> TimeLineTasks;
 
 
 	UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffectCreature",DisplayName="CreateARPGSpecialEffectCreature")
 	static AARPGSpecialEffectCreature* Create(TSubclassOf<AARPGSpecialEffectCreature> CreatureClass,
-	                                          FTransform Transform, AARPGCharacter* OwnerCharacter);
+	                                          FTransform Transform, AARPGCharacter* CreatureOwnerCharacter);
 };

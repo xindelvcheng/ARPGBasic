@@ -14,19 +14,23 @@ class TESTPROJECT_API AARPGActor : public AActor
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly,meta=(AllowPrivateAccess))
-	AARPGCharacter* OwnerCharacter;
+	TWeakObjectPtr<AARPGCharacter> OwnerCharacter;
+
+protected:
+	virtual void PostActorCreated() override;
 	
 public:
 
-	FORCEINLINE AARPGCharacter* GetOwnerCharacter() const { return OwnerCharacter; }
-	virtual void SetOwnerCharacter(AARPGCharacter* NewOwner) { OwnerCharacter = NewOwner; }
-	
+	FORCEINLINE AARPGCharacter* GetOwnerCharacter() const { return OwnerCharacter.Get(); }
+	virtual void SetOwnerCharacter(AARPGCharacter* NewOwner);
+
 	// Sets default values for this actor's properties
 	AARPGActor();
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
 
 public:	
 	// Called every frame

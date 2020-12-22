@@ -25,15 +25,18 @@ UDamageDetectRecord* UDamageDetectRecord::Create(UARPGDamageBoxComponent* Damage
 	Record->ActorsToIgnore.AddUnique(InstigatorCharacter);
 	Record->DamageDetectedEvent.Add(DelegateOnDamageDetected);
 
+	//此处代码较为丑陋，以后可能修改
+	Record->ARPGDamageSubsystem = UARPGDamageSubsystem::Get(InstigatorCharacter->GetWorld());
+
 	return Record;
 }
 
 void UDamageDetectRecord::Tick(float)
 {
-	if (!Instigator.IsValid() || !DamageCenterComponent.IsValid() || !InstigatorStatusComponent.IsValid() || !
-		InstigatorPlayerController.IsValid())
+	if (!Instigator.IsValid() || !DamageCenterComponent.IsValid() || !InstigatorStatusComponent.IsValid())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("有一条DamageDetectRecord因弱指针无效而被跳过"));
+		ARPGDamageSubsystem->UnRegisterToDamageDetect(this);
 		return;
 	}
 

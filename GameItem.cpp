@@ -16,69 +16,63 @@
 // Sets default values
 AGameItem::AGameItem()
 {
-    PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = false;
 
-    BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
-    RootComponent = BoxCollision;
+	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
+	RootComponent = BoxCollision;
 
-    PromptFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("PromptFX"));
-    PromptFX->SetupAttachment(RootComponent);
-    if (UARPGBasicSettings::Get() && UARPGBasicSettings::Get()->DefaultGameItemPickUpPromptVisualEffect)
-    {
-        PromptFX->SetTemplate(UARPGBasicSettings::Get()->DefaultGameItemPickUpPromptVisualEffect.LoadSynchronous());
-    }
+	PromptFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("PromptFX"));
+	PromptFX->SetupAttachment(RootComponent);
+	if (UARPGBasicSettings::Get() && UARPGBasicSettings::Get()->DefaultGameItemPickUpPromptVisualEffect)
+	{
+		PromptFX->SetTemplate(UARPGBasicSettings::Get()->DefaultGameItemPickUpPromptVisualEffect.LoadSynchronous());
+	}
 
-    BillboardComponent = CreateDefaultSubobject<UBillboardComponent>(TEXT("BillboardComponent"));
-    BillboardComponent->SetupAttachment(RootComponent);
-    if (ItemIcon)
-    {
-        BillboardComponent->SetSprite(ItemIcon);
-    }
+	BillboardComponent = CreateDefaultSubobject<UBillboardComponent>(TEXT("BillboardComponent"));
+	BillboardComponent->SetupAttachment(RootComponent);
+	if (ItemIcon)
+	{
+		BillboardComponent->SetSprite(ItemIcon);
+	}
 }
 
 // Called when the game starts or when spawned
 void AGameItem::BeginPlay()
 {
-    Super::BeginPlay();
-    if (!PromptFX->Template || !ItemIcon)
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow, TEXT("道具未指定美术资源"));
-    }
+	Super::BeginPlay();
+	if (!PromptFX->Template || !ItemIcon)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow, TEXT("道具未指定美术资源"));
+	}
 
-    if (EffectActionClass)
-    {
-        FActorSpawnParameters ActorSpawnParameters;
-        ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-        FTransform Transform;
-        EffectAction = Cast<AARPGAction>(GetWorld()->SpawnActor(EffectActionClass, &Transform, ActorSpawnParameters));
-    }
+	if (EffectActionClass)
+	{
+		EffectAction = AARPGAction::CreateARPGAction<AARPGAction>(EffectActionClass, GetOwnerCharacter(),
+		                                                          FActionFinishDelegate::CreateUObject(
+			                                                          GetOwnerCharacter()->
+			                                                          GetCharacterCombatComponent(),
+			                                                          &UARPGCharacterCombatComponent::BindToOnActionFinished));
+	}
 }
 
 AGameItem* AGameItem::BeTaken(AARPGCharacter* Character)
 {
-    BoxCollision->DestroyComponent();
-    RootComponent = PromptFX;
-    IsInBag = true;
-    OwnerCharacter = Character;
-    FMoveFinishDelegate MoveFinishDelegate;
-    MoveFinishDelegate.BindDynamic(this,&AGameItem::BindToBeTaken);
-    UARPGGameInstanceSubsystem::MoveActorTowardActorWithScale(this,OwnerCharacter,MoveFinishDelegate);
-    return this;
+	BoxCollision->DestroyComponent();
+	RootComponent = PromptFX;
+	IsInBag = true;
+	OwnerCharacter = Character;
+	FMoveFinishDelegate MoveFinishDelegate;
+	MoveFinishDelegate.BindDynamic(this, &AGameItem::BindToBeTaken);
+	UARPGGameInstanceSubsystem::MoveActorTowardActorWithScale(this, OwnerCharacter, MoveFinishDelegate);
+	return this;
 }
 
 void AGameItem::BindToBeTaken()
 {
-    PromptFX->DestroyComponent();
+	PromptFX->DestroyComponent();
 }
 
 void AGameItem::NativeUseGameItem(AARPGCharacter* User)
 {
-    if (EffectAction)
-    {
-        EffectAction->InitWithOwningCharacter(User);
-        EffectAction->OnActionFinishedEvent().AddUObject(User->GetCharacterCombatComponent(),
-                                                   &UARPGCharacterCombatComponent::BindToOnActionFinished);
-    }
-
-    BeUsed(User);
+	BeUsed(User);
 }

@@ -152,7 +152,7 @@ void AARPGSpecialEffectCreature::BeginPlay()
 			if (UARPGDamageSubsystem* DamageSubsystem = UARPGDamageSubsystem::Get(GetWorld()))
 			{
 				Task.DamageDetectRecord = DamageSubsystem->RegisterToDamageDetect(
-					DamageDetectionBox, OwnerCharacter.Get(),
+					DamageDetectionBox, GetOwnerCharacter(),
 					FDamageDetectedDelegate{});
 			}
 		}), Task.DamageStartTime, false);
@@ -173,24 +173,14 @@ void AARPGSpecialEffectCreature::BeginPlay()
 AARPGSpecialEffectCreature* AARPGSpecialEffectCreature::Create(
 	TSubclassOf<AARPGSpecialEffectCreature> CreatureClass,
 	FTransform Transform,
-	AARPGCharacter* OwnerCharacter)
+	AARPGCharacter* CreatureOwnerCharacter)
 {
-	FActorSpawnParameters ActorSpawnParameters;
-	ActorSpawnParameters.Instigator = OwnerCharacter;
-	ActorSpawnParameters.Owner = OwnerCharacter;
-	ActorSpawnParameters.SpawnCollisionHandlingOverride =
-		ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-	auto SpecialEffectCreature = OwnerCharacter->GetWorld()->SpawnActor<AARPGSpecialEffectCreature>(
-		CreatureClass, Transform, ActorSpawnParameters);
-
-	if (SpecialEffectCreature && OwnerCharacter)
+	if (const auto SpecialEffectCreature = UARPGGameInstanceSubsystem::SpawnActor<AARPGSpecialEffectCreature>(
+		CreatureClass, Transform, CreatureOwnerCharacter))
 	{
-		SpecialEffectCreature->SetOwnerCharacter(OwnerCharacter);
-	}
-	else
-	{
-		UARPGGameInstanceSubsystem::PrintLogToScreen(FString::Printf(TEXT("ARPGSpecialEffectCreature初始化出现错误")));
+		return SpecialEffectCreature;
 	}
 
-	return SpecialEffectCreature;
+	UARPGGameInstanceSubsystem::PrintLogToScreen(FString::Printf(TEXT("ARPGSpecialEffectCreature初始化出现错误")));
+	return nullptr;
 }

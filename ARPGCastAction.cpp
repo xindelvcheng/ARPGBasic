@@ -3,6 +3,8 @@
 
 #include "ARPGCastAction.h"
 
+
+#include "ARPGBasicSettings.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -12,6 +14,15 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "ARPGSpecialEffectsSubsystem.h"
 
+void AARPGCastAction::InitTasks()
+{
+	Tasks.Empty();
+	for (const FSimpleTaskStruct ActionTaskStruct : ActionTaskStructs)
+	{
+		Tasks.Emplace(UARPGSimpleTask::Create(this, ActionTaskStruct, GetActorTransform()));
+	}
+}
+
 AARPGCastAction::AARPGCastAction()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -19,6 +30,48 @@ AARPGCastAction::AARPGCastAction()
 
 	DefaultSceneComponent = CreateDefaultSubobject<USceneComponent>("DefaultSceneComponent");
 	SetRootComponent(DefaultSceneComponent);
+}
+
+AARPGCastAction* AARPGCastAction::Create(AARPGCharacter* ActionOwnerCharacter,
+                                         const FSimpleCastActionDescriptionStruct& CastActionDescription,
+                                         TArray<UAnimMontage*> CastAnimMontages,
+                                         FActionFinishDelegate ActionFinishedDelegate)
+{
+	AARPGCastAction* Action = CreateARPGAction<AARPGCastAction>(StaticClass(), ActionOwnerCharacter,
+	                                                            ActionFinishedDelegate);
+	Action->SetActionTaskStructs(CastActionDescription.ActionTaskStructs);
+	Action->SpellTypeEnum = CastActionDescription.SpellTypeEnum;
+	Action->MaxDistance = CastActionDescription.MaxDistance;
+	Action->MeleeAttackMontages = CastAnimMontages;
+	Action->Duration = CastActionDescription.Duration;
+	return Action;
+}
+
+AARPGCastAction* AARPGCastAction::Create(AARPGCharacter* ActionOwnerCharacter, const FName& SpellName,
+                                         FActionFinishDelegate ActionFinishedDelegate)
+{
+	if (UARPGConfigSubsystem* ConfigSubsystem = UARPGConfigSubsystem::Get(ActionOwnerCharacter->GetWorld()))
+	{
+		if (UDataTable* DataTable = ConfigSubsystem->AbilityConfigDataTable)
+		{
+			if (const auto SpellDescription = DataTable->FindRow<FSimpleCastActionDescriptionStruct>(
+				SpellName,TEXT("QuerySpell")))
+			{
+				if (AARPGMeleeAttackAction* MeleeAction = Cast<AARPGMeleeAttackAction>(
+					ActionOwnerCharacter->GetCharacterCombatComponent()->CurrentMeleeAttackCollection))
+				{
+					if (AARPGCastAction* CastAction = Create(ActionOwnerCharacter, *SpellDescription, MeleeAction->MeleeAttackMontages,
+                                                   ActionFinishedDelegate))
+					{
+						return CastAction;
+					}
+				}
+			}
+		}
+	}
+
+	UARPGGameInstanceSubsystem::PrintLogToScreen(FString::Printf(TEXT("生成技能%s错误，未进行适当配置"), *SpellName.ToString()));
+	return nullptr;
 }
 
 void AARPGCastAction::BeginPlay()
@@ -36,7 +89,12 @@ void AARPGCastAction::OnActionActivate()
 {
 	verifyf(MeleeAttackMontages.Num()>0, TEXT("AARPGCastAction没有设置施法动作"));
 	StartAllTask();
-	
+
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle,FTimerDelegate::CreateLambda([&]()
+	{
+		FinishAction();
+	}),Duration,false);
 	Super::OnActionActivate();
 }
 
@@ -50,10 +108,9 @@ void AARPGCastAction::OnActionFinished(AARPGAction* Action)
 
 void AARPGCastAction::StartAllTask()
 {
-	Tasks.Empty();
-	for (const FSimpleTaskStruct ActionTaskStruct : ActionTaskStructs)
+	for (UTask* Task : Tasks)
 	{
-		Tasks.Emplace(UARPGSimpleTask::Create(this, ActionTaskStruct,GetActorTransform()));
+		Task->ExecutedTask();
 	}
 }
 
@@ -61,10 +118,8 @@ void AARPGCastAction::StopAllTask()
 {
 	for (UTask* Task : Tasks)
 	{
-		GetWorldTimerManager().ClearTimer(Task->StartTimerHandle);
-		GetWorldTimerManager().ClearTimer(Task->EndTimerHandle);
+		Task->FinishTask();
 	}
-	Tasks.Empty();
 }
 
 #if WITH_EDITOR
@@ -77,33 +132,33 @@ void AARPGCastAction::PostEditChangeProperty(FPropertyChangedEvent& PropertyChan
 
 
 UARPGSimpleTask* UARPGSimpleTask::Create(AARPGCastAction* TaskOwnerAction, FSimpleTaskStruct ActionTaskStruct,
-                                                   FTransform TaskTransform)
+                                         FTransform TaskTransform)
 {
-	UARPGSimpleTask* Task = NewObject<UARPGSimpleTask>();
-	Task->OwnerAction = TaskOwnerAction;
+	UARPGSimpleTask* Task = UTask::Create<UARPGSimpleTask>(UARPGSimpleTask::StaticClass(), TaskOwnerAction,
+	                                                       ActionTaskStruct.CreateEffectCreatureTime,
+	                                                       ActionTaskStruct.Duration, FTaskDelegate{},
+	                                                       FTaskDelegate{});
 	Task->SpecialEffectCreatureClass = ActionTaskStruct.SpecialEffectCreatureClass;
-	Task->Transform = ActionTaskStruct.LayoutDescription.GetAbsoluteTransform(TaskTransform.GetLocation());
-	Task->StartTime = ActionTaskStruct.CreateEffectCreatureTime;
-	Task->Duration = ActionTaskStruct.Duration;
-	Task->EndTime = Task->StartTime + Task->Duration;
-
-	TaskOwnerAction->GetWorldTimerManager().SetTimer(Task->StartTimerHandle, FTimerDelegate::CreateLambda([Task]()
-	{
-		Task->OnTaskExecuted();
-	}), Task->StartTime, false);
-
-	TaskOwnerAction->GetWorldTimerManager().SetTimer(Task->EndTimerHandle, FTimerDelegate::CreateLambda([Task]()
-	{
-		Task->OnTaskFinished();
-	}), Task->EndTime, false);
+	Task->LayoutDescription = ActionTaskStruct.LayoutDescription;
+	
 	return Task;
 }
 
 void UARPGSimpleTask::OnTaskExecuted()
 {
 	Super::OnTaskExecuted();
-	SpecialEffectCreature = AARPGSpecialEffectCreature::Create(SpecialEffectCreatureClass, Transform,
-	                                                           OwnerAction->GetOwnerCharacter());
+	
+	OwnerAction->GetWorldTimerManager().SetTimer(StartTimerHandle, FTimerDelegate::CreateLambda([&]()
+    {
+		Transform = LayoutDescription.CalculateAbsoluteTransform(OwnerAction->GetActorLocation());
+		SpecialEffectCreature = AARPGSpecialEffectCreature::Create(SpecialEffectCreatureClass, Transform,
+                                                               OwnerAction->GetOwnerCharacter());
+    }), StartTime, false);
+
+	OwnerAction->GetWorldTimerManager().SetTimer(EndTimerHandle, FTimerDelegate::CreateLambda([&]()
+    {
+		FinishTask();
+    }), EndTime, false);
 }
 
 void UARPGSimpleTask::OnTaskFinished()
@@ -116,11 +171,12 @@ void UARPGSimpleTask::OnTaskFinished()
 	}
 }
 
-
-UTask* UTask::Create(AARPGCastAction* TaskOwnerAction, float TaskStartTime, float TaskDuration,
-                         FTaskDelegate TaskOnTaskExecuted, FTaskDelegate TaskOnTaskFinished)
+template <typename T>
+T* UTask::Create(TSubclassOf<UTask> TaskClass, AARPGCastAction* TaskOwnerAction, float TaskStartTime,
+                 float TaskDuration,
+                 FTaskDelegate TaskOnTaskExecuted, FTaskDelegate TaskOnTaskFinished)
 {
-	if (UTask* Task = NewObject<UTask>(TaskOwnerAction))
+	if (T* Task = NewObject<T>(TaskOwnerAction,TaskClass))
 	{
 		Task->StartTime = TaskStartTime;
 		Task->Duration = TaskDuration;
@@ -135,4 +191,21 @@ UTask* UTask::Create(AARPGCastAction* TaskOwnerAction, float TaskStartTime, floa
 		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow,TEXT("生成UTask出错"));
 	}
 	return nullptr;
+}
+
+void UTask::OnTaskFinished()
+{
+	OnTaskFinishedDelegate.ExecuteIfBound();
+}
+
+void UTask::ExecutedTask()
+{
+	OnTaskExecuted();
+}
+
+void UTask::FinishTask()
+{
+	OwnerAction->GetWorldTimerManager().ClearTimer(StartTimerHandle);
+	OwnerAction->GetWorldTimerManager().ClearTimer(EndTimerHandle);
+	OnTaskFinished();
 }

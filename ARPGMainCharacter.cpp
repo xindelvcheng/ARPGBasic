@@ -24,8 +24,7 @@ void AARPGMainCharacter::BeginPlay()
 
     if (MainPlayerController)
     {
-        FInputModeGameOnly InputMode;
-        MainPlayerController->SetInputMode(InputMode);
+        MainPlayerController->SetInputMode(FInputModeGameOnly{});
         MainPlayerController->bShowMouseCursor = false;
     }
 }

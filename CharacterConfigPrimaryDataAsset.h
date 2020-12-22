@@ -6,6 +6,7 @@
 #include "Engine/DataAsset.h"
 #include "ARPGAction.h"
 #include "ARPGCharacter.h"
+#include "ARPGCastAction.h"
 #include "CharacterConfigPrimaryDataAsset.generated.h"
 
 class AARPGAction;
@@ -54,13 +55,16 @@ public:
 	TArray<TSubclassOf<AARPGAction>> RemoteAttackClasses;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Combat")
-	TArray<TSubclassOf<AARPGAction>> AbilityClasses;
+	TArray<TSubclassOf<AARPGCastAction>> AbilityClasses;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Combat")
 	TArray<TSubclassOf<AARPGBuff>> BuffClasses;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Combat")
 	TArray<TSubclassOf<ATranscendentalLawsSystem>> TranscendentalLawsSystemClasses;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Simple Cast Action Definitions")
+	TArray<FName> SpellNames;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Art Resource")
 	UAnimSequence* DeathAnimationAsset;
