@@ -124,7 +124,15 @@ public:
 	                                                const FVector LocationOffset,
 	                                                const FRotator RotationOffset);
 
-	static UARPGGameInstanceSubsystem* Get(UWorld* World);
+	static UARPGGameInstanceSubsystem* Get(UWorld* World)
+	{
+		if (World && World->GetGameInstance())
+		{
+			return World->GetGameInstance()->GetSubsystem<UARPGGameInstanceSubsystem>();
+		}
+
+		return nullptr;
+	};
 
 	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",BlueprintPure)
 	static FVector2D GetScreenSize();

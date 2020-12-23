@@ -55,13 +55,14 @@ public:
 	TArray<TSubclassOf<AARPGCastAction>> AbilityClasses;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Combat")
+	TArray<FName> SpellNames;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Combat")
 	TArray<TSubclassOf<AARPGBuff>> BuffClasses;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Combat")
 	TArray<TSubclassOf<ATranscendentalLawsSystem>> TranscendentalLawsSystemClasses;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Simple Cast Action Definitions")
-	TArray<FName> SpellNames;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Art Resource")
 	UAnimSequence* DeathAnimationAsset;

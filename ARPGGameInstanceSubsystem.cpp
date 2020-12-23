@@ -152,16 +152,6 @@ FTransform UARPGGameInstanceSubsystem::GetActorNearPositionTransform(AActor* Ori
 	};
 }
 
-UARPGGameInstanceSubsystem* UARPGGameInstanceSubsystem::Get(UWorld* World)
-{
-	if (World && World->GetGameInstance() && World->GetGameInstance()->GetSubsystem<UARPGGameInstanceSubsystem>())
-	{
-		return World->GetGameInstance()->GetSubsystem<UARPGGameInstanceSubsystem>();
-	}
-
-	return nullptr;
-}
-
 FVector2D UARPGGameInstanceSubsystem::GetScreenSize()
 {
 	if (GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport)

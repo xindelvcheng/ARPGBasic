@@ -7,6 +7,8 @@
 #include "ARPGCastAction.h"
 #include "ARPGGameInstanceSubsystem.h"
 #include "CharacterConfigPrimaryDataAsset.h"
+#include "ARPGLockTargetComponent.h"
+
 #include "GameFramework/CharacterMovementComponent.h"
 
 
@@ -73,9 +75,21 @@ bool UARPGCharacterCombatComponent::TryToUseAbility(int AbilityIndex = 0)
 	}
 
 	AARPGCastAction* Ability = AbilityActions[AbilityIndex];
-	Ability->SetActorTransform(
-		UARPGGameInstanceSubsystem::GetActorNearPositionTransform(GetOwnerCharacter(),
-		                                                          {Ability->GetMaxDistance(), 0, 0}, FRotator{}));
+
+	UARPGLockTargetComponent* LockTargetComponent = GetOwnerCharacter()->GetCharacterLockTargetComponent();
+	if (AARPGCharacter* LockTarget = LockTargetComponent->DetectLockTarget())
+	{
+		Ability->SetActorTransform(LockTarget->GetActorTransform());
+	}
+	else
+	{
+		Ability->SetActorTransform(
+			UARPGGameInstanceSubsystem::GetActorNearPositionTransform(GetOwnerCharacter(),
+			                                                          {
+				                                                          Ability->GetMaxDistance(), 0, 0
+			                                                          }, FRotator{}));
+	}
+
 	if (Ability->TryToActivateAction(GetOwnerCharacter()))
 	{
 		ExclusiveGroupActionsMap.Add(Ability->GetActionExclusiveGroupID(), Ability);
@@ -101,9 +115,12 @@ bool UARPGCharacterCombatComponent::CauseRigid(float Duration, AARPGCharacter* C
 	WorldTimeManager.SetTimer(RigidTimerHandle,
 	                          FTimerDelegate::CreateLambda([&]()
 	                          {
-		                          GetOwnerCharacter()->GetCharacterMovement()->Activate();
-		                          IsRigid = false;
-		                          OnResumeFromRigid.Broadcast(WorldTimeManager.GetTimerElapsed(RigidTimerHandle));
+		                          if (GetOwnerCharacter())
+		                          {
+			                          GetOwnerCharacter()->GetCharacterMovement()->Activate();
+			                          IsRigid = false;
+			                          OnResumeFromRigid.Broadcast(WorldTimeManager.GetTimerElapsed(RigidTimerHandle));
+		                          }
 	                          }),
 	                          TimerRemaining
 	                          , false);
@@ -155,28 +172,30 @@ void UARPGCharacterCombatComponent::ReInitCharacterActions(
 	for (const auto MeleeAttackActionDescriptionStruct : MeleeAttacks)
 	{
 		if (AARPGMeleeAttackAction* Action = AARPGAction::CreateARPGAction<AARPGMeleeAttackAction>(
-                AARPGMeleeAttackAction::StaticClass(), GetOwnerCharacter(),
-                FActionFinishDelegate::CreateUObject(
-                    this,
-                    &UARPGCharacterCombatComponent::BindToOnActionFinished)))
+			AARPGMeleeAttackAction::StaticClass(), GetOwnerCharacter(),
+			FActionFinishDelegate::CreateUObject(
+				this,
+				&UARPGCharacterCombatComponent::BindToOnActionFinished)))
 		{
 			Action->MeleeAttackMontages = MeleeAttackActionDescriptionStruct.MeleeAttackMontages;
 			MeleeAttackCollectionActions.Emplace(Action);
-		}else
+		}
+		else
 		{
 			UARPGGameInstanceSubsystem::PrintLogToScreen(
-                FString::Printf(TEXT("生成%s的AARPGMeleeAttackAction发生错误"), *GetOwner()->GetName()));
+				FString::Printf(TEXT("生成%s的AARPGMeleeAttackAction发生错误"), *GetOwner()->GetName()));
 		}
 	}
-	if (MeleeAttackCollectionActions.Num()>0)
+	if (MeleeAttackCollectionActions.Num() > 0)
 	{
 		CurrentMeleeAttackCollection = MeleeAttackCollectionActions[0];
-	}else if(CharacterConfigPrimaryDataAsset)
+	}
+	else if (CharacterConfigPrimaryDataAsset)
 	{
 		UARPGGameInstanceSubsystem::PrintLogToScreen(
-                FString::Printf(TEXT("%s的DataAsset未配置MeleeAttacks"), *GetOwner()->GetName()));
+			FString::Printf(TEXT("%s的DataAsset未配置MeleeAttacks"), *GetOwner()->GetName()));
 	}
-	
+
 
 	for (auto SpellName : SpellNames)
 	{
@@ -196,9 +215,9 @@ void UARPGCharacterCombatComponent::ReInitCharacterActions(
 		if (ActionClass)
 		{
 			BuffActions.Emplace(AARPGAction::CreateARPGAction<AARPGBuff>(ActionClass, GetOwnerCharacter(),
-			                                                               FActionFinishDelegate::CreateUObject(
-				                                                               this,
-				                                                               &UARPGCharacterCombatComponent::BindToOnActionFinished)));
+			                                                             FActionFinishDelegate::CreateUObject(
+				                                                             this,
+				                                                             &UARPGCharacterCombatComponent::BindToOnActionFinished)));
 		}
 		else
 		{

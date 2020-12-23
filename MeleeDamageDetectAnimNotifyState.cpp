@@ -15,6 +15,7 @@ void UMeleeDamageDetectAnimNotifyState::NotifyBegin(USkeletalMeshComponent* Mesh
                                                     float TotalDuration)
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration);
+	
 	if (AARPGCharacter* OwnerCharacter = Cast<AARPGCharacter>(MeshComp->GetOwner()))
 	{
 		if (UARPGDamageSubsystem::Get(OwnerCharacter->GetWorld()))

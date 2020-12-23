@@ -42,7 +42,7 @@ void UARPGConfigSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 }
 UARPGConfigSubsystem* UARPGConfigSubsystem::Get(UWorld* World)
 {
-	if (World && World->GetGameInstance() && World->GetGameInstance()->GetSubsystem<UARPGGameInstanceSubsystem>())
+	if (World && World->GetGameInstance())
 	{
 		return World->GetGameInstance()->GetSubsystem<UARPGConfigSubsystem>();
 	}

@@ -88,7 +88,7 @@ struct FGridLayoutStruct
 	float LayersNumber = 1;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
-	float RowIndex = 0;
+	float RowIndex = 1;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
 	float ColumnIndex = 1;

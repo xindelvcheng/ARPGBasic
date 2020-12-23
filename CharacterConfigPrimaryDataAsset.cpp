@@ -3,3 +3,4 @@
 
 #include "CharacterConfigPrimaryDataAsset.h"
 
+#include "ARPGConfigSubsystem.h"

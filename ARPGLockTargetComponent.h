@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 
 
+
+#include "Camera/CameraComponent.h"
 #include "Components/ActorComponent.h"
 #include "Components/WidgetComponent.h"
 
@@ -27,10 +29,16 @@ class UARPGLockTargetComponent : public UWidgetComponent
 	TArray<TEnumAsByte<	EObjectTypeQuery> > ObjectTypes = {ObjectTypeQuery3};
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGLockTargetComponent",meta=(AllowPrivateAccess))
-	float DetectDistance = 1500;
+	float DetectDistance = 3000;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGLockTargetComponent",meta=(AllowPrivateAccess))
 	FVector DetectHalfSize{300,1000,150};
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGLockTargetComponent",meta=(AllowPrivateAccess))
+	TArray<AActor*> ActorsToIgnore;
+
+	TArray<AARPGCharacter*> Targets;
+	TArray<AARPGCharacter*> LockedTargets;
 
 public:	
 	// Sets default values for this component's properties
@@ -51,16 +59,12 @@ public:
 
 	TArray<AARPGCharacter*> CharactersInSight;
 
-	
-	
-	TArray<AActor*> ActorsToIgnore;
-
-	TArray<AARPGCharacter*> Targets;
-	TArray<AARPGCharacter*> LockedTargets;
 
 	TArray<FHitResult> OutHits;
 
 	UFUNCTION(BlueprintCallable,Category="ARPGLockTargetComponent")
 	AARPGCharacter* ToggleLockTarget();
 
+	UFUNCTION(BlueprintCallable,Category="ARPGLockTargetComponent")
+    AARPGCharacter* DetectLockTarget();
 };

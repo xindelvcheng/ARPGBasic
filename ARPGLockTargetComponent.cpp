@@ -7,18 +7,13 @@
 #include "ARPGCharacter.h"
 #include "ARPGPlayerController.h"
 #include "ARPGWidgetsLab.h"
+#include "Camera/CameraComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 // Sets default values for this component's properties
 UARPGLockTargetComponent::UARPGLockTargetComponent()
 {
-	
-	AttachedCharacter = Cast<AARPGCharacter>(GetOwner());
-	if (Cast<AARPGMainCharacter>(AttachedCharacter))
-	{
-		PrimaryComponentTick.bCanEverTick = true;
-	}
-	ActorsToIgnore.Emplace(AttachedCharacter);
+	PrimaryComponentTick.bCanEverTick = true;
 	
 	// ...
 	if (UARPGBasicSettings::Get())
@@ -34,7 +29,12 @@ void UARPGLockTargetComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	GetWidget()->SetVisibility(ESlateVisibility::Hidden);
-	MainCharacterPlayerController = Cast<AARPGPlayerController>(AttachedCharacter->GetController());
+	AttachedCharacter = Cast<AARPGCharacter>(GetOwner());
+	ActorsToIgnore.Emplace(AttachedCharacter);
+	if (Cast<AARPGMainCharacter>(AttachedCharacter))
+	{
+		MainCharacterPlayerController = Cast<AARPGPlayerController>(AttachedCharacter->GetController());
+	}
 }
 
 
@@ -53,28 +53,14 @@ void UARPGLockTargetComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 AARPGCharacter* UARPGLockTargetComponent::ToggleLockTarget()
 {
-	UKismetSystemLibrary::BoxTraceMultiForObjects(GetWorld(), AttachedCharacter->GetActorLocation(),
-	                                              AttachedCharacter->GetActorLocation() + AttachedCharacter->
-	                                              GetActorForwardVector() * DetectDistance,
-	                                              DetectHalfSize,
-	                                              AttachedCharacter->GetActorRotation(), ObjectTypes, false,
-	                                              ActorsToIgnore,
-	                                              bDrawDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
-	                                              OutHits, true);
-
-
-	for (const FHitResult HitResult : OutHits)
+	if (DetectLockTarget())
 	{
-		const auto CandidateTarget = Cast<AARPGCharacter>(HitResult.GetActor());
-		if (!LockedTargets.Contains(CandidateTarget) && CandidateTarget->GetCharacterLockTargetComponent())
-		{
-			LockingTarget = CandidateTarget;
-			LockedTargets.Emplace(LockingTarget);
-			LockingTarget->GetCharacterLockTargetComponent()->GetWidget()->SetVisibility(ESlateVisibility::Visible);
-			SetComponentTickEnabled(true);
-			return LockingTarget;
-		}
+		LockedTargets.Emplace(LockingTarget);
+		LockingTarget->GetCharacterLockTargetComponent()->GetWidget()->SetVisibility(ESlateVisibility::Visible);
+		SetComponentTickEnabled(true);
+		return LockingTarget;
 	}
+	
 
 	//未找到下一个满足条件的可锁定对象，视为玩家想解除当前锁定
 	if (LockingTarget && LockingTarget->GetCharacterLockTargetComponent())
@@ -84,5 +70,29 @@ AARPGCharacter* UARPGLockTargetComponent::ToggleLockTarget()
 		SetComponentTickEnabled(false);
 	}
 	LockedTargets.Empty();
+	return nullptr;
+}
+
+AARPGCharacter* UARPGLockTargetComponent::DetectLockTarget()
+{
+	UKismetSystemLibrary::BoxTraceMulti(GetWorld(), AttachedCharacter->GetActorLocation(),
+                                                  AttachedCharacter->GetActorLocation()+ AttachedCharacter->GetActorForwardVector()* DetectDistance,
+                                                  DetectHalfSize,
+                                                  AttachedCharacter->GetActorRotation()
+                                                  , ETraceTypeQuery::TraceTypeQuery2, false,
+                                                  ActorsToIgnore,
+                                                  bDrawDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
+                                                  OutHits, true);
+
+
+	for (const FHitResult HitResult : OutHits)
+	{
+		const auto CandidateTarget = Cast<AARPGCharacter>(HitResult.GetActor());
+		if (!LockedTargets.Contains(CandidateTarget) && CandidateTarget && CandidateTarget!=AttachedCharacter && CandidateTarget->GetCharacterLockTargetComponent())
+		{
+			LockingTarget = CandidateTarget;
+			return LockingTarget;
+		}
+	}
 	return nullptr;
 }
