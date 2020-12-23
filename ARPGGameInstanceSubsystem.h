@@ -23,7 +23,7 @@
 class USaveGame;
 class UActorMoveRecord;
 
-DECLARE_DELEGATE(FActorInitializeDelegate);
+DECLARE_DELEGATE_OneParam(FActorInitializeDelegate, AActor*);
 
 DECLARE_DYNAMIC_DELEGATE(FMoveFinishDelegate);
 
@@ -175,13 +175,19 @@ public:
 
 
 	template <typename T>
-	static T* SpawnActor(UClass* ActorClass, FTransform Transform, AARPGCharacter* OwnerCharacter,FActorInitializeDelegate ActorInitializeDelegate={})
+	static T* SpawnActor(UClass* ActorClass, FTransform Transform, AARPGCharacter* OwnerCharacter,
+	                     FActorInitializeDelegate ActorInitializeDelegate = {})
 	{
-		T* Actor = OwnerCharacter->GetWorld()->SpawnActorDeferred<T>(ActorClass, Transform, OwnerCharacter, OwnerCharacter,
-			ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
-		ActorInitializeDelegate.ExecuteIfBound();
-		UGameplayStatics::FinishSpawningActor(Actor,Transform);
-		return Actor;
+		if (T* Action = OwnerCharacter->GetWorld()->SpawnActorDeferred<T>(
+			ActorClass, Transform, OwnerCharacter, OwnerCharacter,
+			ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
+		{
+			ActorInitializeDelegate.ExecuteIfBound(Action);
+			Action->FinishSpawning(Transform);
+			return Action;
+		}
+		PrintLogToScreen(FString::Printf(TEXT("%s生成Actor出现错误"), *OwnerCharacter->GetName()));
+		return nullptr;
 	}
 
 	template <typename T>

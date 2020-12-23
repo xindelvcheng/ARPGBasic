@@ -73,18 +73,17 @@ T* AARPGAction::CreateARPGAction(TSubclassOf<AARPGAction> ActionClass, AARPGChar
                                  FTransform Transform,
                                  FActionFinishDelegate ActionFinishedDelegate, int ActionExclusiveGroupID)
 {
-	if (T* Action = UARPGGameInstanceSubsystem::SpawnActor<T>(ActionClass, Transform, ActionOwnerCharacter,
-		FActorInitializeDelegate::CreateLambda([=]()
-	{
-            
-	})))
+	if (T* Action = ActionOwnerCharacter->GetWorld()->SpawnActorDeferred<T>(
+		ActionClass, Transform, ActionOwnerCharacter, ActionOwnerCharacter,
+		ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
 	{
 		Action->ExclusiveGroupID = ActionExclusiveGroupID;
 		Action->ActionFinishedEvent.Add(ActionFinishedDelegate);
+		Action->FinishSpawning(Transform);
 		return Action;
 	};
 	UARPGGameInstanceSubsystem::PrintLogToScreen(
-        FString::Printf(TEXT("%s生成Action出现错误"), *ActionOwnerCharacter->GetName()));
+		FString::Printf(TEXT("%s生成Action出现错误"), *ActionOwnerCharacter->GetName()));
 	return nullptr;
 }
 
@@ -171,7 +170,7 @@ void AARPGSingleMontageAction::OnActionActivate()
 void AARPGSingleMontageAction::OnMontageStop(UAnimMontage* Montage, bool bInterrupted)
 {
 	Super::OnMontageStop(Montage, bInterrupted);
-	
+
 	FinishAction();
 }
 
@@ -190,7 +189,7 @@ void AARPGMeleeAttackAction::OnMontageNotify(FName NotifyName,
                                              const FBranchingPointNotifyPayload& BranchingPointPayload)
 {
 	Super::OnMontageNotify(NotifyName, BranchingPointPayload);
-	
+
 	if (NotifyName.ToString() == TEXT("AppendAttack") || NotifyName == NAME_None)
 	{
 		MeleeAttackIndex = (MeleeAttackIndex + 1) % MeleeAttackMontages.Num();
@@ -201,7 +200,7 @@ void AARPGMeleeAttackAction::OnMontageNotify(FName NotifyName,
 void AARPGMeleeAttackAction::OnMontageStop(UAnimMontage* Montage, bool bInterrupted)
 {
 	Super::OnMontageStop(Montage, bInterrupted);
-	
+
 	if (!bInterrupted)
 	{
 		MeleeAttackIndex = 0;
@@ -224,7 +223,7 @@ void AARPGMultiMontageAction::OnActionActivate()
 void AARPGMultiMontageAction::OnMontageStop(UAnimMontage* Montage, bool bInterrupted)
 {
 	Super::OnMontageStop(Montage, bInterrupted);
-	
+
 	ActionIndex = (ActionIndex + 1) % ActionMontages.Num();
 	GetWorldTimerManager().SetTimer(ResetTimerHandle, FTimerDelegate::CreateLambda([&]()
 	{

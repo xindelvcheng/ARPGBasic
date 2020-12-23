@@ -37,14 +37,22 @@ AARPGCastAction* AARPGCastAction::Create(AARPGCharacter* ActionOwnerCharacter,
                                          TArray<UAnimMontage*> CastAnimMontages,
                                          FActionFinishDelegate ActionFinishedDelegate)
 {
-	AARPGCastAction* Action = CreateARPGAction<AARPGCastAction>(StaticClass(), ActionOwnerCharacter,
-	                                                            ActionFinishedDelegate);
-	Action->SetActionTaskStructs(CastActionDescription.ActionTaskStructs);
-	Action->SpellTypeEnum = CastActionDescription.SpellTypeEnum;
-	Action->MaxDistance = CastActionDescription.MaxDistance;
-	Action->MeleeAttackMontages = CastAnimMontages;
-	Action->Duration = CastActionDescription.Duration;
-	return Action;
+	if (AARPGCastAction* Action = ActionOwnerCharacter->GetWorld()->SpawnActorDeferred<AARPGCastAction>(
+		StaticClass(), FTransform{}, ActionOwnerCharacter, ActionOwnerCharacter,
+		ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
+	{
+		Action->OnActionFinishedEvent().Add(ActionFinishedDelegate);
+		Action->SetActionTaskStructs(CastActionDescription.ActionTaskStructs);
+		Action->SpellTypeEnum = CastActionDescription.SpellTypeEnum;
+		Action->MaxDistance = CastActionDescription.MaxDistance;
+		Action->MeleeAttackMontages = CastAnimMontages;
+		Action->Duration = CastActionDescription.Duration;
+		Action->FinishSpawning(FTransform{});
+		return Action;
+	};
+	UARPGGameInstanceSubsystem::PrintLogToScreen(
+		FString::Printf(TEXT("%s生成AARPGCastAction出现错误"), *ActionOwnerCharacter->GetName()));
+	return nullptr;
 }
 
 AARPGCastAction* AARPGCastAction::Create(AARPGCharacter* ActionOwnerCharacter, const FName& SpellName,
@@ -60,8 +68,9 @@ AARPGCastAction* AARPGCastAction::Create(AARPGCharacter* ActionOwnerCharacter, c
 				if (AARPGMeleeAttackAction* MeleeAction = Cast<AARPGMeleeAttackAction>(
 					ActionOwnerCharacter->GetCharacterCombatComponent()->CurrentMeleeAttackCollection))
 				{
-					if (AARPGCastAction* CastAction = Create(ActionOwnerCharacter, *SpellDescription, MeleeAction->MeleeAttackMontages,
-                                                   ActionFinishedDelegate))
+					if (AARPGCastAction* CastAction = Create(ActionOwnerCharacter, *SpellDescription,
+					                                         MeleeAction->MeleeAttackMontages,
+					                                         ActionFinishedDelegate))
 					{
 						return CastAction;
 					}
@@ -91,10 +100,10 @@ void AARPGCastAction::OnActionActivate()
 	StartAllTask();
 
 	FTimerHandle TimerHandle;
-	GetWorldTimerManager().SetTimer(TimerHandle,FTimerDelegate::CreateLambda([&]()
+	GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([&]()
 	{
 		FinishAction();
-	}),Duration,false);
+	}), Duration, false);
 	Super::OnActionActivate();
 }
 
@@ -140,25 +149,25 @@ UARPGSimpleTask* UARPGSimpleTask::Create(AARPGCastAction* TaskOwnerAction, FSimp
 	                                                       FTaskDelegate{});
 	Task->SpecialEffectCreatureClass = ActionTaskStruct.SpecialEffectCreatureClass;
 	Task->LayoutDescription = ActionTaskStruct.LayoutDescription;
-	
+
 	return Task;
 }
 
 void UARPGSimpleTask::OnTaskExecuted()
 {
 	Super::OnTaskExecuted();
-	
+
 	OwnerAction->GetWorldTimerManager().SetTimer(StartTimerHandle, FTimerDelegate::CreateLambda([&]()
-    {
+	{
 		Transform = LayoutDescription.CalculateAbsoluteTransform(OwnerAction->GetActorLocation());
 		SpecialEffectCreature = AARPGSpecialEffectCreature::Create(SpecialEffectCreatureClass, Transform,
-                                                               OwnerAction->GetOwnerCharacter());
-    }), StartTime, false);
+		                                                           OwnerAction->GetOwnerCharacter());
+	}), StartTime, false);
 
 	OwnerAction->GetWorldTimerManager().SetTimer(EndTimerHandle, FTimerDelegate::CreateLambda([&]()
-    {
+	{
 		FinishTask();
-    }), EndTime, false);
+	}), EndTime, false);
 }
 
 void UARPGSimpleTask::OnTaskFinished()
@@ -176,7 +185,7 @@ T* UTask::Create(TSubclassOf<UTask> TaskClass, AARPGCastAction* TaskOwnerAction,
                  float TaskDuration,
                  FTaskDelegate TaskOnTaskExecuted, FTaskDelegate TaskOnTaskFinished)
 {
-	if (T* Task = NewObject<T>(TaskOwnerAction,TaskClass))
+	if (T* Task = NewObject<T>(TaskOwnerAction, TaskClass))
 	{
 		Task->StartTime = TaskStartTime;
 		Task->Duration = TaskDuration;

@@ -26,7 +26,7 @@ void UARPGCharacterCombatComponent::SpawnActionActors(const TArray<TSubclassOf<T
 	{
 		if (ActionClass)
 		{
-			ActionActors.Emplace(AARPGAction::CreateARPGAction<T>(ActionClass, OwnerCharacter.Get(),
+			ActionActors.Emplace(AARPGAction::CreateARPGAction<T>(ActionClass, GetOwnerCharacter(),
                                                               FActionFinishDelegate::CreateUObject(
                                                                   this,
                                                                   &UARPGCharacterCombatComponent::BindToOnActionFinished)));
@@ -43,7 +43,6 @@ void UARPGCharacterCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	OwnerCharacter = Cast<AARPGCharacter>(GetOwner());
 	ReInitCharacterActions();
 }
 
@@ -74,7 +73,7 @@ bool UARPGCharacterCombatComponent::TryToMeleeAttack()
 	{
 		return false;
 	}
-	if (CurrentMeleeAttackCollection->TryToActivateAction(OwnerCharacter.Get()))
+	if (CurrentMeleeAttackCollection->TryToActivateAction(GetOwnerCharacter()))
 	{
 		ExclusiveGroupActionsMap.Add(CurrentMeleeAttackCollection->GetActionExclusiveGroupID(),
 		                             CurrentMeleeAttackCollection);
@@ -93,7 +92,7 @@ bool UARPGCharacterCombatComponent::TryToRemoteAttack(int RemoteAttackIndex = 0)
 	}
 
 	AARPGAction* RemoteAttackAction = RemoteAttackActions[RemoteAttackIndex];
-	if (RemoteAttackAction->TryToActivateAction(OwnerCharacter.Get()))
+	if (RemoteAttackAction->TryToActivateAction(GetOwnerCharacter()))
 	{
 		ExclusiveGroupActionsMap.Add(RemoteAttackAction->GetActionExclusiveGroupID(), RemoteAttackAction);
 		CurrentActiveAction = RemoteAttackAction;
@@ -112,9 +111,9 @@ bool UARPGCharacterCombatComponent::TryToUseAbility(int AbilityIndex = 0)
 
 	AARPGCastAction* Ability = AbilityActions[AbilityIndex];
 	Ability->SetActorTransform(
-		UARPGGameInstanceSubsystem::GetActorNearPositionTransform(OwnerCharacter.Get(),
+		UARPGGameInstanceSubsystem::GetActorNearPositionTransform(GetOwnerCharacter(),
 		                                                          {Ability->GetMaxDistance(), 0, 0}, FRotator{}));
-	if (Ability->TryToActivateAction(OwnerCharacter.Get()))
+	if (Ability->TryToActivateAction(GetOwnerCharacter()))
 	{
 		ExclusiveGroupActionsMap.Add(Ability->GetActionExclusiveGroupID(), Ability);
 		CurrentActiveAction = Ability;
@@ -139,7 +138,7 @@ bool UARPGCharacterCombatComponent::CauseRigid(float Duration, AARPGCharacter* C
 	WorldTimeManager.SetTimer(RigidTimerHandle,
 	                          FTimerDelegate::CreateLambda([&]()
 	                          {
-		                          OwnerCharacter->GetCharacterMovement()->Activate();
+		                          GetOwnerCharacter()->GetCharacterMovement()->Activate();
 		                          IsRigid = false;
 		                          OnResumeFromRigid.Broadcast(WorldTimeManager.GetTimerElapsed(RigidTimerHandle));
 	                          }),
@@ -148,7 +147,7 @@ bool UARPGCharacterCombatComponent::CauseRigid(float Duration, AARPGCharacter* C
 	OnRigid.Broadcast(TimerRemaining);
 
 	ActivateBuff(0, 0.3, Causer);
-	OwnerCharacter->GetCharacterMovement()->Deactivate();
+	GetOwnerCharacter()->GetCharacterMovement()->Deactivate();
 
 	return true;
 }
@@ -163,7 +162,7 @@ bool UARPGCharacterCombatComponent::ActivateBuff(int BuffIndex, float Duration, 
 
 	AARPGBuff* Buff = BuffActions[BuffIndex];
 	Buff->SetDuration(Duration);
-	if (Buff->TryToActivateAction(OwnerCharacter.Get()))
+	if (Buff->TryToActivateAction(GetOwnerCharacter()))
 	{
 		ExclusiveGroupActionsMap.Add(Buff->GetActionExclusiveGroupID(), Buff);
 		return true;
@@ -202,7 +201,7 @@ void UARPGCharacterCombatComponent::ReInitCharacterActions(
 	{
 		if (AARPGMeleeAttackAction* MeleeAction = Cast<AARPGMeleeAttackAction>(CurrentMeleeAttackCollection))
 		{
-			AARPGCastAction* Action = AARPGCastAction::Create(OwnerCharacter.Get(), SpellName,
+			AARPGCastAction* Action = AARPGCastAction::Create(GetOwnerCharacter(), SpellName,
                                                               FActionFinishDelegate::CreateUObject(
                                                                   this,
                                                                   &UARPGCharacterCombatComponent::BindToOnActionFinished));

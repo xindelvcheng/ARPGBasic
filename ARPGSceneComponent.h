@@ -15,17 +15,20 @@ class TESTPROJECT_API UARPGSceneComponent : public USceneComponent
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly,meta=(AllowPrivateAccess))
-	AARPGCharacter* OwnerCharacter;
+	TWeakObjectPtr<AARPGCharacter> OwnerCharacter;
 
 public:
 	// Sets default values for this component's properties
 	UARPGSceneComponent();
 
-	FORCEINLINE AARPGCharacter* GetOwnerCharacter() const { return OwnerCharacter; }
+	FORCEINLINE AARPGCharacter* GetOwnerCharacter() const { return OwnerCharacter.Get(); }
 
-	virtual void SetOwnerCharacter(AARPGCharacter* NewOwner) { OwnerCharacter = NewOwner; }
+	virtual void SetOwnerCharacter(AARPGCharacter* NewOwner);
 
 protected:
+
+	virtual void InitializeComponent() override;
+	
 	// Called when the game starts
 	virtual void BeginPlay() override;
 

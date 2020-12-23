@@ -15,20 +15,24 @@ class TESTPROJECT_API UARPGActorComponent : public UActorComponent
 
 	
 	UPROPERTY(BlueprintReadOnly,meta=(AllowPrivateAccess))
-	AARPGCharacter* OwnerCharacter;
+	TWeakObjectPtr<AARPGCharacter> OwnerCharacter;
 public:	
 	// Sets default values for this component's properties
 	UARPGActorComponent();
 
 protected:
 
-	FORCEINLINE AARPGCharacter* GetOwnerCharacter() const { return OwnerCharacter; }
-	virtual void SetOwnerCharacter(AARPGCharacter* NewOwner) { OwnerCharacter = NewOwner; }
+	FORCEINLINE AARPGCharacter* GetOwnerCharacter() const { return OwnerCharacter.Get(); }
+	virtual void SetOwnerCharacter(AARPGCharacter* NewOwner);
 	
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	
+	virtual void InitializeComponent() override;
 
-public:	
+	
+public:
+	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 

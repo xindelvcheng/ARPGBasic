@@ -18,7 +18,7 @@ void UTranscendentalCombatComponent::BeginPlay()
             auto TranscendentalLawsSystem = Cast<ATranscendentalLawsSystem>(
                 GetWorld()->SpawnActor(TranscendentalLawsSystemClass, &Transform, ActorSpawnParameters));
             check(TranscendentalLawsSystem);
-            TranscendentalLawsSystem->Init(OwnerCharacter.Get(),this);
+            TranscendentalLawsSystem->Init(GetOwnerCharacter(),this);
             TranscendentalLawsSystems.Emplace(TranscendentalLawsSystem);
         }
     }

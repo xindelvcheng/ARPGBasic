@@ -11,10 +11,10 @@ void AARPGActor::PostActorCreated()
 
 	if (!OwnerCharacter.IsValid())
 	{
-		AARPGCharacter* Character = Cast<AARPGCharacter>(GetOwner());
+		AARPGCharacter* Character = Cast<AARPGCharacter>(GetInstigator());
 		if (!Character)
 		{
-			Character = Cast<AARPGCharacter>(GetInstigator());
+			Character = Cast<AARPGCharacter>(GetOwner());
 			if (!Character)
 			{
 				UARPGGameInstanceSubsystem::PrintLogToScreen(
@@ -42,7 +42,6 @@ AARPGActor::AARPGActor()
 void AARPGActor::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame

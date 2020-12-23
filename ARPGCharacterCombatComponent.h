@@ -6,6 +6,7 @@
 
 
 #include "ARPGAction.h"
+#include "ARPGActorComponent.h"
 #include "Components/ActorComponent.h"
 
 #include "ARPGCharacterCombatComponent.generated.h"
@@ -17,7 +18,7 @@ class AARPGCharacter;
 
 
 UCLASS( ClassGroup=(ARPGBasic), meta=(BlueprintSpawnableComponent) )
-class UARPGCharacterCombatComponent : public UActorComponent
+class UARPGCharacterCombatComponent : public UARPGActorComponent
 {
     GENERATED_BODY()
 
@@ -44,8 +45,6 @@ public:
 protected:
     // Called when the game starts
     virtual void BeginPlay() override;
-
-    TWeakObjectPtr<AARPGCharacter> OwnerCharacter;
 
     bool IsRigid;
 

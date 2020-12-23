@@ -241,8 +241,6 @@ public:
 		InitTasks();
 	}
 
-	
-
 	static AARPGCastAction* Create(AARPGCharacter* ActionOwnerCharacter,
 	                               const FSimpleCastActionDescriptionStruct& CastActionDescription,
 	                               TArray<UAnimMontage*> CastAnimMontages,
