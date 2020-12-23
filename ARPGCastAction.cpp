@@ -20,6 +20,11 @@ void AARPGCastAction::InitTasks()
 	for (const FSimpleTaskStruct ActionTaskStruct : ActionTaskStructs)
 	{
 		Tasks.Emplace(UARPGSimpleTask::Create(this, ActionTaskStruct, GetActorTransform()));
+		if (bUseLastTaskEndTimeAsCastActionFinishTime)
+		{
+			Duration = std::max(
+				Duration, ActionTaskStruct.CreateEffectCreatureTime + ActionTaskStruct.Duration);
+		}
 	}
 }
 
@@ -42,11 +47,16 @@ AARPGCastAction* AARPGCastAction::Create(AARPGCharacter* ActionOwnerCharacter,
 		ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
 	{
 		Action->OnActionFinishedEvent().Add(ActionFinishedDelegate);
+		Action->bUseLastTaskEndTimeAsCastActionFinishTime = CastActionDescription.bUseLastTaskEndTimeAsCastActionFinishTime;
+		if (!Action->bUseLastTaskEndTimeAsCastActionFinishTime)
+		{
+			Action->Duration = CastActionDescription.Duration;
+		}
 		Action->SetActionTaskStructs(CastActionDescription.ActionTaskStructs);
 		Action->SpellTypeEnum = CastActionDescription.SpellTypeEnum;
 		Action->MaxDistance = CastActionDescription.MaxDistance;
 		Action->MeleeAttackMontages = CastAnimMontages;
-		Action->Duration = CastActionDescription.Duration;
+		
 		Action->FinishSpawning(FTransform{});
 		return Action;
 	};

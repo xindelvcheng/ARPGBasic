@@ -55,6 +55,13 @@ void UARPGDamageBoxComponent::BeginPlay()
 	Super::BeginPlay();
 }
 
+void UARPGDamageBoxComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
+{
+	Super::OnComponentDestroyed(bDestroyingHierarchy);
+
+	UnRegisterToDamageDetectIfRegistered();
+}
+
 void UARPGDamageBoxComponent::ElementInteract(UARPGDamageBoxComponent* EnvironmentDamageBox)
 {
 	if (EnvironmentDamageBox->DamageType == UWoodDamage::StaticClass())

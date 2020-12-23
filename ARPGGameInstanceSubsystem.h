@@ -178,13 +178,13 @@ public:
 	static T* SpawnActor(UClass* ActorClass, FTransform Transform, AARPGCharacter* OwnerCharacter,
 	                     FActorInitializeDelegate ActorInitializeDelegate = {})
 	{
-		if (T* Action = OwnerCharacter->GetWorld()->SpawnActorDeferred<T>(
+		if (T* Actor = OwnerCharacter->GetWorld()->SpawnActorDeferred<T>(
 			ActorClass, Transform, OwnerCharacter, OwnerCharacter,
 			ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
 		{
-			ActorInitializeDelegate.ExecuteIfBound(Action);
-			Action->FinishSpawning(Transform);
-			return Action;
+			ActorInitializeDelegate.ExecuteIfBound(Actor);
+			Actor->FinishSpawning(Transform);
+			return Actor;
 		}
 		PrintLogToScreen(FString::Printf(TEXT("%s生成Actor出现错误"), *OwnerCharacter->GetName()));
 		return nullptr;

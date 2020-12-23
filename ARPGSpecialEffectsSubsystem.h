@@ -116,6 +116,7 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
 	float DamageBias = 10;
 
+
 	virtual void BeginPlay() override;
 
 

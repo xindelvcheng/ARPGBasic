@@ -56,8 +56,6 @@ public:
 struct FSimpleTaskStruct;
 
 
-
-
 UENUM(BlueprintType)
 enum class ERotationTypeEnum:uint8
 {
@@ -143,8 +141,6 @@ struct FSimpleTaskStruct
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
 	float Duration = 0.5;
 
-	float DestroyEffectCreatureTime = 0.6;
-
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
 	TSubclassOf<AARPGSpecialEffectCreature> SpecialEffectCreatureClass;
 
@@ -173,7 +169,11 @@ struct FSimpleCastActionDescriptionStruct : public FTableRowBase
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpellDefinition")
 	float MaxDistance = 1500;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpellDefinition")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	bool bUseLastTaskEndTimeAsCastActionFinishTime = true;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess,EditCondition=
+        "!bUseLastTaskEndTimeAsCastActionFinishTime",EditConditionHides))
 	float Duration = 1.5;
 };
 
@@ -186,14 +186,16 @@ class UARPGSimpleTask : public UTask
 
 	UPROPERTY()
 	AARPGSpecialEffectCreature* SpecialEffectCreature;
-
+	
 	FGridLayoutStruct LayoutDescription;
-protected:
+	
 	virtual void OnTaskExecuted() override;
 	virtual void OnTaskFinished() override;
 public:
+	float CreatureLifeDuration = 0.5;
+	
 	static UARPGSimpleTask* Create(AARPGCastAction* TaskOwnerAction, FSimpleTaskStruct ActionTaskStruct,
-                                   FTransform RelativeTransform);
+	                               FTransform RelativeTransform);
 };
 
 
@@ -216,7 +218,12 @@ class AARPGCastAction : public AARPGMeleeAttackAction
 	float MaxDistance;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	bool bUseLastTaskEndTimeAsCastActionFinishTime;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess,EditCondition=
+		"!bUseLastTaskEndTimeAsCastActionFinishTime",EditConditionHides))
 	float Duration = 1.5;
+
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
 	TArray<FSimpleTaskStruct> ActionTaskStructs;

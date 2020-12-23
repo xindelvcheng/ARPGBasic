@@ -49,6 +49,9 @@ public:
 
 	virtual void BeginPlay() override;
 
+
+	virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
+	
 	float BaseDamage;
 
 	UFUNCTION(BlueprintCallable,Category="ARPGDamageBoxComponent")
