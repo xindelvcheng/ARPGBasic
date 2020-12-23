@@ -29,15 +29,13 @@ public:
 
     UPROPERTY()
     TMap<int, AARPGAction*> ExclusiveGroupActionsMap;
-
+    
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
-    TArray<TSubclassOf<AARPGAction>> MeleeAttackCollectionClasses;
-
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
-    TArray<TSubclassOf<AARPGAction>> RemoteAttackClasses;
+    TArray<FMeleeAttackActionDescriptionStruct> MeleeAttacks;
 
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     TArray<TSubclassOf<AARPGCastAction>> AbilityClasses;
+
 
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     TArray<TSubclassOf<AARPGBuff>> BuffClasses;
@@ -51,8 +49,6 @@ protected:
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess=true))
     bool AllowInterruptBackswing;
 
-    template<typename  T>
-    void SpawnActionActors(const TArray<TSubclassOf<T>>& ActionClasses, TArray<T*>& ActionActors);
 
 public:
     // Called every frame
@@ -97,9 +93,6 @@ public:
 
     UFUNCTION()
     virtual bool TryToMeleeAttack();
-
-    UFUNCTION()
-    virtual bool TryToRemoteAttack(int RemoteAttackIndex);
 
     UFUNCTION()
     virtual bool TryToUseAbility(int AbilityIndex);

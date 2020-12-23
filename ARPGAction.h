@@ -138,6 +138,15 @@ public:
     virtual void OnMontageStop(UAnimMontage* Montage, bool bInterrupted) override;
 };
 
+USTRUCT(BlueprintType)
+struct FMeleeAttackActionDescriptionStruct
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGMeleeAttackCollection",meta=(AllowPrivateAccess=true))
+    TArray<UAnimMontage*> MeleeAttackMontages;
+};
+
 UCLASS(Blueprintable)
 class AARPGMeleeAttackAction : public AARPGMontageAction
 {

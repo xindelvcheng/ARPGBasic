@@ -47,12 +47,9 @@ public:
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Character Property")
 	int ToughnessSpecialty = 0;
-
+	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Combat")
-	TArray<TSubclassOf<AARPGAction>> MeleeAttackCollectionClasses;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Combat")
-	TArray<TSubclassOf<AARPGAction>> RemoteAttackClasses;
+	TArray<FMeleeAttackActionDescriptionStruct> MeleeAttacks;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Combat")
 	TArray<TSubclassOf<AARPGCastAction>> AbilityClasses;

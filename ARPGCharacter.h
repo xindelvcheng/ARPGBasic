@@ -234,11 +234,6 @@ public:
 		return CharacterCombatComponent->TryToMeleeAttack();
 	};
 
-	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-	bool TryToRemoteAttack(const int RemoteAttackIndex)
-	{
-		return CharacterCombatComponent->TryToRemoteAttack(RemoteAttackIndex);
-	};
 
 	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
 	bool TryToUseAbility(const int AbilityIndex)
