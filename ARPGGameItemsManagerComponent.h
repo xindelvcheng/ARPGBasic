@@ -8,7 +8,7 @@
 
 
 class AARPGCharacter;
-class AGameItem;
+class AARPGGameItem;
 
 UENUM(BlueprintType)
 enum class EBagEvent:uint8
@@ -26,20 +26,20 @@ class  UARPGGameItemsManagerComponent : public UActorComponent
 {
     GENERATED_BODY()
     UPROPERTY()
-    TArray<class AGameItem*> Bag;
+    TArray<class AARPGGameItem*> Bag;
     TArray<class AGameItems*> Repository;
 
     int BagSelectedItemIndex = -1;
 
 
-    DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FBagChangedEvent,EBagEvent,BagEventType ,class AGameItem*, GameItem);
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FBagChangedEvent,EBagEvent,BagEventType ,AARPGGameItem*, GameItem);
 
 public:
     UPROPERTY(BlueprintAssignable)
     FBagChangedEvent OnBagChanged;
 
     UFUNCTION(BlueprintCallable,Category="BagSystem")
-    bool AddItemToBag(AGameItem* GameItem);
+    bool AddItemToBag(AARPGGameItem* GameItem);
 
     UFUNCTION(BlueprintCallable,Category="BagSystem")
     bool SelectNextItemInBag();
@@ -51,9 +51,9 @@ public:
     bool UseItemInBag(AARPGCharacter* User);
 
     UFUNCTION(BlueprintCallable,Category="BagSystem")
-    TArray<AGameItem*> GetAllGameItemsInBag() const { return this->Bag; }
+    TArray<AARPGGameItem*> GetAllGameItemsInBag() const { return this->Bag; }
 
-    void SetBag(TArray<AGameItem*> bag) { this->Bag = bag; OnBagChanged.Broadcast(EBagEvent::ReFlush,nullptr);}
+    void SetBag(TArray<AARPGGameItem*> bag) { this->Bag = bag; OnBagChanged.Broadcast(EBagEvent::ReFlush,nullptr);}
 
     UFUNCTION(BlueprintCallable)
     int GetBagSelectedItemIndex() const { return this->BagSelectedItemIndex; }

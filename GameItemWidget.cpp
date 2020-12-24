@@ -4,7 +4,7 @@
 #include "GameItemWidget.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
-#include "GameItem.h"
+#include "ARPGGameItem.h"
 
 
 bool UGameItemWidget::Initialize()
@@ -21,15 +21,15 @@ bool UGameItemWidget::Initialize()
     return true;
 }
 
-void UGameItemWidget::SetupGameItemWidget(AGameItem* NewGameItem)
+void UGameItemWidget::SetupGameItemWidget(AARPGGameItem* NewGameItem)
 {
     GameItem = NewGameItem;
     
-    Image_Icon->SetBrushFromTexture(GameItem->ItemIcon);
-    TextBlock_Number->SetText(FText::AsNumber(GameItem->Number));
-    TextBlock_GameItemDisplayName->SetText(GameItem->GameItemDisplayName);
+    Image_Icon->SetBrushFromTexture(GameItem->GetItemIcon());
+    TextBlock_Number->SetText(FText::AsNumber(GameItem->GetNumber()));
+    TextBlock_GameItemDisplayName->SetText(GameItem->GetGameItemDisplayName());
 
-    GameItem->ItemWidget = this;
+    GameItem->SetItemWidget(this);
 }
 
 void UGameItemWidget::NativeSelectGameItemWidget()

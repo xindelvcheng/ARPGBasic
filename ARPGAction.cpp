@@ -1,5 +1,8 @@
 ﻿#include "ARPGAction.h"
+
+#include "ARPGBasicSettings.h"
 #include "ARPGCharacter.h"
+#include "ARPGConfigSubsystem.h"
 #include "ARPGGameInstanceSubsystem.h"
 
 
@@ -18,6 +21,15 @@ bool AARPGAction::BPFunc_CheckActionActivateConditionAndPayCost_Implementation()
 		return true;
 	}
 	return false;
+}
+
+void AARPGAction::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+AARPGAction::AARPGAction()
+{
 }
 
 void AARPGAction::FinishAction()
@@ -87,34 +99,53 @@ T* AARPGAction::CreateARPGAction(TSubclassOf<AARPGAction> ActionClass, AARPGChar
 	return nullptr;
 }
 
+void AARPGMontageAction::BindDelegateToOwnerCharacterAnimInstance()
+{
+	if (GetOwnerCharacter() && GetOwnerCharacter()->GetMesh() && !AttachedCharacterAnimInstance)
+	{
+		AttachedCharacterAnimInstance = GetOwnerCharacter()->GetMesh()->GetAnimInstance();
+		if (AttachedCharacterAnimInstance)
+		{
+			if (!AttachedCharacterAnimInstance->OnMontageStarted.IsAlreadyBound(
+				this, &AARPGMontageAction::BindToMontageBegin))
+			{
+				AttachedCharacterAnimInstance->OnMontageStarted.AddDynamic(
+					this, &AARPGMontageAction::BindToMontageBegin);
+			}
+			if (!AttachedCharacterAnimInstance->OnPlayMontageNotifyBegin.IsAlreadyBound(
+				this, &AARPGMontageAction::BindToMontageNotify))
+			{
+				AttachedCharacterAnimInstance->OnPlayMontageNotifyBegin.AddDynamic(
+					this, &AARPGMontageAction::BindToMontageNotify);
+			}
+			if (!AttachedCharacterAnimInstance->OnMontageEnded.IsAlreadyBound(
+				this, &AARPGMontageAction::BindToMontageStop))
+			{
+				AttachedCharacterAnimInstance->OnMontageEnded.AddDynamic(
+					this, &AARPGMontageAction::BindToMontageStop);
+			}
+		}
+	}
+}
+
 void AARPGMontageAction::OnActionActivate()
 {
 	Super::OnActionActivate();
 	GetOwnerCharacter()->PlayAnimMontage(ActionMontage, PlayRate, StartSectionName);
 }
 
+void AARPGMontageAction::SetOwnerCharacter(AARPGCharacter* NewOwner)
+{
+	Super::SetOwnerCharacter(NewOwner);
+
+	BindDelegateToOwnerCharacterAnimInstance();
+}
+
 void AARPGMontageAction::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (GetOwnerCharacter() && GetOwnerCharacter()->GetMesh())
-	{
-		AttachedCharacterAnimInstance = GetOwnerCharacter()->GetMesh()->GetAnimInstance();
-		if (AttachedCharacterAnimInstance)
-		{
-			AttachedCharacterAnimInstance->OnMontageStarted.AddDynamic(
-				this, &AARPGMontageAction::BindToMontageBegin);
-			AttachedCharacterAnimInstance->OnPlayMontageNotifyBegin.AddDynamic(
-				this, &AARPGMontageAction::BindToMontageNotify);
-			AttachedCharacterAnimInstance->OnMontageEnded.AddDynamic(
-				this, &AARPGMontageAction::BindToMontageStop);
-		}
-	}
-	else
-	{
-		UARPGGameInstanceSubsystem::PrintLogToScreen(FString::Printf(TEXT("错误，%s未指定OwnerCharacter"), *GetName()), 15,
-		                                             FColor::Red);
-	}
+	BindDelegateToOwnerCharacterAnimInstance();
 }
 
 void AARPGMontageAction::BindToMontageBegin(UAnimMontage* Montage)
@@ -193,6 +224,7 @@ void AARPGMeleeAttackAction::OnMontageNotify(FName NotifyName,
 	if (NotifyName.ToString() == TEXT("AppendAttack") || NotifyName == NAME_None)
 	{
 		MeleeAttackIndex = (MeleeAttackIndex + 1) % MeleeAttackMontages.Num();
+		UARPGGameInstanceSubsystem::PrintLogToScreen(MeleeAttackIndex);
 		FinishAction();
 	}
 }

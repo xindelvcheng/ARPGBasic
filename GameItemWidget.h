@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameItem.h"
+#include "ARPGGameItem.h"
 #include "Blueprint/UserWidget.h"
 
 
@@ -36,11 +36,11 @@ protected:
 	UTextBlock* TextBlock_GameItemDisplayName;
 
 	UPROPERTY(BlueprintReadOnly,Category="GameItemWidget")
-	TWeakObjectPtr<AGameItem> GameItem;
+	TWeakObjectPtr<AARPGGameItem> GameItem;
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void SetupGameItemWidget(AGameItem* NewGameItem);
+	void SetupGameItemWidget(AARPGGameItem* NewGameItem);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "GameItemWidget")
 	void BeSelected();

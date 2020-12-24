@@ -27,6 +27,7 @@ AARPGCharacter::AARPGCharacter()
 		"AIPerceptionStimuliSourceComponent");
 	CharacterLockTargetComponent = CreateDefaultSubobject<UARPGLockTargetComponent>("ARPGLockTargetComponent");
 	CharacterLockTargetComponent->SetupAttachment(RootComponent);
+	GameItemsManagerComponent = CreateDefaultSubobject<UARPGGameItemsManagerComponent>("GameItemsManagerComponent");
 	
 	if (UARPGBasicSettings::Get())
 	{
@@ -54,7 +55,12 @@ FText AARPGCharacter::GetCharacterDisplayName() const
 void AARPGCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+}
 
+void AARPGCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	
 	RefreshWithCharacterConfigPDataAsset();
 }
 
@@ -111,8 +117,6 @@ void AARPGCharacter::RefreshWithCharacterConfigPDataAsset()
 {
 	if (CharacterConfigPDataAsset)
 	{
-		CharacterName = CharacterConfigPDataAsset->CharacterName;
-
 		CharacterName = CharacterConfigPDataAsset->CharacterName;
 		CharacterStatusComponent->ReInitCharacterProperties(CharacterConfigPDataAsset);
 		CharacterCombatComponent->ReInitCharacterActions(CharacterConfigPDataAsset);

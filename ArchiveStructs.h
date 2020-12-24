@@ -114,7 +114,7 @@ struct FGameItemArchiveStruct
     GENERATED_BODY()
 
     UPROPERTY()
-    TSoftClassPtr<class AGameItem> GameItemClass;
+    TSoftClassPtr<class AARPGGameItem> GameItemClass;
 
     UPROPERTY()
     int Number;

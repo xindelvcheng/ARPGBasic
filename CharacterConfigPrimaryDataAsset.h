@@ -63,7 +63,6 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Combat")
 	TArray<TSubclassOf<ATranscendentalLawsSystem>> TranscendentalLawsSystemClasses;
 
-
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="Character Art Resource")
 	UAnimSequence* DeathAnimationAsset;
 

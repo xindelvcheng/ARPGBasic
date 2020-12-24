@@ -14,7 +14,13 @@ class  AARPGMainCharacter : public AARPGCharacter
 {
 	GENERATED_BODY()
 
-	//在AARPGPlayerController::OnPossess中赋值
+	/** Camera boom positioning the camera behind the character */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class USpringArmComponent* CameraBoom;
+
+	/** Follow camera */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UCameraComponent* FollowCamera;
 	
 public:
 	// Sets default values for this character's properties
@@ -24,8 +30,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(BlueprintReadOnly)
-	class UARPGGameItemsManagerComponent* GameItemsManagerComponent;
+	
 	
 public:	
 	// Called every frame
@@ -33,13 +38,25 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-
-	UARPGGameItemsManagerComponent* GetGameItemsManagerComponent() const
-	{
-		return GameItemsManagerComponent;
-	}
+	
 
 	UPROPERTY(BlueprintReadWrite,Category="ARPGMainCharacter")
 	APlayerController* MainPlayerController;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UParticleSystem* AimFXAsset;
+	
+	UPROPERTY()
+	UParticleSystemComponent* AimFX;
+	
+	UFUNCTION()
+	void BindToPressAim();
+
+	UFUNCTION()
+    void BindToReleaseAim();
+
+	/** Returns CameraBoom subobject **/
+	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+	/** Returns FollowCamera subobject **/
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 };

@@ -21,7 +21,7 @@
  * 
  */
 
-class AGameItem;
+class AARPGGameItem;
 enum class EBagEvent : unsigned char;
 enum class ECharacterProperty : unsigned char;
 
@@ -66,7 +66,7 @@ protected:
     UTextBlock* TextBlock_Dialog;
 
     UFUNCTION(Category="ARPGStatusWidget")
-    void UpdateBagWidget(EBagEvent BagEvent, AGameItem* GameItem);
+    void UpdateBagWidget(EBagEvent BagEvent, AARPGGameItem* GameItem);
 
 public:
 

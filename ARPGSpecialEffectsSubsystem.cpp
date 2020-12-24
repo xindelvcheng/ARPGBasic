@@ -127,6 +127,15 @@ AARPGSpecialEffectCreature::AARPGSpecialEffectCreature()
 	DamageDetectionBox = CreateDefaultSubobject<UARPGDamageBoxComponent>(TEXT("DamageDetectionBox"));
 	DamageDetectionBox->SetupAttachment(RootComponent);
 
+	if (!DamageIncreaseVFX)
+	{
+		if (UARPGBasicSettings* BasicSettings = UARPGBasicSettings::Get())
+		{
+			DamageIncreaseVFX = BasicSettings->DefaultDamageIncreaseVFX.LoadSynchronous();
+			DamageDetectionBox->SetDamageIncreaseVfx(DamageIncreaseVFX);
+		}
+	}
+	
 	if (DamageType != nullptr)
 	{
 		DamageDetectionBox->SetDamageType(DamageType);

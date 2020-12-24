@@ -25,23 +25,32 @@ class  UARPGConfigSubsystem : public UGameInstanceSubsystem
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
 public:
-	static UARPGConfigSubsystem* Get(UWorld* World); 
+	static UARPGConfigSubsystem* Get(UWorld* World);
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGConfigSubsystem")
+	UPROPERTY(BlueprintReadOnly,Category="ARPG Core Config")
+	UDataTable* AbilityConfigDataTable;
+
+	UPROPERTY(BlueprintReadOnly,Category="ARPG GUI Config")
 	TSubclassOf<UARPGStatusWidget> StatusWidgetClass;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGConfigSubsystem")
+	UPROPERTY(BlueprintReadOnly,Category="ARPG GUI Config")
 	TSubclassOf<UARPGNotifyWidget> NotifyWidgetClass;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGConfigSubsystem")
+	UPROPERTY(BlueprintReadOnly,Category="ARPG GUI Config")
 	TSubclassOf<UGameItemWidget> GameItemWidgetClass;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGConfigSubsystem")
+	UPROPERTY(BlueprintReadOnly,Category="ARPG GUI Config")
 	TSubclassOf<UARPGPromptWidget> PromptWidgetClass;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGConfigSubsystem")
+	UPROPERTY(BlueprintReadOnly,Category="ARPG GUI Config")
 	TSubclassOf<UARPGLockTargetWidget> LockTargetWidgetClass;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGConfigSubsystem")
-	UDataTable* AbilityConfigDataTable;
+	UPROPERTY(BlueprintReadOnly,Category="ARPG Art Resource Config")
+	UTexture2D* DefaultGameplayIcon;
+
+	UPROPERTY(BlueprintReadOnly,Category="ARPG Art Resource Config")
+	UTexture2D* DefaultGameItemIcon;
+
+	UPROPERTY(BlueprintReadOnly,Category="ARPG Art Resource Config")
+	UTexture2D* DefaultAbilityIcon;
 };

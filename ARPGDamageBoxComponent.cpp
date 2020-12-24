@@ -3,19 +3,41 @@
 
 #include "ARPGDamageBoxComponent.h"
 
+
+#include "ARPGBasicSettings.h"
 #include "ARPGCharacter.h"
 #include "ARPGDamageSubsystem.h"
 
-void UARPGDamageBoxComponent::SetDamageValue(float DamageWeightCoefficient, float DeltaDamageBias = 0)
+void UARPGDamageBoxComponent::SetDamageValue(float DamageWeightCoefficient)
 {
 	UnRegisterToDamageDetectIfRegistered();
 
 	DetectDescription = {
 		true, FVector{}, true,
-		DamageWeight * DamageWeightCoefficient, DamageBias + DeltaDamageBias, VelocityDamageBonusWeight,
+		DamageWeight * DamageWeightCoefficient, DamageBias, VelocityDamageBonusWeight,
 		DamageType
 	};
+
 	RegisterToDamageDetect();
+
+	if (DamageWeightCoefficient > 1)
+	{
+		OnDamageIncrease(DamageWeightCoefficient - 1);
+	}
+	else
+	{
+		OnDamageDecrease(1 - DamageWeightCoefficient);
+	}
+}
+
+void UARPGDamageBoxComponent::OnDamageIncrease(float DeltaDamageWeightCoefficient)
+{
+	UGameplayStatics::SpawnEmitterAttached(DamageIncreaseVFX, this);
+}
+
+void UARPGDamageBoxComponent::OnDamageDecrease(float DeltaDamageWeightCoefficient)
+{
+
 }
 
 void UARPGDamageBoxComponent::RegisterToDamageDetect()
@@ -47,7 +69,7 @@ UARPGDamageBoxComponent::UARPGDamageBoxComponent()
 {
 	bAutoActivate = false;
 
-	SetDamageValue(1);
+	
 }
 
 void UARPGDamageBoxComponent::BeginPlay()
@@ -69,43 +91,52 @@ void UARPGDamageBoxComponent::ElementInteract(UARPGDamageBoxComponent* Environme
 		if (DamageType == UFireDamage::StaticClass())
 		{
 			SetDamageValue(1.5);
-		}else if(DamageType == UWaterDamage::StaticClass())
+		}
+		else if (DamageType == UWaterDamage::StaticClass())
 		{
 			SetDamageValue(0.5);
 		}
-	}else if(EnvironmentDamageBox->DamageType ==UWaterDamage::StaticClass())
+	}
+	else if (EnvironmentDamageBox->DamageType == UWaterDamage::StaticClass())
 	{
 		if (DamageType == UWoodDamage::StaticClass() || DamageType == UElectricityDamage::StaticClass())
 		{
 			SetDamageValue(1.5);
-		}else if(DamageType == UFireDamage::StaticClass())
+		}
+		else if (DamageType == UFireDamage::StaticClass())
 		{
 			SetDamageValue(0.5);
 		}
-	}else if(EnvironmentDamageBox->DamageType ==UMetalDamage::StaticClass())
+	}
+	else if (EnvironmentDamageBox->DamageType == UMetalDamage::StaticClass())
 	{
 		if (DamageType == UElectricityDamage::StaticClass())
 		{
 			SetDamageValue(2);
-		}else if(DamageType == UWoodDamage::StaticClass())
+		}
+		else if (DamageType == UWoodDamage::StaticClass())
 		{
 			SetDamageValue(0.5);
 		}
-	}else if(EnvironmentDamageBox->DamageType ==UFireDamage::StaticClass())
+	}
+	else if (EnvironmentDamageBox->DamageType == UFireDamage::StaticClass())
 	{
 		if (DamageType == UWoodDamage::StaticClass())
 		{
 			SetDamageValue(2);
-		}else if(DamageType == UWaterDamage::StaticClass() || DamageType == UMetalDamage::StaticClass())
+		}
+		else if (DamageType == UWaterDamage::StaticClass() || DamageType == UMetalDamage::StaticClass())
 		{
 			SetDamageValue(0.5);
 		}
-	}else if(EnvironmentDamageBox->DamageType ==UStoneDamage::StaticClass())
+	}
+	else if (EnvironmentDamageBox->DamageType == UStoneDamage::StaticClass())
 	{
 		if (DamageType == UWoodDamage::StaticClass())
 		{
 			SetDamageValue(1.5);
-		}else if(DamageType == UWaterDamage::StaticClass())
+		}
+		else if (DamageType == UWaterDamage::StaticClass())
 		{
 			SetDamageValue(0.5);
 		}

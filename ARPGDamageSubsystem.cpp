@@ -31,7 +31,7 @@ UDamageDetectRecord* UDamageDetectRecord::Create(UARPGDamageBoxComponent* Damage
 	return Record;
 }
 
-void UDamageDetectRecord::Tick(float)
+void UDamageDetectRecord::Tick(float DeltaTime)
 {
 	if (!Instigator.IsValid() || !DamageCenterComponent.IsValid() || !InstigatorStatusComponent.IsValid())
 	{
@@ -39,6 +39,7 @@ void UDamageDetectRecord::Tick(float)
 		ARPGDamageSubsystem->UnRegisterToDamageDetect(this);
 		return;
 	}
+	TimePassed += DeltaTime;
 
 	CurrentFrameDamageCenterTransform = DamageCenterComponent->GetComponentTransform();
 
@@ -76,6 +77,10 @@ void UDamageDetectRecord::Tick(float)
 
 void UDamageDetectRecord::OnDamageDetected(FHitResult HitResult)
 {
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow,TEXT("DamageDetect"));
+	}
 	DamageDetectedEvent.Broadcast(this, HitResult);
 	InstigatorStatusComponent->OnAttackHitActor.Broadcast(HitResult);
 
@@ -153,7 +158,9 @@ UDamageDetectRecord* UARPGDamageSubsystem::RegisterToDamageDetect(AActor* Damage
 		                              InstigatorCharacter, DelegateOnDamageDetected,
 		                              DamageDetectDescription);
 	}
-	UARPGGameInstanceSubsystem::PrintLogToScreen(TEXT("错误，DamageDetect的没有UARPGDamageBoxComponent"), 15, FColor::Red);
+	UARPGGameInstanceSubsystem::PrintLogToScreen(
+		FString::Printf(TEXT("错误，注册DamageDetect的%s没有UARPGDamageBoxComponent"), *DamageCenterActor->GetName()), 15,
+		FColor::Red);
 	return nullptr;
 }
 

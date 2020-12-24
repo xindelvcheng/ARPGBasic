@@ -114,7 +114,7 @@ void UARPGStatusWidget::BindToMainCharacter(AARPGMainCharacter* MainCharacter)
     }
 }
 
-void UARPGStatusWidget::UpdateBagWidget(EBagEvent BagEvent, AGameItem* GameItem)
+void UARPGStatusWidget::UpdateBagWidget(EBagEvent BagEvent, AARPGGameItem* GameItem)
 {
     if (!GameItem && BagEvent != EBagEvent::ReFlush)
     {
@@ -127,7 +127,7 @@ void UARPGStatusWidget::UpdateBagWidget(EBagEvent BagEvent, AGameItem* GameItem)
         BagItemsNum = 0;
         if (ItemsManagerComponent)
         {
-            for (AGameItem* GameItemsInBag : ItemsManagerComponent->GetAllGameItemsInBag())
+            for (AARPGGameItem* GameItemsInBag : ItemsManagerComponent->GetAllGameItemsInBag())
             {
                 UGameItemWidget* GameItemWidget = Cast<UGameItemWidget>(UniformGridPanel_Bag->GetChildAt(BagItemsNum));
                 GameItemWidget->SetupGameItemWidget(GameItemsInBag);
@@ -150,27 +150,27 @@ void UARPGStatusWidget::UpdateBagWidget(EBagEvent BagEvent, AGameItem* GameItem)
         }
         break;
     case EBagEvent::ChangeItemNumbers:
-        if (GameItem->ItemWidget)
+        if (GameItem->GetItemWidget())
         {
-            GameItem->ItemWidget->SetupGameItemWidget(GameItem);
+            GameItem->GetItemWidget()->SetupGameItemWidget(GameItem);
         }
         break;
     case EBagEvent::SelectItemInBag:
-        if (GameItem->ItemWidget)
+        if (GameItem->GetItemWidget())
         {
-            GameItem->ItemWidget->BeSelected();
+            GameItem->GetItemWidget()->BeSelected();
         }
         break;
     case EBagEvent::DeselectItemInBag:
-        if (GameItem->ItemWidget)
+        if (GameItem->GetItemWidget())
         {
-            GameItem->ItemWidget->NotSelected();
+            GameItem->GetItemWidget()->NotSelected();
         }
         break;
     case EBagEvent::UseItemInBag:
-        if (GameItem->ItemWidget)
+        if (GameItem->GetItemWidget())
         {
-            GameItem->ItemWidget->SetupGameItemWidget(GameItem);
+            GameItem->GetItemWidget()->SetupGameItemWidget(GameItem);
         }
         break;
     }

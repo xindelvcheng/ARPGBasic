@@ -13,7 +13,7 @@
 #include "ARPGPlayerController.h"
 
 #include "ARPGStatusWidget.h"
-#include "GameItem.h"
+#include "ARPGGameItem.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "ARPGArchiveSubsystem.generated.h"
 

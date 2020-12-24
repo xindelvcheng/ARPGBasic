@@ -60,12 +60,14 @@ public:
 	float BaseAttack;
 	FDamageDetectDescriptionStruct DamageDetectDescriptionStruct;
 
+	float TimePassed;
+
 	static UDamageDetectRecord* Create(UARPGDamageBoxComponent* DamageCenterSceneComponent,
 	                                   AARPGCharacter* InstigatorCharacter,
 	                                   FDamageDetectedDelegate DamageDetectedDelegate,
 	                                   FDamageDetectDescriptionStruct DamageDetectDescription = {});
 
-	void Tick(float);
+	void Tick(float DeltaTime);
 
 	FDamageDetectedEvent DamageDetectedEvent;
 

@@ -63,6 +63,9 @@ class AARPGCharacter : public ACharacter
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGBASIC",meta=(AllowPrivateAccess))
 	UCharacterConfigPrimaryDataAsset* CharacterConfigPDataAsset;
 
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGBASIC",meta=(AllowPrivateAccess))
+	class UARPGGameItemsManagerComponent* GameItemsManagerComponent;
+
 public:
 	// Sets default values for this character's properties
 	AARPGCharacter();
@@ -72,6 +75,8 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	virtual void PostInitializeComponents() override;
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCharacterBasicComponent")
 	class UCharacterStatusComponent* CharacterStatusComponent;
@@ -118,13 +123,14 @@ public:
 	{
 		if (CharacterStatusComponent)
 		{
-			int currentLevel = CharacterStatusComponent->GetLevel();
+			const int currentLevel = CharacterStatusComponent->GetLevel();
 			TArray<FStringFormatArg> FormatArray = {LevelNames[currentLevel / 9], (currentLevel + 1) / 9};
 			return FString::Format(TEXT("{0}{1}层"), std::move(FormatArray));
 		}
 		return FString();
 	}
 
+	//此函数在AnimInstance中调用，用于播放脚步声
 	virtual void PlayFootStepSoundEffect(EGroundTypeEnum GroundType, float Volume = 1);
 
 protected:
@@ -134,6 +140,7 @@ protected:
 public:
 	UFUNCTION(CallInEditor,Category="ARPGBASIC")
 	void RefreshWithCharacterConfigPDataAsset();
+	
 
 	UCharacterStatusComponent* GetCharacterStatusComponent() const
 	{
@@ -143,6 +150,11 @@ public:
 	UARPGLockTargetComponent* GetCharacterLockTargetComponent() const
 	{
 		return CharacterLockTargetComponent;
+	}
+
+	UARPGGameItemsManagerComponent* GetGameItemsManagerComponent() const
+	{
+		return GameItemsManagerComponent;
 	}
 
 	FText GetCharacterDisplayName() const;

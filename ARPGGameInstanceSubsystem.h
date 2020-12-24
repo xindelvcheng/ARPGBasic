@@ -15,7 +15,7 @@
 #include "ARPGPlayerController.h"
 
 #include "ARPGStatusWidget.h"
-#include "GameItem.h"
+#include "ARPGGameItem.h"
 
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "ARPGGameInstanceSubsystem.generated.h"
@@ -455,7 +455,7 @@ public:
 	{
 		if (OverlappedActor->GetOwner() == OtherActor->GetOwner()
 			|| OverlappedActor->GetInstigator() == OtherActor->GetInstigator()
-			|| Cast<AGameItem>(OtherActor)
+			|| Cast<AARPGGameItem>(OtherActor)
 			|| OtherActor->GetClass() == OverlappedActor->GetClass()
 			|| IgnoreActors.Contains(OtherActor))
 		{

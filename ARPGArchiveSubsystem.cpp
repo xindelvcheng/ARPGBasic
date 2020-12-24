@@ -61,7 +61,8 @@ void UARPGArchiveSubsystem::Deinitialize()
 
 bool UARPGArchiveSubsystem::SaveArchive(FString ArchiveName, FSaveGameDelegate CompleteDelegate)
 {
-	UARPGGameInstanceSubsystem::ShowNotify(GetWorld(),UARPGBasicSettings::Get()->Icons[0].LoadSynchronous(),FText::FromString(TEXT("正在保存游戏")),FText::FromString(TEXT("")));
+	UARPGGameInstanceSubsystem::ShowNotify(GetWorld(), UARPGBasicSettings::Get()->Icons[0].LoadSynchronous(),
+	                                       FText::FromString(TEXT("正在保存游戏")), FText::FromString(TEXT("")));
 	OnGameSaving.Broadcast();
 	GameSaver = Cast<UAPRGGameSaver>(UGameplayStatics::CreateSaveGameObject(UAPRGGameSaver::StaticClass()));
 	GameSaver->CurrentMap = CurrentStreamingLevelName;
@@ -76,7 +77,7 @@ bool UARPGArchiveSubsystem::SaveArchive(FString ArchiveName, FSaveGameDelegate C
 	}
 
 	GameSaver->Time = FDateTime::Now();
-	
+
 	FArchiveInfoStruct& ArchiveInfoStruct = *ArchiveManager->ArchiveInfos.FindByPredicate(
 		[ArchiveName](FArchiveInfoStruct ArchiveInfoStruct)
 		{
@@ -85,16 +86,16 @@ bool UARPGArchiveSubsystem::SaveArchive(FString ArchiveName, FSaveGameDelegate C
 
 	//保存道具
 	TArray<AActor*> GameItems;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGameItem::StaticClass(), GameItems);
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AARPGGameItem::StaticClass(), GameItems);
 	for (AActor* Actor : GameItems)
 	{
-		AGameItem* GameItem = Cast<AGameItem>(Actor);
+		AARPGGameItem* GameItem = Cast<AARPGGameItem>(Actor);
 		if (GameItem)
 		{
 			FGameItemArchiveStruct GameItemArchiveStruct = {
 				GameItem->GetClass(),
-				GameItem->Number,
-				GameItem->IsInBag,
+				GameItem->GetNumber(),
+				GameItem->GetIsInBag(),
 				GameItem->GetActorTransform()
 			};
 			GameSaver->GameItems.Emplace(std::move(GameItemArchiveStruct));
@@ -124,14 +125,15 @@ bool UARPGArchiveSubsystem::SaveArchive(FString ArchiveName, FSaveGameDelegate C
 				ArchiveManager, ArchiveManageSlot, 0);
 			OnGameSaveSuccess.Broadcast();
 			CompleteDelegate.ExecuteIfBound();
-			UARPGGameInstanceSubsystem::ShowNotify(GetWorld(),UARPGBasicSettings::Get()->Icons[0].LoadSynchronous(),FText::FromString(TEXT("游戏已保存")),FText::FromString(TEXT("")));
+			UARPGGameInstanceSubsystem::ShowNotify(GetWorld(), UARPGBasicSettings::Get()->Icons[0].LoadSynchronous(),
+			                                       FText::FromString(TEXT("游戏已保存")), FText::FromString(TEXT("")));
 		});
 	UGameplayStatics::AsyncSaveGameToSlot(GameSaver, ArchiveName, 0, AsyncSaveGameToSlotDelegate);
 	return true;
 }
 
 bool UARPGArchiveSubsystem::BPFunc_SaveArchive(UObject* WorldContextObject, int ArchiveIndex,
-                                        FSaveGameDelegate CompleteDelegate)
+                                               FSaveGameDelegate CompleteDelegate)
 {
 	UARPGArchiveSubsystem* ArchiveSubsystem = Get(WorldContextObject->GetWorld());
 	if (ArchiveSubsystem)
@@ -139,7 +141,8 @@ bool UARPGArchiveSubsystem::BPFunc_SaveArchive(UObject* WorldContextObject, int 
 		ArchiveIndex = FMath::Clamp(ArchiveIndex, 0, ArchiveSubsystem->ArchiveManager->ArchiveInfos.Num() - 1);
 		if (ArchiveSubsystem->ArchiveManager->ArchiveInfos.IsValidIndex(ArchiveIndex))
 		{
-			ArchiveSubsystem->SaveArchive(ArchiveSubsystem->ArchiveManager->ArchiveInfos[ArchiveIndex].SlotName, CompleteDelegate);
+			ArchiveSubsystem->SaveArchive(ArchiveSubsystem->ArchiveManager->ArchiveInfos[ArchiveIndex].SlotName,
+			                              CompleteDelegate);
 			return true;
 		}
 	}
@@ -162,7 +165,6 @@ void UARPGArchiveSubsystem::LoadArchive(FString ArchiveName, FSaveGameDelegate C
 					const FLatentActionInfo LatentInfo{0, -1,TEXT("OnLevelLoaded"), this};
 					OnLevelLoading.Broadcast();
 					UGameplayStatics::LoadStreamLevel(GetWorld(), GameSaver->CurrentMap, true, false, LatentInfo);
-
 				}
 				else
 				{
@@ -174,7 +176,7 @@ void UARPGArchiveSubsystem::LoadArchive(FString ArchiveName, FSaveGameDelegate C
 }
 
 void UARPGArchiveSubsystem::BPFunc_LoadArchive(UObject* WorldContextObject, int ArchiveIndex,
-                                        FSaveGameDelegate CompleteDelegate)
+                                               FSaveGameDelegate CompleteDelegate)
 {
 	UARPGArchiveSubsystem* ArchiveSubsystem = Get(WorldContextObject->GetWorld());
 	if (ArchiveSubsystem)
@@ -182,7 +184,8 @@ void UARPGArchiveSubsystem::BPFunc_LoadArchive(UObject* WorldContextObject, int 
 		ArchiveIndex = FMath::Clamp(ArchiveIndex, 0, ArchiveSubsystem->ArchiveManager->ArchiveInfos.Num() - 1);
 		if (ArchiveSubsystem->ArchiveManager->ArchiveInfos.IsValidIndex(ArchiveIndex))
 		{
-			ArchiveSubsystem->LoadArchive(ArchiveSubsystem->ArchiveManager->ArchiveInfos[ArchiveIndex].SlotName, CompleteDelegate);
+			ArchiveSubsystem->LoadArchive(ArchiveSubsystem->ArchiveManager->ArchiveInfos[ArchiveIndex].SlotName,
+			                              CompleteDelegate);
 		}
 	}
 }
@@ -206,7 +209,7 @@ void UARPGArchiveSubsystem::OnLevelLoaded()
 
 	//销毁所有道具
 	TArray<AActor*> GameItems;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGameItem::StaticClass(), GameItems);
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AARPGGameItem::StaticClass(), GameItems);
 	for (AActor* Actor : GameItems)
 	{
 		Actor->Destroy();
@@ -221,8 +224,10 @@ void UARPGArchiveSubsystem::OnLevelLoaded()
 	{
 		auto CharacterClass = CharacterArchiveStruct.CharacterClassPath.LoadSynchronous();
 		checkf(GetWorld(), TEXT("World is nullptr!"));
-		auto Actor = GetWorld()->SpawnActor(CharacterClass, &CharacterArchiveStruct.CharacterTransform, ActorSpawnParameters);
-		auto Character = Cast<AARPGCharacter>(Actor);
+		auto Actor = GetWorld()->SpawnActor(CharacterClass, &CharacterArchiveStruct.CharacterTransform,
+		                                    ActorSpawnParameters);
+		AARPGCharacter* Character = GetWorld()->SpawnActor<AARPGCharacter>(
+			CharacterClass, CharacterArchiveStruct.CharacterTransform);
 		if (Character->CharacterName == "MainCharacter")
 		{
 			if (auto MainCharacter = Cast<AARPGMainCharacter>(Character))
@@ -240,28 +245,27 @@ void UARPGArchiveSubsystem::OnLevelLoaded()
 			//对NPC生成AIController
 			Character->SpawnDefaultController();
 		}
-		FCharacterArchiveStruct::LoadArchiveStruct(Character,CharacterArchiveStruct);
+		FCharacterArchiveStruct::LoadArchiveStruct(Character, CharacterArchiveStruct);
 
 		UE_LOG(LogTemp, Warning, TEXT("%s角色已重新生成"), *Character->CharacterName.ToString());
 	}
 
 
 	//从存档还原道具
-	TArray<AGameItem*> Bag;
+	TArray<AARPGGameItem*> Bag;
 
 	if (auto MainCharacter = UARPGGameInstanceSubsystem::GetMainCharacter(this))
 	{
 		for (auto GameItemArchiveStruct : GameSaver->GameItems)
 		{
-			AGameItem* GameItem = Cast<AGameItem>(
-				GetWorld()->SpawnActor(LoadClass<AGameItem>(nullptr, *GameItemArchiveStruct.GameItemClass.ToString()),
-				                       &GameItemArchiveStruct.Transform, ActorSpawnParameters));
+			AARPGGameItem* GameItem = UARPGGameInstanceSubsystem::SpawnActor<AARPGGameItem>(
+				GameItemArchiveStruct.GameItemClass.LoadSynchronous(), GameItemArchiveStruct.Transform, MainCharacter);
 			if (GameItem)
 			{
 				if (GameItemArchiveStruct.IsInBag)
 				{
-					GameItem->Number = GameItemArchiveStruct.Number;
-					Bag.Emplace(GameItem->BeTaken(MainCharacter));
+					GameItem->SetNumber(GameItemArchiveStruct.Number);
+					Bag.Emplace(GameItem->PickUpGameItem(MainCharacter));
 				}
 			}
 		}

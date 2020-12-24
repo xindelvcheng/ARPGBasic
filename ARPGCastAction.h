@@ -160,21 +160,36 @@ struct FSimpleCastActionDescriptionStruct : public FTableRowBase
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpellDefinition")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Definition")
 	TArray<FSimpleTaskStruct> ActionTaskStructs;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpellDefinition")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Definition")
 	ESpellTypeEnum SpellTypeEnum;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpellDefinition")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Definition")
+	float SPCost = 1;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Definition")
 	float MaxDistance = 1500;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Definition")
 	bool bUseLastTaskEndTimeAsCastActionFinishTime = true;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess,EditCondition=
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Definition",meta=(AllowPrivateAccess,EditCondition=
         "!bUseLastTaskEndTimeAsCastActionFinishTime",EditConditionHides))
 	float Duration = 1.5;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Information")
+	FText ActionDisplayName;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Information")
+	UTexture2D* ItemIcon;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Information")
+	FText Introduction;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Information")
+	FText DetailDescription;
 };
 
 UCLASS(BlueprintType)
@@ -215,6 +230,9 @@ class AARPGCastAction : public AARPGMeleeAttackAction
 	ESpellTypeEnum SpellTypeEnum;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	float SPCost = 1;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
 	float MaxDistance;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
@@ -224,9 +242,20 @@ class AARPGCastAction : public AARPGMeleeAttackAction
 		"!bUseLastTaskEndTimeAsCastActionFinishTime",EditConditionHides))
 	float Duration = 1.5;
 
-
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
 	TArray<FSimpleTaskStruct> ActionTaskStructs;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	FText ActionDisplayName;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	UTexture2D* ItemIcon;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	FText Introduction;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	FText DetailDescription;
 
 	UPROPERTY()
 	TArray<UTask*> Tasks;
@@ -264,6 +293,8 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+	virtual bool CheckActionActivateConditionAndPayCost() override;
 
 public:
 	virtual void Tick(float DeltaSeconds) override;

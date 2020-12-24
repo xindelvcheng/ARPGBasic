@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 
 #include "ARPGActor.h"
+#include "ARPGGameItem.h"
+
 
 #include "ARPGAction.generated.h"
 
@@ -29,7 +31,7 @@ protected:
     UFUNCTION(BlueprintCallable,Category="ARPGAction")
     virtual void OnActionInterrupted(AARPGCharacter* Causer){};
 
-    bool CheckActionActivateConditionAndPayCost();
+    virtual bool CheckActionActivateConditionAndPayCost();
 
     UFUNCTION(BlueprintNativeEvent,DisplayName="CheckConditionAndPayCost")
     bool BPFunc_CheckActionActivateConditionAndPayCost();
@@ -40,7 +42,11 @@ protected:
     UFUNCTION(BlueprintImplementableEvent,DisplayName="OnInterrupt")
     void BPFunc_OnActionInterrupted(AARPGCharacter* Character);
 
+    virtual void BeginPlay() override;
+
 public:
+    AARPGAction();
+    
     UFUNCTION(BlueprintCallable,Category="ARPGAction")
     void FinishAction();
 
@@ -74,14 +80,22 @@ class AARPGMontageAction : public AARPGAction
 {
     GENERATED_BODY()
 
+    void BindDelegateToOwnerCharacterAnimInstance();
+
 protected:
+
+    virtual void BeginPlay() override;
+    
+    
     UPROPERTY()
     UAnimInstance* AttachedCharacterAnimInstance;
 
     virtual void OnActionActivate() override;
 
+    virtual void SetOwnerCharacter(AARPGCharacter* NewOwner) override;
 
-    virtual void BeginPlay() override;
+
+    
     
     UFUNCTION()
     void BindToMontageBegin(UAnimMontage* Montage);

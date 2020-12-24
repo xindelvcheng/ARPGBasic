@@ -39,10 +39,16 @@ class UARPGDamageBoxComponent : public UBoxComponent
 
 	FDamageDetectDescriptionStruct DetectDescription;
 
-	void SetDamageValue(float DamageWeightCoefficient, float DeltaDamageBias);
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGDamageBoxComponent",meta=(AllowPrivateAccess))
+	UParticleSystem* DamageIncreaseVFX;
 
+	void SetDamageValue(float DamageWeightCoefficient);
 	void RegisterToDamageDetect();
 	void UnRegisterToDamageDetectIfRegistered();
+	
+protected:
+	virtual void OnDamageIncrease(float DeltaDamageWeightCoefficient);
+	virtual void OnDamageDecrease(float DeltaDamageWeightCoefficient);
 
 public:
 	UARPGDamageBoxComponent();
@@ -70,5 +76,15 @@ public:
 	virtual void SetDetectDescription(const FDamageDetectDescriptionStruct& NewDetectDescription)
 	{
 		this->DetectDescription = NewDetectDescription;
+	}
+
+	virtual UParticleSystem* GetDamageIncreaseVfx()
+	{
+		return DamageIncreaseVFX;
+	}
+
+	virtual void SetDamageIncreaseVfx(UParticleSystem* CreatureDamageIncreaseVfx)
+	{
+		DamageIncreaseVFX = CreatureDamageIncreaseVfx;
 	}
 };

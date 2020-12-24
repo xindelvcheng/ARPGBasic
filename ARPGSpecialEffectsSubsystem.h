@@ -105,6 +105,9 @@ class AARPGSpecialEffectCreature : public AARPGActor
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpecialEffect",meta=(AllowPrivateAccess))
+	UParticleSystem* DamageIncreaseVFX;
+
 protected:
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
@@ -133,4 +136,15 @@ public:
 	UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffectCreature",DisplayName="CreateARPGSpecialEffectCreature")
 	static AARPGSpecialEffectCreature* Create(TSubclassOf<AARPGSpecialEffectCreature> CreatureClass,
 	                                          FTransform Transform, AARPGCharacter* CreatureOwnerCharacter);
+
+
+	virtual UParticleSystem* GetDamageIncreaseVFX()
+	{
+		return DamageIncreaseVFX;
+	}
+
+	virtual void SetDamageIncreaseVFX(UParticleSystem* CreatureDamageIncreaseVfx)
+	{
+		DamageIncreaseVFX = CreatureDamageIncreaseVfx;
+	}
 };

@@ -54,8 +54,15 @@ AARPGCastAction* AARPGCastAction::Create(AARPGCharacter* ActionOwnerCharacter,
 		}
 		Action->SetActionTaskStructs(CastActionDescription.ActionTaskStructs);
 		Action->SpellTypeEnum = CastActionDescription.SpellTypeEnum;
+		Action->SPCost = CastActionDescription.SPCost;
 		Action->MaxDistance = CastActionDescription.MaxDistance;
 		Action->MeleeAttackMontages = CastAnimMontages;
+
+		Action->ActionDisplayName = CastActionDescription.ActionDisplayName;
+		Action->ItemIcon = CastActionDescription.ItemIcon;
+		Action->Introduction = CastActionDescription.Introduction;
+		Action->ActionDisplayName = CastActionDescription.ActionDisplayName;
+
 		
 		Action->FinishSpawning(FTransform{});
 		return Action;
@@ -89,13 +96,23 @@ AARPGCastAction* AARPGCastAction::Create(AARPGCharacter* ActionOwnerCharacter, c
 		}
 	}
 
-	UARPGGameInstanceSubsystem::PrintLogToScreen(FString::Printf(TEXT("生成技能%s错误，未进行适当配置"), *SpellName.ToString()));
+	UARPGGameInstanceSubsystem::PrintLogToScreen(FString::Printf(TEXT("生成技能执行者%s错误，未进行适当配置"), *SpellName.ToString()));
 	return nullptr;
 }
 
 void AARPGCastAction::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+bool AARPGCastAction::CheckActionActivateConditionAndPayCost()
+{
+	if (GetOwnerCharacter() && GetOwnerCharacter()->GetCurrentSP()>SPCost)
+	{
+		GetOwnerCharacter()->UpdateCurrentSP(-SPCost);
+		return true;
+	}
+	return false;
 }
 
 // Called every frame
@@ -109,6 +126,7 @@ void AARPGCastAction::OnActionActivate()
 	verifyf(MeleeAttackMontages.Num()>0, TEXT("AARPGCastAction没有设置施法动作"));
 	StartAllTask();
 
+	//在快速施法时会出现来不及增加MeleeAttackIndex的情况，后面可能会修复
 	FTimerHandle TimerHandle;
 	GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([&]()
 	{

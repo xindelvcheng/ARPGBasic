@@ -25,13 +25,20 @@ void UARPGConfigSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		PromptWidgetClass = BasicSettings->PromptWidgetClass.LoadSynchronous();
 		LockTargetWidgetClass = BasicSettings->LockTargetWidgetClass.LoadSynchronous();
 		AbilityConfigDataTable = BasicSettings->AbilityConfigDataTable.LoadSynchronous();
+
+		DefaultGameplayIcon = BasicSettings->DefaultGameplayIcon.LoadSynchronous();
+		DefaultGameItemIcon = BasicSettings->DefaultGameItemIcon.LoadSynchronous();
+		DefaultAbilityIcon = BasicSettings->DefaultAbilityIcon.LoadSynchronous();
 		
 		const bool bBasicConfigComplete = StatusWidgetClass
 			&& NotifyWidgetClass
 			&& GameItemWidgetClass
 			&& PromptWidgetClass
 			&& LockTargetWidgetClass
-			&& AbilityConfigDataTable;
+			&& AbilityConfigDataTable
+			&& DefaultGameplayIcon
+			&& DefaultGameItemIcon
+			&& DefaultAbilityIcon;
 #if WITH_EDITOR
 		if (!bBasicConfigComplete)
 		{

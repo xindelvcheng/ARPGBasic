@@ -9,7 +9,7 @@
 class AARPGCharacter;
 
 UCLASS()
-class TESTPROJECT_API AARPGActor : public AActor
+class AARPGActor : public AActor
 {
 	GENERATED_BODY()
 

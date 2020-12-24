@@ -3,7 +3,7 @@
 
 #include "ARPGGameItemsManagerComponent.h"
 #include "ARPGCharacter.h"
-#include "GameItem.h"
+#include "ARPGGameItem.h"
 #include "GameItemWidget.h"
 
 // Sets default values for this component's properties
@@ -35,23 +35,23 @@ void UARPGGameItemsManagerComponent::TickComponent(float DeltaTime, ELevelTick T
 	// ...
 }
 
-bool UARPGGameItemsManagerComponent::AddItemToBag(AGameItem* GameItem){
+bool UARPGGameItemsManagerComponent::AddItemToBag(AARPGGameItem* GameItem){
     if (!GameItem)
     {
         return false;
     }
     for (int i = 0; i < Bag.Num(); ++i)
     {
-        AGameItem* Item = Bag[i];
+        AARPGGameItem* Item = Bag[i];
         if (!Item)
         {
             Bag.Remove(Item);
             continue;
         }
 
-        if (Item->ItemName == GameItem->ItemName)
+        if (Item->GetItemName() == GameItem->GetItemName())
         {
-            Item->Number += GameItem->Number;
+            Item->UpdateNumber(GameItem->GetNumber());
             OnBagChanged.Broadcast(EBagEvent::ChangeItemNumbers,Item);
             return true;
         }
@@ -118,10 +118,10 @@ bool UARPGGameItemsManagerComponent::UseItemInBag(AARPGCharacter* User)
         return false;
     }
 
-    AGameItem* GameItem = Bag[BagSelectedItemIndex];
-    GameItem->NativeUseGameItem(User);
-    GameItem->Number--;
-    if (GameItem->Number > 0)
+    AARPGGameItem* GameItem = Bag[BagSelectedItemIndex];
+    GameItem->UseGameItem(User);
+    GameItem->UpdateNumber(-1);
+    if (GameItem->GetNumber() > 0)
     {
         OnBagChanged.Broadcast(EBagEvent::UseItemInBag,GameItem);
     }else

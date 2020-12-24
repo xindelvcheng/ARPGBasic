@@ -61,6 +61,15 @@ public:
 
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Art Resource Config")
     TArray<TSoftObjectPtr<UTexture2D>> Icons;
+
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Art Resource Config")
+    TSoftObjectPtr<UTexture2D> DefaultGameplayIcon;
+
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Art Resource Config")
+    TSoftObjectPtr<UTexture2D> DefaultGameItemIcon;
+
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Art Resource Config")
+    TSoftObjectPtr<UTexture2D> DefaultAbilityIcon;
     
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
     TArray<TSoftObjectPtr<USoundCue>> PositiveSoundEffects;
@@ -91,6 +100,9 @@ public:
 
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
     TSoftObjectPtr<USoundCue> DefaultCreatureDestroySoundEffect;
+
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
+    TSoftObjectPtr<UParticleSystem> DefaultDamageIncreaseVFX;
 
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Gameplay Config")
     TSoftObjectPtr<UDataTable> AbilityConfigDataTable;
