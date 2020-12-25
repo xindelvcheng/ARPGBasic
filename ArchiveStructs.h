@@ -72,6 +72,9 @@ struct FCharacterArchiveStruct
     UPROPERTY(BlueprintReadWrite,Category="CharacterArchiveStruct")
     TArray<TSoftClassPtr<class ATranscendentalLawsSystem> > TranscendentalLawsSystemClasses;
 
+    UPROPERTY(BlueprintReadWrite,Category="CharacterArchiveStruct")
+    TArray<FName> SpellNames;
+
     static FCharacterArchiveStruct MakeArchiveStruct(AARPGCharacter* Character);
     
     static void LoadArchiveStruct(AARPGCharacter* Character,FCharacterArchiveStruct CharacterArchiveStruct);

@@ -198,7 +198,6 @@ void UARPGArchiveSubsystem::OnLevelLoaded()
 		MainCharacter->SetActorTransform(GameSaver->MainCharacterTransform);
 	}
 
-
 	//销毁所有角色
 	TArray<AActor*> OutActors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AARPGCharacter::StaticClass(), OutActors);
@@ -224,10 +223,8 @@ void UARPGArchiveSubsystem::OnLevelLoaded()
 	{
 		auto CharacterClass = CharacterArchiveStruct.CharacterClassPath.LoadSynchronous();
 		checkf(GetWorld(), TEXT("World is nullptr!"));
-		auto Actor = GetWorld()->SpawnActor(CharacterClass, &CharacterArchiveStruct.CharacterTransform,
-		                                    ActorSpawnParameters);
 		AARPGCharacter* Character = GetWorld()->SpawnActor<AARPGCharacter>(
-			CharacterClass, CharacterArchiveStruct.CharacterTransform);
+			CharacterClass, CharacterArchiveStruct.CharacterTransform,ActorSpawnParameters);
 		if (Character->CharacterName == "MainCharacter")
 		{
 			if (auto MainCharacter = Cast<AARPGMainCharacter>(Character))
@@ -249,7 +246,6 @@ void UARPGArchiveSubsystem::OnLevelLoaded()
 
 		UE_LOG(LogTemp, Warning, TEXT("%s角色已重新生成"), *Character->CharacterName.ToString());
 	}
-
 
 	//从存档还原道具
 	TArray<AARPGGameItem*> Bag;

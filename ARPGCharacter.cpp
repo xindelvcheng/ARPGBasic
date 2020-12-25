@@ -15,6 +15,7 @@
 #include "ARPGBasicSettings.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include <cmath>
 
 
 AARPGCharacter::AARPGCharacter()
@@ -28,7 +29,7 @@ AARPGCharacter::AARPGCharacter()
 	CharacterLockTargetComponent = CreateDefaultSubobject<UARPGLockTargetComponent>("ARPGLockTargetComponent");
 	CharacterLockTargetComponent->SetupAttachment(RootComponent);
 	GameItemsManagerComponent = CreateDefaultSubobject<UARPGGameItemsManagerComponent>("GameItemsManagerComponent");
-	
+
 	if (UARPGBasicSettings::Get())
 	{
 		if (!ImpactVisualEffect)
@@ -60,18 +61,37 @@ void AARPGCharacter::BeginPlay()
 void AARPGCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	
+
 	RefreshWithCharacterConfigPDataAsset();
 }
 
 float AARPGCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
                                  AActor* DamageCauser)
 {
-	const float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-	UpdateCurrentHP(-DamageAmount);
+	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	
+	//同招不可互接机制
+	if (int& DamageTypeCounter = DamageToleranceCounter.FindOrAdd(DamageEvent.DamageTypeClass,0))
+	{
+		ActualDamage *= pow(2, -(DamageTypeCounter++));
 
+		FTimerHandle TimerHandle;
+		GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([this,DamageEvent]()
+		{
+			if (this)
+			{
+				DamageToleranceCounter.Add(DamageEvent.DamageTypeClass,
+				                           DamageToleranceCounter.FindRef(DamageEvent.DamageTypeClass) - 1);
+			}
+		}), 5, false);
+	}
+	UpdateCurrentHP(-ActualDamage);
+
+
+	//受伤特效
 	FVector HitLocation = GetActorLocation();
-	if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+	
+	if(DamageEvent.IsOfType(FPointDamageEvent::ClassID))
 	{
 		const FPointDamageEvent* PointDamageEvent = static_cast<const FPointDamageEvent*>(&DamageEvent);
 		HitLocation = PointDamageEvent->HitInfo.Location;
@@ -79,19 +99,20 @@ float AARPGCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), ImpactSoundEffect, HitLocation);
 	}
 
+	//受伤动作反馈
 	if (HitReactAnimMontages.Num() > 0)
 	{
 		PlayAnimMontage(
 			HitReactAnimMontages.IsValidIndex(HitReactIndex) ? HitReactAnimMontages[HitReactIndex] : nullptr);
 		HitReactIndex = (HitReactIndex + 1) % HitReactAnimMontages.Num();
 		FTimerManager& WorldTimerManager = GetWorldTimerManager();
-		WorldTimerManager.ClearTimer(ResetHitReactIndexTimerHandle);
 		WorldTimerManager.SetTimer(ResetHitReactIndexTimerHandle, FTimerDelegate::CreateLambda([&]()
 		{
 			HitReactIndex = 0;
 		}), 2, false);
 	}
 
+	//冲击力
 	const float ImpactForceFactor = 1000 * (DamageAmount / GetMaxHP());
 	LaunchCharacter(
 		(UKismetMathLibrary::GetDirectionUnitVector(
@@ -99,6 +120,7 @@ float AARPGCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 			GetActorLocation()) * ImpactForceFactor),
 		true, true);
 	CauseRigid(1 * (DamageAmount / GetMaxHP()), nullptr);
+
 	return ActualDamage;
 }
 

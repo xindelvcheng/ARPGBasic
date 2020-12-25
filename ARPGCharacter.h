@@ -99,6 +99,9 @@ protected:
 
 	int HitReactIndex = 0;
 
+	//Tolerance
+	TMap<TSubclassOf<UDamageType>,int> DamageToleranceCounter;
+
 	FTimerHandle ResetHitReactIndexTimerHandle;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPG Art Resource")

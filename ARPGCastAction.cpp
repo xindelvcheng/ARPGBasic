@@ -63,7 +63,6 @@ AARPGCastAction* AARPGCastAction::Create(AARPGCharacter* ActionOwnerCharacter,
 		Action->Introduction = CastActionDescription.Introduction;
 		Action->ActionDisplayName = CastActionDescription.ActionDisplayName;
 
-		
 		Action->FinishSpawning(FTransform{});
 		return Action;
 	};

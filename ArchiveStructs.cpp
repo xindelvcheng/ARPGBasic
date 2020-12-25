@@ -35,7 +35,8 @@ FCharacterArchiveStruct FCharacterArchiveStruct::MakeArchiveStruct(AARPGCharacte
         CharacterStatusComponent->GetCurrentHP(),
         CharacterStatusComponent->GetCurrentSP(),
         CharacterStatusComponent->GetCharacterState(),
-        std::move(TranscendentalLawsSystemClasses)
+        std::move(TranscendentalLawsSystemClasses),
+		CharacterCombatComponent->GetSpellNames()
     };
 	return CharacterArchiveStruct;
 }
@@ -63,4 +64,6 @@ void FCharacterArchiveStruct::LoadArchiveStruct(AARPGCharacter* Character,
 		TranscendentalLawsSystems.Emplace(TranscendentalLawsSystem);
 	}
 	Character->GetCharacterCombatComponent()->SetTranscendentalLawsSystems(std::move(TranscendentalLawsSystems));
+
+	Character->GetCharacterCombatComponent()->SetSpellNames( CharacterArchiveStruct.SpellNames);
 }

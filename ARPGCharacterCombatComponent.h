@@ -22,11 +22,6 @@ class UARPGCharacterCombatComponent : public UARPGActorComponent
 {
     GENERATED_BODY()
 
-
-public:
-    // Sets default values for this component's properties
-    UARPGCharacterCombatComponent();
-
     UPROPERTY()
     TMap<int, AARPGAction*> ExclusiveGroupActionsMap;
     
@@ -35,10 +30,17 @@ public:
 
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     TArray<TSubclassOf<AARPGCastAction>> AbilityClasses;
-
+    
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
+    TArray<FName> SpellNames;
 
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     TArray<TSubclassOf<AARPGBuff>> BuffClasses;
+public:
+    // Sets default values for this component's properties
+    UARPGCharacterCombatComponent();
+
+    
 
 protected:
     // Called when the game starts
@@ -77,8 +79,7 @@ public:
     TArray<AARPGCastAction*> AbilityActions;
     UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     TArray<AARPGBuff*> BuffActions;
-    UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
-    TArray<FName> SpellNames;
+    
     
     UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
     AARPGAction* CurrentActiveAction;
@@ -117,4 +118,22 @@ public:
 
     UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
     void ReInitCharacterActions(UCharacterConfigPrimaryDataAsset* CharacterConfigPrimaryDataAsset = nullptr);
+
+
+    virtual const TArray<FName>& GetSpellNames() const
+    {
+        return SpellNames;
+    }
+
+    virtual void SetSpellNames(const TArray<FName>& NewSpellNames)
+    {
+        this->SpellNames = NewSpellNames;
+        ReInitCharacterActions();
+    }
+
+    virtual void AppendSpellNames(FName NewSpellName)
+    {
+        this->SpellNames.Emplace(NewSpellName);
+        ReInitCharacterActions();
+    }
 };
