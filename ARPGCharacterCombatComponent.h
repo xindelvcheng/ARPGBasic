@@ -25,17 +25,21 @@ class UARPGCharacterCombatComponent : public UARPGActorComponent
     UPROPERTY()
     TMap<int, AARPGAction*> ExclusiveGroupActionsMap;
     
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess))
     TArray<FMeleeAttackActionDescriptionStruct> MeleeAttacks;
 
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess=true))
+    bool AllowInterruptBackswing;
+
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess))
     TArray<TSubclassOf<AARPGCastAction>> AbilityClasses;
     
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess))
     TArray<FName> SpellNames;
 
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
+    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess))
     TArray<TSubclassOf<AARPGBuff>> BuffClasses;
+
 public:
     // Sets default values for this component's properties
     UARPGCharacterCombatComponent();
@@ -47,10 +51,6 @@ protected:
     virtual void BeginPlay() override;
 
     bool IsRigid;
-
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess=true))
-    bool AllowInterruptBackswing;
-
 
 public:
     // Called every frame

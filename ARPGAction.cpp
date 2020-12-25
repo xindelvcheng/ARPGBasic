@@ -224,7 +224,6 @@ void AARPGMeleeAttackAction::OnMontageNotify(FName NotifyName,
 	if (NotifyName.ToString() == TEXT("AppendAttack") || NotifyName == NAME_None)
 	{
 		MeleeAttackIndex = (MeleeAttackIndex + 1) % MeleeAttackMontages.Num();
-		UARPGGameInstanceSubsystem::PrintLogToScreen(MeleeAttackIndex);
 		FinishAction();
 	}
 }
