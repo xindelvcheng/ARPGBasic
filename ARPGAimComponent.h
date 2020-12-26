@@ -22,10 +22,14 @@ class TESTPROJECT_API UARPGAimComponent : public UARPGSceneComponent
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGAimComponent",meta=(AllowPrivateAccess))
 	AAimTargetActor* AimTargetActor;
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGAimComponent",meta=(AllowPrivateAccess))
+	float AimTargetResetDuration = 15;
+
+	FTimerHandle ResetAimTargetTimerHandle;
+
 public:
 	UARPGAimComponent();
 
-	
 
 protected:
 	virtual void BeginPlay() override;

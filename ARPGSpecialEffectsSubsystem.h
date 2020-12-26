@@ -91,6 +91,9 @@ struct FARPGCreatureTimeLineTaskStruct
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
 	UParticleSystem* VisualEffectAsset;
 
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
+	FTransform VisualEffectRelativeTransform;
+
 	TWeakObjectPtr<UParticleSystemComponent> ParticleSystemComponent;
 	TWeakObjectPtr<UAudioComponent> AudioComponent;
 
@@ -112,6 +115,12 @@ protected:
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
 	UARPGDamageBoxComponent* DamageDetectionBox;
+
+#if WITH_EDITOR
+	/*该组件仅在编译器模式下有效，用于调试伤害盒子和粒子系统*/
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
+    UParticleSystemComponent* DebugParticleSystem;
+#endif
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
 	float DamageWeight = 1;

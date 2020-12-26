@@ -35,7 +35,6 @@ void UARPGAimComponent::Activate(bool bReset)
 
 	AimTargetActor->SetActorVisibility(true);
 	SetComponentTickEnabled(true);
-	
 }
 
 void UARPGAimComponent::Deactivate()
@@ -44,6 +43,12 @@ void UARPGAimComponent::Deactivate()
 
 	AimTargetActor->SetActorVisibility(false);
 	SetComponentTickEnabled(false);
+
+	
+	GetWorld()->GetTimerManager().SetTimer(ResetAimTargetTimerHandle, FTimerDelegate::CreateLambda([&]()
+    {
+        AimTargetActor->SetActorLocation(FVector{0, 0, 0});
+    }), AimTargetResetDuration, false);
 }
 
 void AAimTargetActor::BeginPlay()
@@ -55,6 +60,7 @@ AAimTargetActor::AAimTargetActor()
 {
 	SetActorEnableCollision(false);
 }
+
 void UARPGAimComponent::TickComponent(float DeltaTime, ELevelTick TickType,
                                       FActorComponentTickFunction* ThisTickFunction)
 {

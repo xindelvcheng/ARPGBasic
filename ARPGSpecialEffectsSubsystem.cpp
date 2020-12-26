@@ -123,7 +123,9 @@ void UARPGSpecialEffectsSubsystem::PlaySpecialEffectAtLocation(const UObject* Wo
 AARPGSpecialEffectCreature::AARPGSpecialEffectCreature()
 {
 	PrimaryActorTick.bCanEverTick = false;
+	
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("DefaultRootSceneComponent"));
+	
 	DamageDetectionBox = CreateDefaultSubobject<UARPGDamageBoxComponent>(TEXT("DamageDetectionBox"));
 	DamageDetectionBox->SetupAttachment(RootComponent);
 
@@ -140,6 +142,11 @@ AARPGSpecialEffectCreature::AARPGSpecialEffectCreature()
 	{
 		DamageDetectionBox->SetDamageType(DamageType);
 	}
+
+#if WITH_EDITOR
+	DebugParticleSystem = CreateDefaultSubobject<UParticleSystemComponent>("DebugParticleSystem");
+	DebugParticleSystem->SetupAttachment(RootComponent);
+#endif	
 }
 
 void AARPGSpecialEffectCreature::BeginPlay()
@@ -153,6 +160,7 @@ void AARPGSpecialEffectCreature::BeginPlay()
 		//显示特效
 		Task.ParticleSystemComponent = UGameplayStatics::SpawnEmitterAttached(
 			Task.VisualEffectAsset, RootComponent);
+		Task.ParticleSystemComponent->SetRelativeTransform(Task.VisualEffectRelativeTransform);
 		Task.AudioComponent = UGameplayStatics::SpawnSoundAttached(Task.SoundEffectAsset, RootComponent);
 
 		//进行伤害判定
@@ -177,6 +185,14 @@ void AARPGSpecialEffectCreature::BeginPlay()
 			}
 		}), Task.DamageEndTime, false);
 	}
+
+#if WITH_EDITOR
+	FTimerHandle ResetTimerHandle;
+	GetWorldTimerManager().SetTimer(ResetTimerHandle,FTimerDelegate::CreateLambda([&]()
+	{
+		DebugParticleSystem->ResetParticles();
+	}),1,true);
+#endif	
 }
 
 AARPGSpecialEffectCreature* AARPGSpecialEffectCreature::Create(

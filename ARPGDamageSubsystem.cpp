@@ -65,7 +65,7 @@ void UDamageDetectRecord::Tick(float DeltaTime)
 	for (int i = 0; i < HitResults.Num(); i++)
 	{
 		AActor* HitActor = HitResults[i].GetActor();
-		if (HitResults[i].GetComponent() != DamageCenterComponent && !HitActors.Contains(HitActor))
+		if (HitResults[i].GetComponent() != DamageCenterComponent && !HitActors.Contains(HitActor) && !Cast<UStaticMesh>(HitActor))
 		{
 			HitActors.Add(HitActor);
 			OnDamageDetected(HitResults[i]);
@@ -77,10 +77,6 @@ void UDamageDetectRecord::Tick(float DeltaTime)
 
 void UDamageDetectRecord::OnDamageDetected(FHitResult HitResult)
 {
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow,TEXT("DamageDetect"));
-	}
 	DamageDetectedEvent.Broadcast(this, HitResult);
 	InstigatorStatusComponent->OnAttackHitActor.Broadcast(HitResult);
 
