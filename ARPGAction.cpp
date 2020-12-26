@@ -247,20 +247,28 @@ void AARPGMeleeAttackAction::OnActionInterrupted(AARPGCharacter* Causer)
 
 void AARPGMultiMontageAction::OnActionActivate()
 {
-	ActionMontage = ActionMontages[ActionIndex];
+	ActionMontage = ActionMontages[MontageIndex];
+	MontageIndex = (MontageIndex + 1) % ActionMontages.Num();
 	Super::OnActionActivate();
 }
 
+#pragma optimize("",off)
 void AARPGMultiMontageAction::OnMontageStop(UAnimMontage* Montage, bool bInterrupted)
 {
 	Super::OnMontageStop(Montage, bInterrupted);
-
-	ActionIndex = (ActionIndex + 1) % ActionMontages.Num();
+	
 	GetWorldTimerManager().SetTimer(ResetTimerHandle, FTimerDelegate::CreateLambda([&]()
-	{
-		ActionIndex = 0;
-	}), ResetDelay, false);
+    {
+        MontageIndex = 0;
+    }), ResetDelay, false);
 }
+#pragma optimize("",on)
+
+void AARPGMultiMontageAction::OnActionFinished(AARPGAction* Action)
+{
+	Super::OnActionFinished(Action);
+}
+
 
 void AARPGBuff::OnActionActivate()
 {

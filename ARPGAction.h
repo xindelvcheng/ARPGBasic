@@ -189,9 +189,9 @@ class AARPGMultiMontageAction : public AARPGMontageAction
 {
     GENERATED_BODY()
 
-    int ActionIndex;
+    int MontageIndex;
     FTimerHandle ResetTimerHandle;
-    float ResetDelay = 1;
+    float ResetDelay = 3;
 
 public:
     UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGMultiMontageAction",meta=(AllowPrivateAccess=true))
@@ -200,6 +200,8 @@ public:
     virtual void OnActionActivate() override;
 
     virtual void OnMontageStop(UAnimMontage* Montage, bool bInterrupted) override;
+
+    virtual void OnActionFinished(AARPGAction* Action) override;
 };
 
 

@@ -17,14 +17,18 @@
 void AARPGCastAction::InitTasks()
 {
 	Tasks.Empty();
+
+	float LastTaskEndTime = 0;
 	for (const FSimpleTaskStruct ActionTaskStruct : ActionTaskStructs)
 	{
 		Tasks.Emplace(UARPGSimpleTask::Create(this, ActionTaskStruct, GetActorTransform()));
-		if (bUseLastTaskEndTimeAsCastActionFinishTime)
-		{
-			Duration = std::max(
-				Duration, ActionTaskStruct.CreateEffectCreatureTime + ActionTaskStruct.Duration);
-		}
+		LastTaskEndTime = std::max(
+			LastTaskEndTime, ActionTaskStruct.CreateEffectCreatureTime + ActionTaskStruct.Duration);
+	}
+
+	if (bUseLastTaskEndTimeAsCastActionFinishTime)
+	{
+		Duration = LastTaskEndTime;
 	}
 }
 
@@ -47,7 +51,8 @@ AARPGCastAction* AARPGCastAction::Create(AARPGCharacter* ActionOwnerCharacter,
 		ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
 	{
 		Action->OnActionFinishedEvent().Add(ActionFinishedDelegate);
-		Action->bUseLastTaskEndTimeAsCastActionFinishTime = CastActionDescription.bUseLastTaskEndTimeAsCastActionFinishTime;
+		Action->bUseLastTaskEndTimeAsCastActionFinishTime = CastActionDescription.
+			bUseLastTaskEndTimeAsCastActionFinishTime;
 		if (!Action->bUseLastTaskEndTimeAsCastActionFinishTime)
 		{
 			Action->Duration = CastActionDescription.Duration;
@@ -106,7 +111,7 @@ void AARPGCastAction::BeginPlay()
 
 bool AARPGCastAction::CheckActionActivateConditionAndPayCost()
 {
-	if (GetOwnerCharacter() && GetOwnerCharacter()->GetCurrentSP()>SPCost)
+	if (GetOwnerCharacter() && GetOwnerCharacter()->GetCurrentSP() > SPCost)
 	{
 		GetOwnerCharacter()->UpdateCurrentSP(-SPCost);
 		return true;
