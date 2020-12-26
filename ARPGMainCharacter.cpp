@@ -2,6 +2,8 @@
 
 
 #include "ARPGMainCharacter.h"
+
+#include "ARPGAimComponent.h"
 #include "ARPGConfigSubsystem.h"
 #include "ARPGGameItemsManagerComponent.h"
 #include "CharacterStatusComponent.h"
@@ -27,10 +29,6 @@ AARPGMainCharacter::AARPGMainCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
-
-	AimFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("AimFX"));
-	AimFX->Template = AimFXAsset;
-	AimFX->SetVisibility(false);
 }
 
 // Called when the game starts or when spawned
@@ -49,33 +47,10 @@ void AARPGMainCharacter::BeginPlay()
 void AARPGMainCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	FMinimalViewInfo ViewInfo;
-	CalcCamera(0, ViewInfo);
-
-	const TArray<AActor*> IgnoreActors = {this,this->GetOwner(),this->GetInstigator()};
-	FHitResult HitResult;
-	UKismetSystemLibrary::LineTraceSingle(this, ViewInfo.Location,
-	                                      ViewInfo.Location + ViewInfo.Rotation.Vector() * 1000,
-	                                      ETraceTypeQuery::TraceTypeQuery1, false, IgnoreActors, EDrawDebugTrace::None,HitResult,true);
-	AimFX->SetWorldLocation(HitResult.Location);
 }
 
 // Called to bind functionality to input
 void AARPGMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	PlayerInputComponent->BindAction("Aim", EInputEvent::IE_Pressed, this, &AARPGMainCharacter::BindToPressAim);
-	PlayerInputComponent->BindAction("Aim", EInputEvent::IE_Released, this, &AARPGMainCharacter::BindToReleaseAim);
-}
-
-void AARPGMainCharacter::BindToPressAim()
-{
-	AimFX->SetVisibility(true);
-}
-
-void AARPGMainCharacter::BindToReleaseAim()
-{
-	AimFX->SetVisibility(false);
 }

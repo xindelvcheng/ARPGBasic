@@ -1,7 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-
 #include "ARPGConfigSubsystem.h"
 
 
@@ -19,17 +18,19 @@ void UARPGConfigSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	if (UARPGBasicSettings* BasicSettings = UARPGBasicSettings::Get())
 	{
+		AbilityConfigDataTable = BasicSettings->AbilityConfigDataTable.LoadSynchronous();
+
 		StatusWidgetClass = BasicSettings->StatusWidgetClass.LoadSynchronous();
 		NotifyWidgetClass = BasicSettings->NotifyWidgetClass.LoadSynchronous();
 		GameItemWidgetClass = BasicSettings->GameItemWidgetClass.LoadSynchronous();
 		PromptWidgetClass = BasicSettings->PromptWidgetClass.LoadSynchronous();
 		LockTargetWidgetClass = BasicSettings->LockTargetWidgetClass.LoadSynchronous();
-		AbilityConfigDataTable = BasicSettings->AbilityConfigDataTable.LoadSynchronous();
+		AimPromptActorClass = BasicSettings->AimPromptActorClass.LoadSynchronous();
 
 		DefaultGameplayIcon = BasicSettings->DefaultGameplayIcon.LoadSynchronous();
 		DefaultGameItemIcon = BasicSettings->DefaultGameItemIcon.LoadSynchronous();
 		DefaultAbilityIcon = BasicSettings->DefaultAbilityIcon.LoadSynchronous();
-		
+
 		const bool bBasicConfigComplete = StatusWidgetClass
 			&& NotifyWidgetClass
 			&& GameItemWidgetClass
@@ -38,7 +39,8 @@ void UARPGConfigSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 			&& AbilityConfigDataTable
 			&& DefaultGameplayIcon
 			&& DefaultGameItemIcon
-			&& DefaultAbilityIcon;
+			&& DefaultAbilityIcon
+			&& AimPromptActorClass;
 #if WITH_EDITOR
 		if (!bBasicConfigComplete)
 		{
@@ -47,6 +49,7 @@ void UARPGConfigSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 #endif
 	}
 }
+
 UARPGConfigSubsystem* UARPGConfigSubsystem::Get(UWorld* World)
 {
 	if (World && World->GetGameInstance())

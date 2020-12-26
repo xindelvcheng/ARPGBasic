@@ -17,6 +17,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include <cmath>
 
+#include "ARPGAimComponent.h"
+
 
 AARPGCharacter::AARPGCharacter()
 {
@@ -29,6 +31,9 @@ AARPGCharacter::AARPGCharacter()
 	CharacterLockTargetComponent = CreateDefaultSubobject<UARPGLockTargetComponent>("ARPGLockTargetComponent");
 	CharacterLockTargetComponent->SetupAttachment(RootComponent);
 	GameItemsManagerComponent = CreateDefaultSubobject<UARPGGameItemsManagerComponent>("GameItemsManagerComponent");
+
+	AimComponent = CreateDefaultSubobject<UARPGAimComponent>(TEXT("AimComponent"));
+	AimComponent->SetupAttachment(RootComponent);
 
 	if (UARPGBasicSettings::Get())
 	{

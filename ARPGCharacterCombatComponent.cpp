@@ -4,6 +4,7 @@
 #include "ARPGCharacterCombatComponent.h"
 #include "ARPGCharacter.h"
 #include "ARPGAction.h"
+#include "ARPGAimComponent.h"
 #include "ARPGCastAction.h"
 #include "ARPGGameInstanceSubsystem.h"
 #include "CharacterConfigPrimaryDataAsset.h"
@@ -76,19 +77,30 @@ bool UARPGCharacterCombatComponent::TryToUseAbility(int AbilityIndex = 0)
 
 	AARPGCastAction* Ability = AbilityActions[AbilityIndex];
 
-	UARPGLockTargetComponent* LockTargetComponent = GetOwnerCharacter()->GetCharacterLockTargetComponent();
-	if (AARPGCharacter* LockTarget = LockTargetComponent->DetectLockTarget())
+	if (UARPGAimComponent* AimComponent = GetOwnerCharacter()->GetAimComponent())
 	{
-		Ability->SetActorTransform(LockTarget->GetActorTransform());
+		if (AimComponent->GetAimTargetActor()->GetActorLocation() != FVector{0, 0, 0})
+		{
+			Ability->SetActorTransform(AimComponent->GetAimTargetActor()->GetActorTransform());
+		}
 	}
-	else
+	else //AimComponent指向{0,0,0}则其无效
 	{
-		Ability->SetActorTransform(
-			UARPGGameInstanceSubsystem::GetActorNearPositionTransform(GetOwnerCharacter(),
-			                                                          {
-				                                                          Ability->GetMaxDistance(), 0, 0
-			                                                          }, FRotator{}));
+		UARPGLockTargetComponent* LockTargetComponent = GetOwnerCharacter()->GetCharacterLockTargetComponent();
+		if (AARPGCharacter* LockTarget = LockTargetComponent->DetectLockTarget())
+		{
+			Ability->SetActorTransform(LockTarget->GetActorTransform());
+		}
+		else
+		{
+			Ability->SetActorTransform(
+				UARPGGameInstanceSubsystem::GetActorNearPositionTransform(GetOwnerCharacter(),
+				                                                          {
+					                                                          Ability->GetMaxDistance(), 0, 0
+				                                                          }, FRotator{}));
+		}
 	}
+
 
 	if (Ability->TryToActivateAction(GetOwnerCharacter()))
 	{

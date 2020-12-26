@@ -66,6 +66,9 @@ class AARPGCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGBASIC",meta=(AllowPrivateAccess))
 	class UARPGGameItemsManagerComponent* GameItemsManagerComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AimComponent, meta = (AllowPrivateAccess))
+	class UARPGAimComponent* AimComponent;
+
 public:
 	// Sets default values for this character's properties
 	AARPGCharacter();
@@ -158,6 +161,12 @@ public:
 	UARPGGameItemsManagerComponent* GetGameItemsManagerComponent() const
 	{
 		return GameItemsManagerComponent;
+	}
+
+
+	virtual UARPGAimComponent* GetAimComponent() const
+	{
+		return AimComponent;
 	}
 
 	FText GetCharacterDisplayName() const;

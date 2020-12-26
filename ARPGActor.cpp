@@ -38,6 +38,16 @@ AARPGActor::AARPGActor()
 	PrimaryActorTick.bCanEverTick = true;
 }
 
+void AARPGActor::SetActorVisibility(bool bNewVisibility)
+{
+	TArray<USceneComponent*> Components;
+	GetComponents<USceneComponent>(Components);
+	for (USceneComponent* Component : Components)
+	{
+		Component->SetVisibility(bNewVisibility);
+	}
+}
+
 // Called when the game starts or when spawned
 void AARPGActor::BeginPlay()
 {

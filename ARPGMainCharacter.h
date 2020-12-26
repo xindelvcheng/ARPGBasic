@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 
+
 #include "ARPGCharacter.h"
 #include "Components/BoxComponent.h"
 
@@ -21,6 +22,8 @@ class  AARPGMainCharacter : public AARPGCharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
+
+	
 	
 public:
 	// Sets default values for this character's properties
@@ -43,17 +46,6 @@ public:
 	UPROPERTY(BlueprintReadWrite,Category="ARPGMainCharacter")
 	APlayerController* MainPlayerController;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UParticleSystem* AimFXAsset;
-	
-	UPROPERTY()
-	UParticleSystemComponent* AimFX;
-	
-	UFUNCTION()
-	void BindToPressAim();
-
-	UFUNCTION()
-    void BindToReleaseAim();
 
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }

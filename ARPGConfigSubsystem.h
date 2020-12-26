@@ -9,6 +9,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "ARPGConfigSubsystem.generated.h"
 
+class AAimTargetActor;
 class UARPGLockTargetWidget;
 class UARPGPromptWidget;
 class UGameItemWidget;
@@ -44,6 +45,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly,Category="ARPG GUI Config")
 	TSubclassOf<UARPGLockTargetWidget> LockTargetWidgetClass;
+	
+	UPROPERTY(BlueprintReadWrite,Category="ARPG GUI Config")
+	TSubclassOf<AAimTargetActor> AimPromptActorClass;
 
 	UPROPERTY(BlueprintReadOnly,Category="ARPG Art Resource Config")
 	UTexture2D* DefaultGameplayIcon;

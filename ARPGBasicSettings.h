@@ -15,6 +15,7 @@
 
 #include "ARPGBasicSettings.generated.h"
 
+class AAimTargetActor;
 /**
  * 
  */
@@ -59,6 +60,9 @@ public:
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
     TSoftClassPtr<UARPGGamingMenuContentItemWidget> GamingMenuContentItemWidgetClass;
 
+    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG 3D GUI Config")
+    TSoftClassPtr<AAimTargetActor> AimPromptActorClass;
+    
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Art Resource Config")
     TArray<TSoftObjectPtr<UTexture2D>> Icons;
 
