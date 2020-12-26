@@ -66,7 +66,6 @@ bool UARPGCharacterCombatComponent::TryToMeleeAttack()
 	return false;
 }
 
-#pragma optimize("",off)
 bool UARPGCharacterCombatComponent::TryToUseAbility(int AbilityIndex = 0)
 {
 	if (IsRigid || !AbilityActions.IsValidIndex(AbilityIndex) || ExclusiveGroupActionsMap.Contains(
@@ -108,7 +107,6 @@ bool UARPGCharacterCombatComponent::TryToUseAbility(int AbilityIndex = 0)
 	}
 	return false;
 }
-#pragma optimize("",on)
 
 bool UARPGCharacterCombatComponent::CauseRigid(float Duration, AARPGCharacter* Causer = nullptr)
 {
