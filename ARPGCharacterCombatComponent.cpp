@@ -66,7 +66,7 @@ bool UARPGCharacterCombatComponent::TryToMeleeAttack()
 	return false;
 }
 
-
+#pragma optimize("",off)
 bool UARPGCharacterCombatComponent::TryToUseAbility(int AbilityIndex = 0)
 {
 	if (IsRigid || !AbilityActions.IsValidIndex(AbilityIndex) || ExclusiveGroupActionsMap.Contains(
@@ -77,14 +77,12 @@ bool UARPGCharacterCombatComponent::TryToUseAbility(int AbilityIndex = 0)
 
 	AARPGCastAction* Ability = AbilityActions[AbilityIndex];
 
-	if (UARPGAimComponent* AimComponent = GetOwnerCharacter()->GetAimComponent())
+	UARPGAimComponent* AimComponent = GetOwnerCharacter()->GetAimComponent();
+	if (AimComponent && AimComponent->IsAimTargetResultIsValid())
 	{
-		if (AimComponent->GetAimTargetActor()->GetActorLocation() != FVector{0, 0, 0})
-		{
-			Ability->SetActorTransform(AimComponent->GetAimTargetActor()->GetActorTransform());
-		}
+		Ability->SetActorTransform(AimComponent->GetAimTargetActor()->GetActorTransform());
 	}
-	else //AimComponent指向{0,0,0}则其无效
+	else
 	{
 		UARPGLockTargetComponent* LockTargetComponent = GetOwnerCharacter()->GetCharacterLockTargetComponent();
 		if (AARPGCharacter* LockTarget = LockTargetComponent->DetectLockTarget())
@@ -110,6 +108,7 @@ bool UARPGCharacterCombatComponent::TryToUseAbility(int AbilityIndex = 0)
 	}
 	return false;
 }
+#pragma optimize("",on)
 
 bool UARPGCharacterCombatComponent::CauseRigid(float Duration, AARPGCharacter* Causer = nullptr)
 {

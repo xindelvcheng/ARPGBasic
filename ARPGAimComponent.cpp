@@ -23,9 +23,10 @@ void UARPGAimComponent::BeginPlay()
 	if (UARPGConfigSubsystem* ConfigSubsystem = UARPGConfigSubsystem::Get(GetWorld()))
 	{
 		AimTargetActor = UARPGGameInstanceSubsystem::SpawnActor<AAimTargetActor>(
-			ConfigSubsystem->AimPromptActorClass, GetComponentTransform(), GetOwnerCharacter());
+			ConfigSubsystem->AimPromptActorClass, FTransform{}, GetOwnerCharacter());
 	}
 
+	bAimTargetResultIsValid = false;
 	Deactivate();
 }
 
@@ -48,6 +49,7 @@ void UARPGAimComponent::Deactivate()
 	GetWorld()->GetTimerManager().SetTimer(ResetAimTargetTimerHandle, FTimerDelegate::CreateLambda([&]()
     {
         AimTargetActor->SetActorLocation(FVector{0, 0, 0});
+		bAimTargetResultIsValid = true;
     }), AimTargetResetDuration, false);
 }
 
@@ -77,5 +79,6 @@ void UARPGAimComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		                                      ETraceTypeQuery::TraceTypeQuery1, false, IgnoreActors,
 		                                      EDrawDebugTrace::None, HitResult, true);
 		AimTargetActor->SetActorLocation(HitResult.Location);
+		bAimTargetResultIsValid = true;
 	}
 }

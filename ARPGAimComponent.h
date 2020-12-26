@@ -22,6 +22,8 @@ class TESTPROJECT_API UARPGAimComponent : public UARPGSceneComponent
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGAimComponent",meta=(AllowPrivateAccess))
 	AAimTargetActor* AimTargetActor;
 
+	bool bAimTargetResultIsValid;
+
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGAimComponent",meta=(AllowPrivateAccess))
 	float AimTargetResetDuration = 15;
 
@@ -45,6 +47,12 @@ public:
 	virtual AAimTargetActor* GetAimTargetActor() const
 	{
 		return AimTargetActor;
+	}
+
+
+	virtual bool IsAimTargetResultIsValid() const
+	{
+		return bAimTargetResultIsValid;
 	}
 };
 
