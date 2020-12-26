@@ -177,7 +177,7 @@ struct FSimpleCastActionDescriptionStruct : public FTableRowBase
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Definition",meta=(AllowPrivateAccess,EditCondition=
         "!bUseLastTaskEndTimeAsCastActionFinishTime",EditConditionHides))
-	float Duration = 1.5;
+	float Duration = 1.6;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Information")
 	FText ActionDisplayName;
@@ -218,7 +218,7 @@ public:
  * 施法型技能
  */
 UCLASS()
-class AARPGCastAction : public AARPGMeleeAttackAction
+class AARPGCastAction : public AARPGMultiMontageAction
 {
 	GENERATED_BODY()
 

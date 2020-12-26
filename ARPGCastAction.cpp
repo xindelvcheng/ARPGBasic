@@ -56,7 +56,7 @@ AARPGCastAction* AARPGCastAction::Create(AARPGCharacter* ActionOwnerCharacter,
 		Action->SpellTypeEnum = CastActionDescription.SpellTypeEnum;
 		Action->SPCost = CastActionDescription.SPCost;
 		Action->MaxDistance = CastActionDescription.MaxDistance;
-		Action->MeleeAttackMontages = CastAnimMontages;
+		Action->ActionMontages = CastAnimMontages;
 
 		Action->ActionDisplayName = CastActionDescription.ActionDisplayName;
 		Action->ItemIcon = CastActionDescription.ItemIcon;
@@ -122,10 +122,9 @@ void AARPGCastAction::Tick(float DeltaTime)
 
 void AARPGCastAction::OnActionActivate()
 {
-	verifyf(MeleeAttackMontages.Num()>0, TEXT("AARPGCastAction没有设置施法动作"));
+	verifyf(ActionMontages.Num()>0, TEXT("AARPGCastAction没有设置施法动作"));
 	StartAllTask();
 
-	//在快速施法时会出现来不及增加MeleeAttackIndex的情况，后面可能会修复
 	FTimerHandle TimerHandle;
 	GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([&]()
 	{
