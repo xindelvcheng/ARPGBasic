@@ -11,7 +11,7 @@ class AARPGCharacter;
 class AARPGGameItem;
 
 UENUM(BlueprintType)
-enum class EBagEvent:uint8
+enum class EBagEventType:uint8
 {
     AddNewItemToBag,
     ChangeItemNumbers,
@@ -32,7 +32,7 @@ class  UARPGGameItemsManagerComponent : public UActorComponent
     int BagSelectedItemIndex = -1;
 
 
-    DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FBagChangedEvent,EBagEvent,BagEventType ,AARPGGameItem*, GameItem);
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FBagChangedEvent,EBagEventType,BagEventType ,AARPGGameItem*, GameItem);
 
 public:
     UPROPERTY(BlueprintAssignable)
@@ -53,7 +53,7 @@ public:
     UFUNCTION(BlueprintCallable,Category="BagSystem")
     TArray<AARPGGameItem*> GetAllGameItemsInBag() const { return this->Bag; }
 
-    void SetBag(TArray<AARPGGameItem*> bag) { this->Bag = bag; OnBagChanged.Broadcast(EBagEvent::ReFlush,nullptr);}
+    void SetBag(TArray<AARPGGameItem*> bag) { this->Bag = bag; OnBagChanged.Broadcast(EBagEventType::ReFlush,nullptr);}
 
     UFUNCTION(BlueprintCallable)
     int GetBagSelectedItemIndex() const { return this->BagSelectedItemIndex; }

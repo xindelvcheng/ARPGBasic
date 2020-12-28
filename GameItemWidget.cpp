@@ -32,16 +32,16 @@ void UGameItemWidget::SetupGameItemWidget(AARPGGameItem* NewGameItem)
     GameItem->SetItemWidget(this);
 }
 
-void UGameItemWidget::NativeSelectGameItemWidget()
+void UGameItemWidget::SelectGameItemWidget()
 {
     Image_BeSelectedIcon->SetVisibility(ESlateVisibility::Visible);
     TextBlock_GameItemDisplayName->SetVisibility(ESlateVisibility::Visible);
-    BeSelected();
+    BPFunc_OnWidgetBeSelected();
 }
 
-void UGameItemWidget::NativeDeselectGameItemWidget()
+void UGameItemWidget::DeselectGameItemWidget()
 {
     Image_BeSelectedIcon->SetVisibility(ESlateVisibility::Hidden);
     TextBlock_GameItemDisplayName->SetVisibility(ESlateVisibility::Hidden);
-    NotSelected();
+    BPFunc_OnWidgetDeselected();
 }

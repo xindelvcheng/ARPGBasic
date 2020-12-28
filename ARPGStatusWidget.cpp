@@ -114,16 +114,16 @@ void UARPGStatusWidget::BindToMainCharacter(AARPGMainCharacter* MainCharacter)
     }
 }
 
-void UARPGStatusWidget::UpdateBagWidget(EBagEvent BagEvent, AARPGGameItem* GameItem)
+void UARPGStatusWidget::UpdateBagWidget(EBagEventType BagEvent, AARPGGameItem* GameItem)
 {
-    if (!GameItem && BagEvent != EBagEvent::ReFlush)
+    if (!GameItem && BagEvent != EBagEventType::ReFlush)
     {
         UARPGGameInstanceSubsystem::PrintLogToScreen(TEXT("背包更新的GameItem为空"));
         return;
     }
     switch (BagEvent)
     {
-    case EBagEvent::ReFlush:
+    case EBagEventType::ReFlush:
         BagItemsNum = 0;
         if (ItemsManagerComponent)
         {
@@ -141,7 +141,7 @@ void UARPGStatusWidget::UpdateBagWidget(EBagEvent BagEvent, AARPGGameItem* GameI
             GameItemWidget->SetVisibility(ESlateVisibility::Hidden);
         }
         break;
-    case EBagEvent::AddNewItemToBag:
+    case EBagEventType::AddNewItemToBag:
         {
             UGameItemWidget* GameItemWidget = Cast<UGameItemWidget>(UniformGridPanel_Bag->GetChildAt(BagItemsNum));
             GameItemWidget->SetupGameItemWidget(GameItem);
@@ -149,25 +149,25 @@ void UARPGStatusWidget::UpdateBagWidget(EBagEvent BagEvent, AARPGGameItem* GameI
             BagItemsNum++;
         }
         break;
-    case EBagEvent::ChangeItemNumbers:
+    case EBagEventType::ChangeItemNumbers:
         if (GameItem->GetItemWidget())
         {
             GameItem->GetItemWidget()->SetupGameItemWidget(GameItem);
         }
         break;
-    case EBagEvent::SelectItemInBag:
+    case EBagEventType::SelectItemInBag:
         if (GameItem->GetItemWidget())
         {
-            GameItem->GetItemWidget()->BeSelected();
+            GameItem->GetItemWidget()->BPFunc_OnWidgetBeSelected();
         }
         break;
-    case EBagEvent::DeselectItemInBag:
+    case EBagEventType::DeselectItemInBag:
         if (GameItem->GetItemWidget())
         {
-            GameItem->GetItemWidget()->NotSelected();
+            GameItem->GetItemWidget()->BPFunc_OnWidgetDeselected();
         }
         break;
-    case EBagEvent::UseItemInBag:
+    case EBagEventType::UseItemInBag:
         if (GameItem->GetItemWidget())
         {
             GameItem->GetItemWidget()->SetupGameItemWidget(GameItem);

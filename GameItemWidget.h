@@ -43,14 +43,17 @@ public:
 	void SetupGameItemWidget(AARPGGameItem* NewGameItem);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "GameItemWidget")
-	void BeSelected();
+	void BPFunc_OnWidgetBeSelected();
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "GameItemWidget")
-	void NotSelected();
+	void BPFunc_OnWidgetDeselected();
 	
 	UFUNCTION(BlueprintCallable,DisplayName="SelectGameItemWidget", Category = "GameItemWidget")
-	void NativeSelectGameItemWidget();
+	void SelectGameItemWidget();
 
 	UFUNCTION(BlueprintCallable,DisplayName="DeselectGameItemWidget", Category = "GameItemWidget")
-	void NativeDeselectGameItemWidget();
+	void DeselectGameItemWidget();
+	
 };
+
+typedef UGameItemWidget USpellWidget;

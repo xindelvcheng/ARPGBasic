@@ -8,6 +8,7 @@
 
 #include "ARPGActor.h"
 #include "Components/BoxComponent.h"
+#include "Engine/DataTable.h"
 #include "Sound/SoundCue.h"
 #include "particles/ParticleSystem.h"
 #include "Subsystems/GameInstanceSubsystem.h"
@@ -116,11 +117,9 @@ protected:
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
 	UARPGDamageBoxComponent* DamageDetectionBox;
 
-#if WITH_EDITOR
-	/*该组件仅在编译器模式下有效，用于调试伤害盒子和粒子系统*/
+	/*该组件仅在编译器模式下被初始化，用于调试粒子系统匹配伤害盒子*/
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
     UParticleSystemComponent* DebugParticleSystem;
-#endif
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
 	float DamageWeight = 1;
@@ -156,4 +155,14 @@ public:
 	{
 		DamageIncreaseVFX = CreatureDamageIncreaseVfx;
 	}
+};
+
+/*用于罗列项目中所有的粒子特效*/
+USTRUCT(BlueprintType)
+struct FParticleSystemListRow : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ParticleSystemList")
+	UParticleSystem* ParticleSystem;
 };

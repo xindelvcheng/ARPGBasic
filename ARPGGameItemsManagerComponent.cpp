@@ -23,7 +23,7 @@ void UARPGGameItemsManagerComponent::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
-    OnBagChanged.Broadcast(EBagEvent::ReFlush,nullptr);
+    OnBagChanged.Broadcast(EBagEventType::ReFlush,nullptr);
 }
 
 
@@ -52,12 +52,12 @@ bool UARPGGameItemsManagerComponent::AddItemToBag(AARPGGameItem* GameItem){
         if (Item->GetItemName() == GameItem->GetItemName())
         {
             Item->UpdateNumber(GameItem->GetNumber());
-            OnBagChanged.Broadcast(EBagEvent::ChangeItemNumbers,Item);
+            OnBagChanged.Broadcast(EBagEventType::ChangeItemNumbers,Item);
             return true;
         }
     }
     Bag.Emplace(GameItem);
-    OnBagChanged.Broadcast(EBagEvent::AddNewItemToBag,GameItem);
+    OnBagChanged.Broadcast(EBagEventType::AddNewItemToBag,GameItem);
 
     if (BagSelectedItemIndex < 0)
     {
@@ -77,14 +77,14 @@ bool UARPGGameItemsManagerComponent::SelectNextItemInBag()
     if (Bag.IsValidIndex(BagSelectedItemIndex))
     {
         const auto PreviousItem = Bag[BagSelectedItemIndex];
-        OnBagChanged.Broadcast(EBagEvent::DeselectItemInBag,PreviousItem);
+        OnBagChanged.Broadcast(EBagEventType::DeselectItemInBag,PreviousItem);
     }
 
     BagSelectedItemIndex = (BagSelectedItemIndex + 1) % Bag.Num();
     if (Bag.IsValidIndex(BagSelectedItemIndex))
     {
         const auto CurrentItem = Bag[BagSelectedItemIndex];
-        OnBagChanged.Broadcast(EBagEvent::SelectItemInBag,CurrentItem);
+        OnBagChanged.Broadcast(EBagEventType::SelectItemInBag,CurrentItem);
     }
     return true;
 }
@@ -99,14 +99,14 @@ bool UARPGGameItemsManagerComponent::SelectPreviousItemInBag()
     if (Bag.IsValidIndex(BagSelectedItemIndex))
     {
         const auto PreviousItem = Bag[BagSelectedItemIndex];
-        OnBagChanged.Broadcast(EBagEvent::DeselectItemInBag,PreviousItem);
+        OnBagChanged.Broadcast(EBagEventType::DeselectItemInBag,PreviousItem);
     }
 
     BagSelectedItemIndex = (BagSelectedItemIndex + Bag.Num() - 1) % Bag.Num();
     if (Bag.IsValidIndex(BagSelectedItemIndex))
     {
         const auto CurrentItem = Bag[BagSelectedItemIndex];
-        OnBagChanged.Broadcast(EBagEvent::SelectItemInBag,CurrentItem);
+        OnBagChanged.Broadcast(EBagEventType::SelectItemInBag,CurrentItem);
     }
     return true;
 }
@@ -123,11 +123,11 @@ bool UARPGGameItemsManagerComponent::UseItemInBag(AARPGCharacter* User)
     GameItem->UpdateNumber(-1);
     if (GameItem->GetNumber() > 0)
     {
-        OnBagChanged.Broadcast(EBagEvent::UseItemInBag,GameItem);
+        OnBagChanged.Broadcast(EBagEventType::UseItemInBag,GameItem);
     }else
     {
         Bag.RemoveAt(BagSelectedItemIndex);
-        OnBagChanged.Broadcast(EBagEvent::ReFlush,nullptr);
+        OnBagChanged.Broadcast(EBagEventType::ReFlush,nullptr);
     }
     return true;
 }
