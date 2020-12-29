@@ -4,6 +4,7 @@
 #include "ARPGAimComponent.h"
 
 
+#include "ARPGBasicSettings.h"
 #include "ARPGCharacter.h"
 #include "ARPGConfigSubsystem.h"
 #include "ARPGGameInstanceSubsystem.h"
@@ -14,17 +15,22 @@ UARPGAimComponent::UARPGAimComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	bAutoActivate = false;
+
+	if (!AimPromptActorClass)
+	{
+		if (UARPGBasicSettings* BasicSettings = UARPGBasicSettings::Get())
+		{
+			AimPromptActorClass = BasicSettings->AimPromptActorClass.LoadSynchronous();
+		}
+	}
 }
 
 void UARPGAimComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (UARPGConfigSubsystem* ConfigSubsystem = UARPGConfigSubsystem::Get(GetWorld()))
-	{
-		AimTargetActor = UARPGGameInstanceSubsystem::SpawnActor<AAimTargetActor>(
-			ConfigSubsystem->AimPromptActorClass, FTransform{}, GetOwnerCharacter());
-	}
+	AimTargetActor = UARPGGameInstanceSubsystem::SpawnActor<AAimTargetActor>(
+		AimPromptActorClass, FTransform{}, GetOwnerCharacter());
 
 	bAimTargetResultIsValid = false;
 	Deactivate();
@@ -45,12 +51,12 @@ void UARPGAimComponent::Deactivate()
 	AimTargetActor->SetActorVisibility(false);
 	SetComponentTickEnabled(false);
 
-	
+
 	GetWorld()->GetTimerManager().SetTimer(ResetAimTargetTimerHandle, FTimerDelegate::CreateLambda([&]()
-    {
-        AimTargetActor->SetActorLocation(FVector{0, 0, 0});
+	{
+		AimTargetActor->SetActorLocation(FVector{0, 0, 0});
 		bAimTargetResultIsValid = true;
-    }), AimTargetResetDuration, false);
+	}), AimTargetResetDuration, false);
 }
 
 void AAimTargetActor::BeginPlay()
@@ -79,6 +85,7 @@ void UARPGAimComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		                                      ETraceTypeQuery::TraceTypeQuery1, false, IgnoreActors,
 		                                      EDrawDebugTrace::None, HitResult, true);
 		AimTargetActor->SetActorLocation(HitResult.Location);
+		AimTargetActor->SetActorRotation((HitResult.Location - GetOwnerCharacter()->GetActorLocation()).Rotation());
 		bAimTargetResultIsValid = true;
 	}
 }

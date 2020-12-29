@@ -4,6 +4,7 @@
 #include "ARPGCharacter.h"
 #include "ARPGConfigSubsystem.h"
 #include "ARPGGameInstanceSubsystem.h"
+#include "GameFramework/GameModeBase.h"
 
 
 bool AARPGAction::CheckActionActivateConditionAndPayCost()
@@ -85,7 +86,8 @@ T* AARPGAction::CreateARPGAction(TSubclassOf<AARPGAction> ActionClass, AARPGChar
                                  FTransform Transform,
                                  FActionFinishDelegate ActionFinishedDelegate, int ActionExclusiveGroupID)
 {
-	if (T* Action = ActionOwnerCharacter->GetWorld()->SpawnActorDeferred<T>(
+
+	if (T* Action = GEngine->GetWorldFromContextObject(ActionOwnerCharacter,EGetWorldErrorMode::Assert)->SpawnActorDeferred<T>(
 		ActionClass, Transform, ActionOwnerCharacter, ActionOwnerCharacter,
 		ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
 	{
@@ -101,27 +103,27 @@ T* AARPGAction::CreateARPGAction(TSubclassOf<AARPGAction> ActionClass, AARPGChar
 
 void AARPGMontageAction::BindDelegateToOwnerCharacterAnimInstance()
 {
-	if (GetOwnerCharacter() && GetOwnerCharacter()->GetMesh() && !AttachedCharacterAnimInstance)
+	if (GetOwnerCharacter() && GetOwnerCharacter()->GetMesh() && !OwnerCharacterAnimInstance)
 	{
-		AttachedCharacterAnimInstance = GetOwnerCharacter()->GetMesh()->GetAnimInstance();
-		if (AttachedCharacterAnimInstance)
+		OwnerCharacterAnimInstance = GetOwnerCharacter()->GetMesh()->GetAnimInstance();
+		if (OwnerCharacterAnimInstance)
 		{
-			if (!AttachedCharacterAnimInstance->OnMontageStarted.IsAlreadyBound(
+			if (!OwnerCharacterAnimInstance->OnMontageStarted.IsAlreadyBound(
 				this, &AARPGMontageAction::BindToMontageBegin))
 			{
-				AttachedCharacterAnimInstance->OnMontageStarted.AddDynamic(
+				OwnerCharacterAnimInstance->OnMontageStarted.AddDynamic(
 					this, &AARPGMontageAction::BindToMontageBegin);
 			}
-			if (!AttachedCharacterAnimInstance->OnPlayMontageNotifyBegin.IsAlreadyBound(
+			if (!OwnerCharacterAnimInstance->OnPlayMontageNotifyBegin.IsAlreadyBound(
 				this, &AARPGMontageAction::BindToMontageNotify))
 			{
-				AttachedCharacterAnimInstance->OnPlayMontageNotifyBegin.AddDynamic(
+				OwnerCharacterAnimInstance->OnPlayMontageNotifyBegin.AddDynamic(
 					this, &AARPGMontageAction::BindToMontageNotify);
 			}
-			if (!AttachedCharacterAnimInstance->OnMontageEnded.IsAlreadyBound(
+			if (!OwnerCharacterAnimInstance->OnMontageEnded.IsAlreadyBound(
 				this, &AARPGMontageAction::BindToMontageStop))
 			{
-				AttachedCharacterAnimInstance->OnMontageEnded.AddDynamic(
+				OwnerCharacterAnimInstance->OnMontageEnded.AddDynamic(
 					this, &AARPGMontageAction::BindToMontageStop);
 			}
 		}
@@ -155,7 +157,7 @@ void AARPGMontageAction::BindToMontageBegin(UAnimMontage* Montage)
 		return;
 	}
 
-	if (FAnimMontageInstance* MontageInstance = AttachedCharacterAnimInstance->GetActiveInstanceForMontage(
+	if (FAnimMontageInstance* MontageInstance = OwnerCharacterAnimInstance->GetActiveInstanceForMontage(
 		ActionMontage))
 	{
 		MontageInstanceID = MontageInstance->GetInstanceID();
@@ -187,7 +189,7 @@ void AARPGMontageAction::BindToMontageStop(UAnimMontage* Montage, bool bInterrup
 
 void AARPGMontageAction::OnActionInterrupted(AARPGCharacter* Causer)
 {
-	AttachedCharacterAnimInstance->Montage_Stop(0.2, ActionMontage);
+	OwnerCharacterAnimInstance->Montage_Stop(0.2, ActionMontage);
 	Super::OnActionInterrupted(Causer);
 }
 

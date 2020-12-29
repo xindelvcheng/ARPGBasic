@@ -48,7 +48,7 @@ public:
 	                 FTaskDelegate TaskOnTaskExecuted, FTaskDelegate TaskOnTaskFinished);
 
 	UFUNCTION(BlueprintCallable,Category="SpellTask")
-	void ExecutedTask();
+	void ExecuteTask();
 	UFUNCTION(BlueprintCallable,Category="SpellTask")
 	void FinishTask();
 };
@@ -109,23 +109,23 @@ struct FGridLayoutStruct
 		}) * FVector{(Width / RowsNumber), -(Length / ColumnsNumber), (Height / LayersNumber)};
 	}
 
-	FRotator GetAbsoluteRotation() const
+	FRotator GetAbsoluteRotation(FRotator OriginRotation) const
 	{
 		switch (RotationType)
 		{
 		case ERotationTypeEnum::NoRotation:
-			return FRotator{};
+			return OriginRotation;
 		case ERotationTypeEnum::CircleFaceInner:
-			return (-GetRelativeLocation()).Rotation();
+			return (-GetRelativeLocation()).Rotation() + OriginRotation;
 		case ERotationTypeEnum::CircleFaceOuter:
-			return GetRelativeLocation().Rotation();
+			return GetRelativeLocation().Rotation() + OriginRotation;
 		}
-		return FRotator{};
+		return OriginRotation;
 	};
 
-	FTransform CalculateAbsoluteTransform(FVector Origin) const
+	FTransform CalculateAbsoluteTransform(FVector Origin, FRotator OriginRotation) const
 	{
-		return FTransform{GetAbsoluteRotation(), Origin + GetRelativeLocation(), Scale};
+		return FTransform{GetAbsoluteRotation(OriginRotation), Origin + GetRelativeLocation(), Scale};
 	}
 };
 
@@ -176,7 +176,7 @@ struct FSimpleCastActionDescriptionStruct : public FTableRowBase
 	bool bUseLastTaskEndTimeAsCastActionFinishTime = true;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Definition",meta=(AllowPrivateAccess,EditCondition=
-        "!bUseLastTaskEndTimeAsCastActionFinishTime",EditConditionHides))
+		"!bUseLastTaskEndTimeAsCastActionFinishTime",EditConditionHides))
 	float Duration = 1.6;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Information")
@@ -201,14 +201,14 @@ class UARPGSimpleTask : public UTask
 
 	UPROPERTY()
 	AARPGSpecialEffectCreature* SpecialEffectCreature;
-	
+
 	FGridLayoutStruct LayoutDescription;
-	
+
 	virtual void OnTaskExecuted() override;
 	virtual void OnTaskFinished() override;
 public:
 	float CreatureLifeDuration = 0.5;
-	
+
 	static UARPGSimpleTask* Create(AARPGCastAction* TaskOwnerAction, FSimpleTaskStruct ActionTaskStruct,
 	                               FTransform RelativeTransform);
 };
@@ -222,7 +222,7 @@ class AARPGCastAction : public AARPGMultiMontageAction
 {
 	GENERATED_BODY()
 
-	/*ARPGCastAction的位置是定向法术的原点*/
+	/*ARPGCastAction的位置是定向法术的伤害中心*/
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
 	USceneComponent* DefaultSceneComponent;
 
@@ -244,18 +244,6 @@ class AARPGCastAction : public AARPGMultiMontageAction
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
 	TArray<FSimpleTaskStruct> ActionTaskStructs;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
-	FText ActionDisplayName;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
-	UTexture2D* ItemIcon;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
-	FText Introduction;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
-	FText DetailDescription;
 
 	UPROPERTY()
 	TArray<UTask*> Tasks;

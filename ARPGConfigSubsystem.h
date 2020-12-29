@@ -12,7 +12,7 @@
 class AAimTargetActor;
 class UARPGLockTargetWidget;
 class UARPGPromptWidget;
-class UGameItemWidget;
+class UCollectableItemWidget;
 class UARPGNotifyWidget;
 class UARPGStatusWidget;
 /**
@@ -38,7 +38,7 @@ public:
 	TSubclassOf<UARPGNotifyWidget> NotifyWidgetClass;
 
 	UPROPERTY(BlueprintReadOnly,Category="ARPG GUI Config")
-	TSubclassOf<UGameItemWidget> GameItemWidgetClass;
+	TSubclassOf<UCollectableItemWidget> GameItemWidgetClass;
 
 	UPROPERTY(BlueprintReadOnly,Category="ARPG GUI Config")
 	TSubclassOf<UARPGPromptWidget> PromptWidgetClass;

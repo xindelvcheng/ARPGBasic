@@ -4,10 +4,8 @@
 
 #include "CoreMinimal.h"
 
-
 #include "ARPGAction.h"
 #include "ARPGActorComponent.h"
-#include "Components/ActorComponent.h"
 
 #include "ARPGCharacterCombatComponent.generated.h"
 
@@ -20,120 +18,139 @@ class AARPGCharacter;
 UCLASS( ClassGroup=(ARPGBasic), meta=(BlueprintSpawnableComponent) )
 class UARPGCharacterCombatComponent : public UARPGActorComponent
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
-    UPROPERTY()
-    TMap<int, AARPGAction*> ExclusiveGroupActionsMap;
-    
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess))
-    TArray<FMeleeAttackActionDescriptionStruct> MeleeAttacks;
+	UPROPERTY()
+	TMap<int, AARPGAction*> ExclusiveGroupActionsMap;
 
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess=true))
-    bool AllowInterruptBackswing;
+	/*技能配置，推荐在角色的CharacterConfigPDataAsset中统一配置（bool bUseCharacterDataAssetInit = true中时此处配置将被覆盖）*/
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess))
+	bool bUseCharacterDataAssetInit = true;
 
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess))
-    TArray<TSubclassOf<AARPGCastAction>> AbilityClasses;
-    
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess))
-    TArray<FName> SpellNames;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess,
+		EditCondition="!bUseCharacterDataAssetInit",EditConditionHides))
+	TArray<FMeleeAttackActionDescriptionStruct> MeleeAttacks;
 
-    UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess))
-    TArray<TSubclassOf<AARPGBuff>> BuffClasses;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess,
+		EditCondition="!bUseCharacterDataAssetInit",EditConditionHides))
+	bool AllowInterruptBackswing;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess,
+		EditCondition="!bUseCharacterDataAssetInit",EditConditionHides))
+	TArray<TSubclassOf<AARPGCastAction>> AbilityClasses;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess,
+		EditCondition="!bUseCharacterDataAssetInit",EditConditionHides))
+	TArray<FName> SpellNames;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess,
+		EditCondition="!bUseCharacterDataAssetInit",EditConditionHides))
+	TArray<TSubclassOf<AARPGBuff>> BuffClasses;
+
+	
+	/*缓存技能释放对象*/
+	UPROPERTY()
+	TArray<AARPGAction*> MeleeAttackCollectionActions;
+	
+	UPROPERTY()
+	AARPGAction* CurrentMeleeAttackCollection;
+	
+	UPROPERTY()
+	TArray<AARPGCastAction*> AbilityActions;
+	
+	UPROPERTY()
+	TArray<AARPGBuff*> BuffActions;
 
 public:
-    // Sets default values for this component's properties
-    UARPGCharacterCombatComponent();
-
-    
+	// Sets default values for this component's properties
+	UARPGCharacterCombatComponent();
 
 protected:
-    // Called when the game starts
-    virtual void BeginPlay() override;
+	virtual void InitializeComponent() override;
+	
+	// Called when the game starts
+	virtual void BeginPlay() override;
 
-    bool IsRigid;
+	bool IsRigid;
 
 public:
-    // Called every frame
-    virtual void TickComponent(float DeltaTime, ELevelTick TickType,
-                               FActorComponentTickFunction* ThisTickFunction) override;
+	// Called every frame
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
+	                           FActorComponentTickFunction* ThisTickFunction) override;
 
-    UFUNCTION()
-    void BindToOnActionFinished(AARPGAction* Action);
+	UFUNCTION()
+	void BindToActionFinished(AARPGAction* Action);
 
-    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    bool GetIsRigid() const { return IsRigid; }
+	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	bool GetIsRigid() const { return IsRigid; }
 
-    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    bool GetIsActing() const { return CurrentActiveAction ? true : false; }
+	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	bool GetIsActing() const { return CurrentActiveAction ? true : false; }
 
-    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    AARPGAction* GetCurrentActiveAction() const { return CurrentActiveAction; }
+	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	AARPGAction* GetCurrentActiveAction() const { return CurrentActiveAction; }
 
-    UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
-    TArray<AARPGAction*> MeleeAttackCollectionActions;
-    UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
-    AARPGAction* CurrentMeleeAttackCollection;
-    UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
-    TArray<AARPGAction*> RemoteAttackActions;
-    UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
-    TArray<AARPGCastAction*> AbilityActions;
-    UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
-    TArray<AARPGBuff*> BuffActions;
-    
-    
-    UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
-    AARPGAction* CurrentActiveAction;
+	UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
+	AARPGAction* CurrentActiveAction;
 
-    DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCombatEvent);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCombatEvent);
 
-    UPROPERTY(BlueprintAssignable,BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    FCombatEvent ActionStart;
+	UPROPERTY(BlueprintAssignable,BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	FCombatEvent ActionStart;
 
-    UPROPERTY(BlueprintAssignable,BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    FCombatEvent ActionEnd;
+	UPROPERTY(BlueprintAssignable,BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	FCombatEvent ActionEnd;
 
-    UFUNCTION()
-    virtual bool TryToMeleeAttack();
+	UFUNCTION()
+	virtual bool TryToMeleeAttack();
 
-    UFUNCTION()
-    virtual bool TryToUseAbility(int AbilityIndex);
+	UFUNCTION()
+	virtual bool TryToCastSpell(AARPGCastAction* Spell);
 
-    UFUNCTION()
-    virtual bool CauseRigid(float Duration, AARPGCharacter* Causer);
+	UFUNCTION()
+	virtual bool CauseRigid(float Duration, AARPGCharacter* Causer);
 
-    UFUNCTION()
-    virtual bool ActivateBuff(int BuffIndex, float Duration, AARPGCharacter* Instigator = nullptr);
+	UFUNCTION()
+	virtual bool ActivateBuff(int BuffIndex, float Duration, AARPGCharacter* Instigator = nullptr);
 
 
-    DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRigidEvent, float, Duration);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRigidEvent, float, Duration);
 
-    UPROPERTY(BlueprintAssignable,Category="ARPGCharacterCombatComponent")
-    FRigidEvent OnRigid;
-    FRigidEvent OnResumeFromRigid;
+	UPROPERTY(BlueprintAssignable,Category="ARPGCharacterCombatComponent")
+	FRigidEvent OnRigid;
+	FRigidEvent OnResumeFromRigid;
 
-    FTimerHandle RigidTimerHandle;
-    FTimerDelegate RigidTimerDelegate;
+	FTimerHandle RigidTimerHandle;
+	FTimerDelegate RigidTimerDelegate;
 
-    bool IsMoving;
+	bool IsMoving;
 
-    UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-    void ReInitCharacterActions(UCharacterConfigPrimaryDataAsset* CharacterConfigPrimaryDataAsset = nullptr);
+	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	void ReInitCharacterActions();
 
 
-    virtual const TArray<FName>& GetSpellNames() const
-    {
-        return SpellNames;
-    }
+	virtual const TArray<FName>& GetSpellNames() const
+	{
+		return SpellNames;
+	}
 
-    virtual void SetSpellNames(const TArray<FName>& NewSpellNames)
-    {
-        this->SpellNames = NewSpellNames;
-        ReInitCharacterActions();
-    }
+	virtual void SetSpellNames(const TArray<FName>& NewSpellNames)
+	{
+		this->SpellNames = NewSpellNames;
+		ReInitCharacterActions();
+	}
 
-    virtual void AppendSpellNames(FName NewSpellName)
-    {
-        this->SpellNames.Emplace(NewSpellName);
-        ReInitCharacterActions();
-    }
+	virtual void AppendSpellNames(FName NewSpellName)
+	{
+		this->SpellNames.Emplace(NewSpellName);
+		ReInitCharacterActions();
+	}
+
+
+	virtual AARPGAction* GetCurrentMeleeAttackCollection()
+	{
+		return CurrentMeleeAttackCollection;
+	}
+
+	TArray<AARPGCastAction*> GetAbilityActions() const {return AbilityActions;};
 };

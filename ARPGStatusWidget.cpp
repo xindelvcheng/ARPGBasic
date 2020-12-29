@@ -11,188 +11,235 @@
 #include "ARPGGameInstanceSubsystem.h"
 #include "ARPGWidgetsLab.h"
 #include "Components/ScrollBoxSlot.h"
-#include "ARPGGameItemsManagerComponent.h"
+#include "ARPGCollectionComponent.h"
+#include "ARPGMainCharacter.h"
 #include "Kismet/KismetTextLibrary.h"
+
 
 bool UARPGStatusWidget::Initialize()
 {
-    Super::Initialize();
+	Super::Initialize();
 
-    if (!ScrollBox_Notifications || !UniformGridPanel_Bag)
-    {
-        if (GEngine)
-        {
-            GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, TEXT("UARPGStatusWidget的蓝图类控件与C++中指定的不一致"));
-        }
-        return false;
-    }
-    if (UARPGBasicSettings::Get())
-    {
-        NotifyWidgetClass = LoadClass<UARPGNotifyWidget>(
-            nullptr, *UARPGBasicSettings::Get()->NotifyWidgetClass.ToSoftObjectPath().ToString());
+	if (!ScrollBox_Notifications || !HorizontalBox_GameItems || !HorizontalBox_GameItems)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, TEXT("UARPGStatusWidget的蓝图类控件与C++中指定的不一致"));
+		}
+		return false;
+	}
 
-        verifyf(NotifyWidgetClass, TEXT("没有设定NotifyWidgetClass、HPBarClass、HPBarClass"))
+	if (UARPGBasicSettings::Get())
+	{
+		if (!NotifyWidgetClass)
+		{
+			NotifyWidgetClass = UARPGBasicSettings::Get()->NotifyWidgetClass.LoadSynchronous();
+		}
+		if (!ItemWidgetClass)
+		{
+			ItemWidgetClass = UARPGBasicSettings::Get()->GameItemWidgetClass.LoadSynchronous();
+		}
+	}
 
-        GameItemWidgetClass = LoadClass<UGameItemWidget>(
-            nullptr, *UARPGBasicSettings::Get()->GameItemWidgetClass.ToSoftObjectPath().ToString());
 
-        verifyf(GameItemWidgetClass, TEXT("没有设定GameItemWidgetClass"));
-    }
+	ScrollBox_Notifications->SetRenderOpacity(0);
 
-    ScrollBox_Notifications->SetRenderOpacity(0);
+	TextBlock_Dialog->SetAutoWrapText(true);
+	TextBlock_Dialog->SetJustification(ETextJustify::Center);
 
-    TextBlock_Dialog->SetAutoWrapText(true);
-    TextBlock_Dialog->SetJustification(ETextJustify::Center);
-    return true;
+	return true;
+}
+
+void UARPGStatusWidget::NativePreConstruct()
+{
+	Super::NativePreConstruct();
+
+	
+}
+
+void UARPGStatusWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	
 }
 
 void UARPGStatusWidget::BeginDestroy()
 {
-    Super::BeginDestroy();
+	Super::BeginDestroy();
 }
-
 
 void UARPGStatusWidget::ShowNotify(UTexture2D* Icon, FText Title, FText Content)
 {
-    UARPGNotifyWidget* NotifyWidget = Cast<UARPGNotifyWidget>(
-        CreateWidget(UARPGGameInstanceSubsystem::GetMainCharacterController(GetWorld()), NotifyWidgetClass));
+	UARPGNotifyWidget* NotifyWidget = Cast<UARPGNotifyWidget>(
+		CreateWidget(UARPGGameInstanceSubsystem::GetMainCharacterController(GetWorld()), NotifyWidgetClass));
 
-    verifyf(NotifyWidget, TEXT("未指定NotifyWidgetClass"))
+	verifyf(NotifyWidget, TEXT("未指定NotifyWidgetClass"))
 
-    NotifyWidget->ShowNotify(Icon, Title, Content);
-    TArray<UWidget*> Widgets = ScrollBox_Notifications->GetAllChildren();
-    ScrollBox_Notifications->ClearChildren();
-    ScrollBox_Notifications->AddChild(NotifyWidget);
-    for (auto Widget : Widgets)
-    {
-        ScrollBox_Notifications->AddChild(Widget);
-    }
-    ScrollBox_Notifications->SetRenderOpacity(1);
+	NotifyWidget->ShowNotify(Icon, Title, Content);
+	TArray<UWidget*> Widgets = ScrollBox_Notifications->GetAllChildren();
+	ScrollBox_Notifications->ClearChildren();
+	ScrollBox_Notifications->AddChild(NotifyWidget);
+	for (auto Widget : Widgets)
+	{
+		ScrollBox_Notifications->AddChild(Widget);
+	}
+	ScrollBox_Notifications->SetRenderOpacity(1);
 
-    GetWorld()->GetTimerManager().ClearTimer(ClearNotifiesTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(ClearNotifiesTimerHandle);
 
-    if (!ClearNotifiesTimerDelegate.IsBound())
-    {
-        ClearNotifiesTimerDelegate.BindLambda([&]()
-        {
-            ScrollBox_Notifications->ClearChildren();
-            ScrollBox_Notifications->SetRenderOpacity(0);
-        });
-    }
+	if (!ClearNotifiesTimerDelegate.IsBound())
+	{
+		ClearNotifiesTimerDelegate.BindLambda([&]()
+		{
+			ScrollBox_Notifications->ClearChildren();
+			ScrollBox_Notifications->SetRenderOpacity(0);
+		});
+	}
 
-    GetWorld()->GetTimerManager().SetTimer(ClearNotifiesTimerHandle, ClearNotifiesTimerDelegate, 5, false);
+	GetWorld()->GetTimerManager().SetTimer(ClearNotifiesTimerHandle, ClearNotifiesTimerDelegate, 5, false);
 }
 
 void UARPGStatusWidget::BindToMainCharacter(AARPGMainCharacter* MainCharacter)
 {
-    verify(SmoothProgressBar_HP&&SmoothProgressBar_SP&&TextBlock_Coins);
+	verify(SmoothProgressBar_HP&&SmoothProgressBar_SP&&TextBlock_Coins);
 
-    //根据主角的当前属性进行初始化
-    SmoothProgressBar_HP->SetPercent(MainCharacter->GetCurrentHP(), MainCharacter->GetMaxHP());
-    SmoothProgressBar_SP->SetPercent(MainCharacter->GetCurrentSP(), MainCharacter->GetMaxSP());
-    TextBlock_Coins->SetText(UKismetTextLibrary::Conv_IntToText(MainCharacter->GetCoins()));
+	//初始化背包栏
+	HorizontalBox_GameItems->ClearChildren();
+	BagItemsNum = 0;
+	for (int i = 0; i < BagBlocksNum; ++i)
+	{
+		UCollectableItemWidget* ItemWidget = CreateWidget<UCollectableItemWidget>(
+            GetOwningPlayer(), ItemWidgetClass);
+		HorizontalBox_GameItems->AddChildToHorizontalBox(ItemWidget);
+	}
 
-    //绑定主角的属性更改事件
-    MainCharacter->OnCharacterPropertyChanged().AddDynamic(this, &UARPGStatusWidget::ProcessCharacterPropertiesChanged);
+	//初始化技能栏
+	UniformGridPanel_Spells->ClearChildren();
+	SpellsNum = 0;
 
+	for (int i = 0; i < SpellGridRowsNum * SpellGridColumnsNum; ++i)
+	{
+		UCollectableItemWidget* ItemWidget = CreateWidget<UCollectableItemWidget>(
+            GetOwningPlayer(), ItemWidgetClass);
+		UniformGridPanel_Spells->AddChildToUniformGrid(ItemWidget, i / SpellGridRowsNum, i % SpellGridColumnsNum);
+	}
 
-    //清空背包栏
-    UniformGridPanel_Bag->ClearChildren();
-    BagItemsNum = 0;
-    for (int i = 0; i < 9; ++i)
-    {
-        UGameItemWidget* GameItemWidget = Cast<UGameItemWidget>(CreateWidget(GetOwningPlayer(), GameItemWidgetClass));
-        UniformGridPanel_Bag->AddChildToUniformGrid(GameItemWidget, i / 3, i % 3);
-        GameItemWidget->SetVisibility(ESlateVisibility::Hidden);
-    }
+	//根据主角的当前属性进行初始化
+	SmoothProgressBar_HP->SetPercent(MainCharacter->GetCurrentHP(), MainCharacter->GetMaxHP());
+	SmoothProgressBar_SP->SetPercent(MainCharacter->GetCurrentSP(), MainCharacter->GetMaxSP());
+	TextBlock_Coins->SetText(UKismetTextLibrary::Conv_IntToText(MainCharacter->GetCoins()));
 
-    ItemsManagerComponent = MainCharacter->GetGameItemsManagerComponent();
-    //绑定背包事件
-    if (ItemsManagerComponent)
-    {
-        ItemsManagerComponent->OnBagChanged.AddDynamic(this, &UARPGStatusWidget::UpdateBagWidget);
-    }
-}
+	//绑定主角的属性更改事件
+	MainCharacter->OnCharacterPropertyChanged().AddDynamic(this, &UARPGStatusWidget::ProcessCharacterPropertiesChanged);
 
-void UARPGStatusWidget::UpdateBagWidget(EBagEventType BagEvent, AARPGGameItem* GameItem)
-{
-    if (!GameItem && BagEvent != EBagEventType::ReFlush)
-    {
-        UARPGGameInstanceSubsystem::PrintLogToScreen(TEXT("背包更新的GameItem为空"));
-        return;
-    }
-    switch (BagEvent)
-    {
-    case EBagEventType::ReFlush:
-        BagItemsNum = 0;
-        if (ItemsManagerComponent)
-        {
-            for (AARPGGameItem* GameItemsInBag : ItemsManagerComponent->GetAllGameItemsInBag())
-            {
-                UGameItemWidget* GameItemWidget = Cast<UGameItemWidget>(UniformGridPanel_Bag->GetChildAt(BagItemsNum));
-                GameItemWidget->SetupGameItemWidget(GameItemsInBag);
-                GameItemWidget->SetVisibility(ESlateVisibility::Visible);
-                BagItemsNum++;
-            }
-        }
-        for (int j = BagItemsNum; j < 9; ++j)
-        {
-            UGameItemWidget* GameItemWidget = Cast<UGameItemWidget>(UniformGridPanel_Bag->GetChildAt(j));
-            GameItemWidget->SetVisibility(ESlateVisibility::Hidden);
-        }
-        break;
-    case EBagEventType::AddNewItemToBag:
-        {
-            UGameItemWidget* GameItemWidget = Cast<UGameItemWidget>(UniformGridPanel_Bag->GetChildAt(BagItemsNum));
-            GameItemWidget->SetupGameItemWidget(GameItem);
-            GameItemWidget->SetVisibility(ESlateVisibility::Visible);
-            BagItemsNum++;
-        }
-        break;
-    case EBagEventType::ChangeItemNumbers:
-        if (GameItem->GetItemWidget())
-        {
-            GameItem->GetItemWidget()->SetupGameItemWidget(GameItem);
-        }
-        break;
-    case EBagEventType::SelectItemInBag:
-        if (GameItem->GetItemWidget())
-        {
-            GameItem->GetItemWidget()->BPFunc_OnWidgetBeSelected();
-        }
-        break;
-    case EBagEventType::DeselectItemInBag:
-        if (GameItem->GetItemWidget())
-        {
-            GameItem->GetItemWidget()->BPFunc_OnWidgetDeselected();
-        }
-        break;
-    case EBagEventType::UseItemInBag:
-        if (GameItem->GetItemWidget())
-        {
-            GameItem->GetItemWidget()->SetupGameItemWidget(GameItem);
-        }
-        break;
-    }
+	ItemsManagerComponent = MainCharacter->GetGameItemsManagerComponent();
+	//绑定背包事件
+	if (ItemsManagerComponent.IsValid())
+	{
+		ItemsManagerComponent->OnCollectionRefresh().AddLambda([&]()
+		{
+			GameItemUIMap.Empty();
+			BagItemsNum = 0;
+			if (ItemsManagerComponent.IsValid())
+			{
+				for (AARPGGameItem* GameItemInBag : ItemsManagerComponent->GetAllItems<AARPGGameItem>())
+				{
+					UCollectableItemWidget* ItemWidget = Cast<UCollectableItemWidget>(
+						HorizontalBox_GameItems->GetChildAt(BagItemsNum));
+					ItemWidget->BindToItem(GameItemInBag);
+					GameItemUIMap.Add(GameItemInBag, ItemWidget);
+					BagItemsNum++;
+				}
+			}
+			for (int j = BagItemsNum; j < BagBlocksNum; ++j)
+			{
+				UCollectableItemWidget* ItemWidget = Cast<UCollectableItemWidget>(
+					HorizontalBox_GameItems->GetChildAt(j));
+				ItemWidget->ClearItemWidgetAndUnbindDelegates();
+			}
+		});
+
+		ItemsManagerComponent->OnAddItemToCollection().AddLambda([&](AARPGCollectableObject* Item)
+		{
+			UCollectableItemWidget* GameItemWidget = Cast<UCollectableItemWidget>(
+				HorizontalBox_GameItems->GetChildAt(BagItemsNum));
+			AARPGGameItem* GameItem = Cast<AARPGGameItem>(Item);
+			GameItemWidget->BindToItem(GameItem);
+			GameItemUIMap.Add(GameItem, GameItemWidget);
+			BagItemsNum++;
+		});
+
+		ItemsManagerComponent->OnRemoveItemFromCollection().AddLambda([&](AARPGCollectableObject* Item)
+		{
+			AARPGGameItem* GameItem = Cast<AARPGGameItem>(Item);
+			UCollectableItemWidget* GameItemWidget = GameItemUIMap.FindRef(GameItem);
+			GameItemUIMap.Remove(GameItem);
+			GameItemWidget->ClearItemWidgetAndUnbindDelegates();
+		});
+	}
+	SpellsManagerComponent = MainCharacter->GetSpellsManagerComponent();
+	if (SpellsManagerComponent.IsValid())
+	{
+		SpellsManagerComponent->OnCollectionRefresh().AddLambda([&]()
+		{
+			SpellsNum = 0;
+			SpellUIMap.Empty();
+			if (SpellsManagerComponent.IsValid())
+			{
+				for (AARPGCastAction* Spell : SpellsManagerComponent->GetAllItems<AARPGCastAction>())
+				{
+					UCollectableItemWidget* ItemWidget = Cast<UCollectableItemWidget>(
+						UniformGridPanel_Spells->GetChildAt(SpellsNum));
+					ItemWidget->BindToItem(Spell);
+					SpellUIMap.Add(Spell, ItemWidget);
+					SpellsNum++;
+				}
+			}
+			for (int j = SpellsNum; j < SpellGridRowsNum * SpellGridColumnsNum; ++j)
+			{
+				UCollectableItemWidget* ItemWidget = Cast<UCollectableItemWidget>(
+					UniformGridPanel_Spells->GetChildAt(j));
+				ItemWidget->ClearItemWidgetAndUnbindDelegates();
+			}
+		});
+
+		SpellsManagerComponent->OnAddItemToCollection().AddLambda([&](AARPGCollectableObject* Item)
+		{
+			UCollectableItemWidget* SpellWidget = Cast<UCollectableItemWidget>(
+				UniformGridPanel_Spells->GetChildAt(SpellsNum));
+			SpellWidget->BindToItem(Item);
+			SpellUIMap.Add(Item, SpellWidget);
+			SpellsNum++;
+		});
+
+		SpellsManagerComponent->OnRemoveItemFromCollection().AddLambda([&](AARPGCollectableObject* Item)
+		{
+			AARPGGameItem* Spell = Cast<AARPGGameItem>(Item);
+			UCollectableItemWidget* GameItemWidget = SpellUIMap.FindRef(Spell);
+			SpellUIMap.Remove(Spell);
+			GameItemWidget->ClearItemWidgetAndUnbindDelegates();
+		});
+	}
 }
 
 
 void UARPGStatusWidget::ProcessCharacterPropertiesChanged(ECharacterProperty ChangedProperty, int CurrentValue,
                                                           int TotalValue, int DeltaValue)
 {
-    switch (ChangedProperty)
-    {
-    case ECharacterProperty::CurrentHP:
-        SmoothProgressBar_HP->SetPercent(CurrentValue, TotalValue);
-        break;
-    case ECharacterProperty::CurrentSP:
-        SmoothProgressBar_SP->SetPercent(CurrentValue, TotalValue);
-        break;
-    case ECharacterProperty::Coins:
-        TextBlock_Coins->SetText(UKismetTextLibrary::Conv_IntToText(CurrentValue));
-        break;
-    default:
-        break;
-    }
-    BPFunc_OnCharacterPropertiesChanged(ChangedProperty, CurrentValue, TotalValue, DeltaValue);
+	switch (ChangedProperty)
+	{
+	case ECharacterProperty::CurrentHP:
+		SmoothProgressBar_HP->SetPercent(CurrentValue, TotalValue);
+		break;
+	case ECharacterProperty::CurrentSP:
+		SmoothProgressBar_SP->SetPercent(CurrentValue, TotalValue);
+		break;
+	case ECharacterProperty::Coins:
+		TextBlock_Coins->SetText(UKismetTextLibrary::Conv_IntToText(CurrentValue));
+		break;
+	default:
+		break;
+	}
+	BPFunc_OnCharacterPropertiesChanged(ChangedProperty, CurrentValue, TotalValue, DeltaValue);
 }

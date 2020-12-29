@@ -4,9 +4,10 @@
 
 #include "CoreMinimal.h"
 
-#include "ARPGStatusWidget.h"
 #include "GameFramework/PlayerController.h"
 #include "ARPGPlayerController.generated.h"
+
+class UARPGStatusWidget;
 
 /**
  * 
@@ -20,6 +21,8 @@ class  AARPGPlayerController : public APlayerController
 
 public:
 	AARPGPlayerController();
+
+	virtual void BeginPlay() override;
 	
 	DECLARE_DELEGATE(FPlayerControllerPossesEvent);
 	FPlayerControllerPossesEvent OnPlayerControllerPossessed;

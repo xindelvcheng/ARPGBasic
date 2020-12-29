@@ -37,8 +37,11 @@ class UARPGLockTargetComponent : public UWidgetComponent
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGLockTargetComponent",meta=(AllowPrivateAccess))
 	TArray<AActor*> ActorsToIgnore;
 
-	TArray<AARPGCharacter*> Targets;
+	AARPGCharacter* LockingTarget;
 	TArray<AARPGCharacter*> LockedTargets;
+
+	UFUNCTION()
+	void BindToLockTargetDeath();
 
 public:	
 	// Sets default values for this component's properties
@@ -55,7 +58,7 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	AARPGCharacter* LockingTarget;
+	
 
 	TArray<AARPGCharacter*> CharactersInSight;
 
@@ -67,4 +70,7 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="ARPGLockTargetComponent")
     AARPGCharacter* DetectLockTarget();
+
+
+	virtual AARPGCharacter* GetLockingTarget();
 };

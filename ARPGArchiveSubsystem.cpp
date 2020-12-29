@@ -10,9 +10,9 @@
 #include "ARPGGameInstanceSubsystem.h"
 #include "APRGGameSaver.h"
 #include "ARPGBasicSettings.h"
-#include "GameItemWidget.h"
+#include "CollectableItemWidget.h"
 #include "ARPGPlayerController.h"
-#include "ARPGGameItemsManagerComponent.h"
+#include "ARPGCollectionComponent.h"
 
 #include "TranscendentalCombatComponent.h"
 #include "TranscendentalLawsSystem.h"
@@ -94,7 +94,7 @@ bool UARPGArchiveSubsystem::SaveArchive(FString ArchiveName, FSaveGameDelegate C
 		{
 			FGameItemArchiveStruct GameItemArchiveStruct = {
 				GameItem->GetClass(),
-				GameItem->GetNumber(),
+				GameItem->GetItemNumber(),
 				GameItem->GetIsInBag(),
 				GameItem->GetActorTransform()
 			};
@@ -260,12 +260,11 @@ void UARPGArchiveSubsystem::OnLevelLoaded()
 			{
 				if (GameItemArchiveStruct.IsInBag)
 				{
-					GameItem->SetNumber(GameItemArchiveStruct.Number);
-					Bag.Emplace(GameItem->PickUpGameItem(MainCharacter));
+					GameItem->SetItemNumber(GameItemArchiveStruct.Number);
+					MainCharacter->GetGameItemsManagerComponent()->AddItem(GameItem->PickUpGameItem(MainCharacter));
 				}
 			}
 		}
-		MainCharacter->GetGameItemsManagerComponent()->SetBag(Bag);
 		UE_LOG(LogTemp, Warning, TEXT("刷新物品和背包"));
 	}
 	UE_LOG(LogTemp, Warning, TEXT("存档加载完成"));

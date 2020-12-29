@@ -63,10 +63,9 @@ AARPGCastAction* AARPGCastAction::Create(AARPGCharacter* ActionOwnerCharacter,
 		Action->MaxDistance = CastActionDescription.MaxDistance;
 		Action->ActionMontages = CastAnimMontages;
 
-		Action->ActionDisplayName = CastActionDescription.ActionDisplayName;
-		Action->ItemIcon = CastActionDescription.ItemIcon;
-		Action->Introduction = CastActionDescription.Introduction;
-		Action->ActionDisplayName = CastActionDescription.ActionDisplayName;
+		Action->SetItemDisplayName(CastActionDescription.ActionDisplayName);
+		Action->SetItemIcon(CastActionDescription.ItemIcon);
+		Action->SetItemIntroduction(CastActionDescription.Introduction);
 
 		Action->FinishSpawning(FTransform{});
 		return Action;
@@ -87,7 +86,7 @@ AARPGCastAction* AARPGCastAction::Create(AARPGCharacter* ActionOwnerCharacter, c
 				SpellName,TEXT("QuerySpell")))
 			{
 				if (AARPGMeleeAttackAction* MeleeAction = Cast<AARPGMeleeAttackAction>(
-					ActionOwnerCharacter->GetCharacterCombatComponent()->CurrentMeleeAttackCollection))
+					ActionOwnerCharacter->GetCharacterCombatComponent()->GetCurrentMeleeAttackCollection()))
 				{
 					if (AARPGCastAction* CastAction = Create(ActionOwnerCharacter, *SpellDescription,
 					                                         MeleeAction->MeleeAttackMontages,
@@ -100,7 +99,7 @@ AARPGCastAction* AARPGCastAction::Create(AARPGCharacter* ActionOwnerCharacter, c
 		}
 	}
 
-	UARPGGameInstanceSubsystem::PrintLogToScreen(FString::Printf(TEXT("生成技能执行者%s错误，未进行适当配置"), *SpellName.ToString()));
+	UARPGGameInstanceSubsystem::PrintLogToScreen(FString::Printf(TEXT("生成技能执行者%s失败，配置错误"), *SpellName.ToString()),15,FColor::Red);
 	return nullptr;
 }
 
@@ -150,7 +149,7 @@ void AARPGCastAction::StartAllTask()
 {
 	for (UTask* Task : Tasks)
 	{
-		Task->ExecutedTask();
+		Task->ExecuteTask();
 	}
 }
 
@@ -190,7 +189,7 @@ void UARPGSimpleTask::OnTaskExecuted()
 
 	OwnerAction->GetWorldTimerManager().SetTimer(StartTimerHandle, FTimerDelegate::CreateLambda([&]()
 	{
-		Transform = LayoutDescription.CalculateAbsoluteTransform(OwnerAction->GetActorLocation());
+		Transform = LayoutDescription.CalculateAbsoluteTransform(OwnerAction->GetActorLocation(),OwnerAction->GetActorRotation());
 		SpecialEffectCreature = AARPGSpecialEffectCreature::Create(SpecialEffectCreatureClass, Transform,
 		                                                           OwnerAction->GetOwnerCharacter());
 	}), StartTime, false);
@@ -238,7 +237,7 @@ void UTask::OnTaskFinished()
 	OnTaskFinishedDelegate.ExecuteIfBound();
 }
 
-void UTask::ExecutedTask()
+void UTask::ExecuteTask()
 {
 	OnTaskExecuted();
 }

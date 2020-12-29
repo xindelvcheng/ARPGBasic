@@ -61,12 +61,15 @@ class AARPGCharacter : public ACharacter
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGBASIC",meta=(AllowPrivateAccess))
-	UCharacterConfigPrimaryDataAsset* CharacterConfigPDataAsset;
+	UCharacterConfigPrimaryDataAsset* CharacterConfigDataAsset;
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGBASIC",meta=(AllowPrivateAccess))
-	class UARPGGameItemsManagerComponent* GameItemsManagerComponent;
+	class UARPGBagComponent* GameItemsManagerComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AimComponent, meta = (AllowPrivateAccess))
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGBASIC",meta=(AllowPrivateAccess))
+	UARPGSpellsManagerComponent* SpellsManagerComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AimComponent", meta = (AllowPrivateAccess))
 	class UARPGAimComponent* AimComponent;
 
 public:
@@ -75,10 +78,15 @@ public:
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGBASIC",meta=(AllowPrivateAccess))
 	FName CharacterName = "DefaultCharacter";
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGBASIC",meta=(AllowPrivateAccess))
+	FText CharacterDisplayName;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	virtual void PreInitializeComponents() override;
+	
 	virtual void PostInitializeComponents() override;
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCharacterBasicComponent")
@@ -97,7 +105,7 @@ protected:
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
 	                         AActor* DamageCauser) override;
 
-	UPROPERTY(EditAnywhere,Category="ARPGCharacter")
+	UPROPERTY(EditAnywhere,Category="ARPGCharacter",meta=(EditCondition="!CharacterConfigDataAsset"))
 	TArray<UAnimMontage*> HitReactAnimMontages;
 
 	int HitReactIndex = 0;
@@ -139,14 +147,20 @@ public:
 	//此函数在AnimInstance中调用，用于播放脚步声
 	virtual void PlayFootStepSoundEffect(EGroundTypeEnum GroundType, float Volume = 1);
 
+	UFUNCTION(BlueprintCallable,Category="ARPGTest")
+	void AddToSpellPanel(int index);
+
 protected:
-	UFUNCTION()
-	void ReInitCharacterArtResources(UCharacterConfigPrimaryDataAsset* CharacterConfigDataAsset);
 
 public:
 	UFUNCTION(CallInEditor,Category="ARPGBASIC")
-	void RefreshWithCharacterConfigPDataAsset();
-	
+	void LoadCharacterConfigDataAsset();
+
+
+	virtual UCharacterConfigPrimaryDataAsset* GetCharacterConfigDataAsset()
+	{
+		return CharacterConfigDataAsset;
+	}
 
 	UCharacterStatusComponent* GetCharacterStatusComponent() const
 	{
@@ -158,11 +172,16 @@ public:
 		return CharacterLockTargetComponent;
 	}
 
-	UARPGGameItemsManagerComponent* GetGameItemsManagerComponent() const
+	UARPGBagComponent* GetGameItemsManagerComponent() const
 	{
 		return GameItemsManagerComponent;
 	}
 
+
+	virtual UARPGSpellsManagerComponent* GetSpellsManagerComponent()
+	{
+		return SpellsManagerComponent;
+	}
 
 	virtual UARPGAimComponent* GetAimComponent() const
 	{
@@ -260,9 +279,9 @@ public:
 
 
 	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
-	bool TryToUseAbility(const int AbilityIndex)
+	bool TryToUseAbility(AARPGCastAction* Spell)
 	{
-		return (CharacterCombatComponent->TryToUseAbility(AbilityIndex));
+		return CharacterCombatComponent->TryToCastSpell(Spell);
 	};
 
 	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")

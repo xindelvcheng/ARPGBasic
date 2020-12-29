@@ -5,7 +5,7 @@
 
 #include "ARPGAimComponent.h"
 #include "ARPGConfigSubsystem.h"
-#include "ARPGGameItemsManagerComponent.h"
+#include "ARPGCollectionComponent.h"
 #include "CharacterStatusComponent.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Camera/CameraComponent.h"

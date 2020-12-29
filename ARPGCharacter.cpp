@@ -6,7 +6,7 @@
 #include "particles/ParticleSystem.h"
 #include "ARPGConfigSubsystem.h"
 #include "ARPGGameInstanceSubsystem.h"
-#include "ARPGGameItemsManagerComponent.h"
+#include "ARPGCollectionComponent.h"
 #include "CharacterConfigPrimaryDataAsset.h"
 #include "CharacterStatusComponent.h"
 #include "TranscendentalCombatComponent.h"
@@ -26,12 +26,16 @@ AARPGCharacter::AARPGCharacter()
 
 	CharacterStatusComponent = CreateDefaultSubobject<UCharacterStatusComponent>("CharacterStatusComponent");
 	CharacterCombatComponent = CreateDefaultSubobject<UTranscendentalCombatComponent>("ARPGCharacterCombaComponent");
+	
 	AIPerceptionStimuliSourceComponent = CreateDefaultSubobject<UARPGAIPerceptionStimuliSourceComponent>(
 		"AIPerceptionStimuliSourceComponent");
+	
+	GameItemsManagerComponent = CreateDefaultSubobject<UARPGBagComponent>("GameItemsManagerComponent");
+	SpellsManagerComponent = CreateDefaultSubobject<UARPGSpellsManagerComponent>("SpellsManagerComponent");
+
 	CharacterLockTargetComponent = CreateDefaultSubobject<UARPGLockTargetComponent>("ARPGLockTargetComponent");
 	CharacterLockTargetComponent->SetupAttachment(RootComponent);
-	GameItemsManagerComponent = CreateDefaultSubobject<UARPGGameItemsManagerComponent>("GameItemsManagerComponent");
-
+	
 	AimComponent = CreateDefaultSubobject<UARPGAimComponent>(TEXT("AimComponent"));
 	AimComponent->SetupAttachment(RootComponent);
 
@@ -48,11 +52,13 @@ AARPGCharacter::AARPGCharacter()
 	}
 }
 
+
+
 FText AARPGCharacter::GetCharacterDisplayName() const
 {
-	if (CharacterConfigPDataAsset)
+	if (CharacterConfigDataAsset)
 	{
-		return CharacterConfigPDataAsset->CharacterDisplayName;
+		return CharacterConfigDataAsset->CharacterDisplayName;
 	}
 	return FText();
 }
@@ -63,11 +69,34 @@ void AARPGCharacter::BeginPlay()
 	Super::BeginPlay();
 }
 
+void AARPGCharacter::PreInitializeComponents()
+{
+	Super::PreInitializeComponents();
+
+	LoadCharacterConfigDataAsset();
+}
+
+
+void AARPGCharacter::LoadCharacterConfigDataAsset()
+{
+	if (CharacterConfigDataAsset)
+	{
+		CharacterName = CharacterConfigDataAsset->CharacterName;
+		CharacterDisplayName = CharacterConfigDataAsset->CharacterDisplayName;
+		HitReactAnimMontages = CharacterConfigDataAsset->HitReactAnimMontages;
+		FootstepSoundEffects = CharacterConfigDataAsset->FootstepSoundEffects;
+	}
+	else
+	{
+		UARPGGameInstanceSubsystem::PrintLogToScreen(
+            FString::Printf(TEXT("角色%s未设置CharacterConfigPDataAsset"), *GetName()));
+	}
+}
+
 void AARPGCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	RefreshWithCharacterConfigPDataAsset();
 }
 
 float AARPGCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
@@ -140,28 +169,6 @@ void AARPGCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-void AARPGCharacter::RefreshWithCharacterConfigPDataAsset()
-{
-	if (CharacterConfigPDataAsset)
-	{
-		CharacterName = CharacterConfigPDataAsset->CharacterName;
-		CharacterStatusComponent->ReInitCharacterProperties(CharacterConfigPDataAsset);
-		CharacterCombatComponent->ReInitCharacterActions(CharacterConfigPDataAsset);
-		ReInitCharacterArtResources(CharacterConfigPDataAsset);
-	}
-	else
-	{
-		UARPGGameInstanceSubsystem::PrintLogToScreen(
-			FString::Printf(TEXT("角色%s未设置CharacterConfigPDataAsset"), *GetName()));
-	}
-}
-
-void AARPGCharacter::ReInitCharacterArtResources(UCharacterConfigPrimaryDataAsset* CharacterConfigDataAsset)
-{
-	HitReactAnimMontages = CharacterConfigPDataAsset->HitReactAnimMontages;
-	FootstepSoundEffects = CharacterConfigPDataAsset->FootstepSoundEffects;
-}
-
 
 void AARPGCharacter::PlayFootStepSoundEffect(EGroundTypeEnum GroundType, float Volume)
 {
@@ -183,4 +190,9 @@ void AARPGCharacter::PlayFootStepSoundEffect(EGroundTypeEnum GroundType, float V
 		FootstepPlayLocation = GetActorLocation() + FVector{0, 0, -50};
 	}
 	UGameplayStatics::PlaySoundAtLocation(this, FootstepSoundEffect, FootstepPlayLocation, Volume);
+}
+
+void AARPGCharacter::AddToSpellPanel(int index)
+{
+	SpellsManagerComponent->AddItem(CharacterCombatComponent->GetAbilityActions()[index]);
 }

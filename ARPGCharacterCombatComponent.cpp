@@ -21,12 +21,107 @@ UARPGCharacterCombatComponent::UARPGCharacterCombatComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
+void UARPGCharacterCombatComponent::InitializeComponent()
+{
+	Super::InitializeComponent();
+
+	ReInitCharacterActions();
+}
+
+
+void UARPGCharacterCombatComponent::ReInitCharacterActions()
+{
+	MeleeAttackCollectionActions.Empty();
+	AbilityActions.Empty();
+	BuffActions.Empty();
+
+	if (bUseCharacterDataAssetInit)
+	{
+		if (!GetOwnerCharacter())
+		{
+			return;
+		}
+
+		if (!GetOwnerCharacter()->GetCharacterConfigDataAsset())
+		{
+			UARPGGameInstanceSubsystem::PrintLogToScreen(
+				FString::Printf(
+					TEXT("%s设置bUseCharacterDataAssetInit=true却没有配置CharacterConfigDataAsset"),
+					*GetOwnerCharacter()->GetName()));
+		}
+		MeleeAttacks = GetOwnerCharacter()->GetCharacterConfigDataAsset()->MeleeAttacks;
+		AbilityClasses = GetOwnerCharacter()->GetCharacterConfigDataAsset()->AbilityClasses;
+		BuffClasses = GetOwnerCharacter()->GetCharacterConfigDataAsset()->BuffClasses;
+		SpellNames = GetOwnerCharacter()->GetCharacterConfigDataAsset()->SpellNames;
+	}
+
+	AbilityClasses.RemoveAll([](auto e) { return !e; });
+	BuffClasses.RemoveAll([](auto e) { return !e; });
+
+	for (const auto MeleeAttackActionDescriptionStruct : MeleeAttacks)
+	{
+		if (AARPGMeleeAttackAction* Action = AARPGAction::CreateARPGAction<AARPGMeleeAttackAction>(
+			AARPGMeleeAttackAction::StaticClass(), GetOwnerCharacter(),
+			FActionFinishDelegate::CreateUObject(
+				this,
+				&UARPGCharacterCombatComponent::BindToActionFinished)))
+		{
+			Action->MeleeAttackMontages = MeleeAttackActionDescriptionStruct.MeleeAttackMontages;
+			MeleeAttackCollectionActions.Emplace(Action);
+		}
+		else
+		{
+			UARPGGameInstanceSubsystem::PrintLogToScreen(
+				FString::Printf(
+					TEXT("生成%s的AARPGMeleeAttackAction发生错误"), GetOwner() ? *GetOwner()->GetName() : *this->GetName()));
+		}
+	}
+	if (MeleeAttackCollectionActions.Num() > 0)
+	{
+		CurrentMeleeAttackCollection = MeleeAttackCollectionActions[0];
+	}
+	else if (GetOwnerCharacter()->GetCharacterConfigDataAsset())
+	{
+		UARPGGameInstanceSubsystem::PrintLogToScreen(
+			FString::Printf(TEXT("%s的DataAsset未配置MeleeAttacks"), *GetOwner()->GetName()));
+	}
+
+
+	for (auto SpellName : SpellNames)
+	{
+		if (AARPGMeleeAttackAction* MeleeAction = Cast<AARPGMeleeAttackAction>(CurrentMeleeAttackCollection))
+		{
+			AARPGCastAction* Action = AARPGCastAction::Create(GetOwnerCharacter(), SpellName,
+			                                                  FActionFinishDelegate::CreateUObject(
+				                                                  this,
+				                                                  &UARPGCharacterCombatComponent::BindToActionFinished));
+			AbilityActions.Emplace(Action);
+		}
+	}
+
+
+	for (const auto ActionClass : BuffClasses)
+	{
+		if (ActionClass)
+		{
+			BuffActions.Emplace(AARPGAction::CreateARPGAction<AARPGBuff>(ActionClass, GetOwnerCharacter(),
+			                                                             FActionFinishDelegate::CreateUObject(
+				                                                             this,
+				                                                             &UARPGCharacterCombatComponent::BindToActionFinished)));
+		}
+		else
+		{
+			UARPGGameInstanceSubsystem::PrintLogToScreen(
+				FString::Printf(TEXT("%s的Action存在NULL"), *GetOwner()->GetName()));
+		}
+	}
+}
+
+
 // Called when the game starts
 void UARPGCharacterCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	ReInitCharacterActions();
 }
 
 
@@ -40,7 +135,7 @@ void UARPGCharacterCombatComponent::TickComponent(float DeltaTime, ELevelTick Ti
 	// ...
 }
 
-void UARPGCharacterCombatComponent::BindToOnActionFinished(AARPGAction* Action)
+void UARPGCharacterCombatComponent::BindToActionFinished(AARPGAction* Action)
 {
 	if (ExclusiveGroupActionsMap.FindRef(Action->GetActionExclusiveGroupID()) == Action)
 	{
@@ -66,43 +161,45 @@ bool UARPGCharacterCombatComponent::TryToMeleeAttack()
 	return false;
 }
 
-bool UARPGCharacterCombatComponent::TryToUseAbility(int AbilityIndex = 0)
+bool UARPGCharacterCombatComponent::TryToCastSpell(AARPGCastAction* Spell)
 {
-	if (IsRigid || !AbilityActions.IsValidIndex(AbilityIndex) || ExclusiveGroupActionsMap.Contains(
-		AbilityActions[AbilityIndex]->GetActionExclusiveGroupID()))
+	if (IsRigid || !Spell || ExclusiveGroupActionsMap.Contains(Spell->GetActionExclusiveGroupID()))
 	{
 		return false;
 	}
 
-	AARPGCastAction* Ability = AbilityActions[AbilityIndex];
-
 	UARPGAimComponent* AimComponent = GetOwnerCharacter()->GetAimComponent();
 	if (AimComponent && AimComponent->IsAimTargetResultIsValid())
 	{
-		Ability->SetActorTransform(AimComponent->GetAimTargetActor()->GetActorTransform());
+		Spell->SetActorTransform(AimComponent->GetAimTargetActor()->GetActorTransform());
 	}
 	else
 	{
 		UARPGLockTargetComponent* LockTargetComponent = GetOwnerCharacter()->GetCharacterLockTargetComponent();
-		if (AARPGCharacter* LockTarget = LockTargetComponent->DetectLockTarget())
+
+		if (AARPGCharacter* LockingTarget = LockTargetComponent->GetLockingTarget())
 		{
-			Ability->SetActorTransform(LockTarget->GetActorTransform());
+			Spell->SetActorTransform(LockingTarget->GetActorTransform());
+		}
+		else if (AARPGCharacter* LockTarget = LockTargetComponent->DetectLockTarget())
+		{
+			Spell->SetActorTransform(LockTarget->GetActorTransform());
 		}
 		else
 		{
-			Ability->SetActorTransform(
+			Spell->SetActorTransform(
 				UARPGGameInstanceSubsystem::GetActorNearPositionTransform(GetOwnerCharacter(),
 				                                                          {
-					                                                          Ability->GetMaxDistance(), 0, 0
+					                                                          Spell->GetMaxDistance(), 0, 0
 				                                                          }, FRotator{}));
 		}
 	}
 
 
-	if (Ability->TryToActivateAction(GetOwnerCharacter()))
+	if (Spell->TryToActivateAction(GetOwnerCharacter()))
 	{
-		ExclusiveGroupActionsMap.Add(Ability->GetActionExclusiveGroupID(), Ability);
-		CurrentActiveAction = Ability;
+		ExclusiveGroupActionsMap.Add(Spell->GetActionExclusiveGroupID(), Spell);
+		CurrentActiveAction = Spell;
 		return true;
 	}
 	return false;
@@ -157,81 +254,4 @@ bool UARPGCharacterCombatComponent::ActivateBuff(int BuffIndex, float Duration, 
 		return true;
 	}
 	return false;
-}
-
-void UARPGCharacterCombatComponent::ReInitCharacterActions(
-	UCharacterConfigPrimaryDataAsset* CharacterConfigPrimaryDataAsset)
-{
-	MeleeAttackCollectionActions.Empty();
-	RemoteAttackActions.Empty();
-	AbilityActions.Empty();
-	BuffActions.Empty();
-
-	if (CharacterConfigPrimaryDataAsset)
-	{
-		MeleeAttacks = CharacterConfigPrimaryDataAsset->MeleeAttacks;
-		AbilityClasses = CharacterConfigPrimaryDataAsset->AbilityClasses;
-		BuffClasses = CharacterConfigPrimaryDataAsset->BuffClasses;
-		SpellNames = CharacterConfigPrimaryDataAsset->SpellNames;
-	}
-
-	AbilityClasses.RemoveAll([](auto e) { return !e; });
-	BuffClasses.RemoveAll([](auto e) { return !e; });
-
-	for (const auto MeleeAttackActionDescriptionStruct : MeleeAttacks)
-	{
-		if (AARPGMeleeAttackAction* Action = AARPGAction::CreateARPGAction<AARPGMeleeAttackAction>(
-			AARPGMeleeAttackAction::StaticClass(), GetOwnerCharacter(),
-			FActionFinishDelegate::CreateUObject(
-				this,
-				&UARPGCharacterCombatComponent::BindToOnActionFinished)))
-		{
-			Action->MeleeAttackMontages = MeleeAttackActionDescriptionStruct.MeleeAttackMontages;
-			MeleeAttackCollectionActions.Emplace(Action);
-		}
-		else
-		{
-			UARPGGameInstanceSubsystem::PrintLogToScreen(
-				FString::Printf(TEXT("生成%s的AARPGMeleeAttackAction发生错误"), *GetOwner()->GetName()));
-		}
-	}
-	if (MeleeAttackCollectionActions.Num() > 0)
-	{
-		CurrentMeleeAttackCollection = MeleeAttackCollectionActions[0];
-	}
-	else if (CharacterConfigPrimaryDataAsset)
-	{
-		UARPGGameInstanceSubsystem::PrintLogToScreen(
-			FString::Printf(TEXT("%s的DataAsset未配置MeleeAttacks"), *GetOwner()->GetName()));
-	}
-
-
-	for (auto SpellName : SpellNames)
-	{
-		if (AARPGMeleeAttackAction* MeleeAction = Cast<AARPGMeleeAttackAction>(CurrentMeleeAttackCollection))
-		{
-			AARPGCastAction* Action = AARPGCastAction::Create(GetOwnerCharacter(), SpellName,
-			                                                  FActionFinishDelegate::CreateUObject(
-				                                                  this,
-				                                                  &UARPGCharacterCombatComponent::BindToOnActionFinished));
-			AbilityActions.Emplace(Action);
-		}
-	}
-
-
-	for (const auto ActionClass : BuffClasses)
-	{
-		if (ActionClass)
-		{
-			BuffActions.Emplace(AARPGAction::CreateARPGAction<AARPGBuff>(ActionClass, GetOwnerCharacter(),
-			                                                             FActionFinishDelegate::CreateUObject(
-				                                                             this,
-				                                                             &UARPGCharacterCombatComponent::BindToOnActionFinished)));
-		}
-		else
-		{
-			UARPGGameInstanceSubsystem::PrintLogToScreen(
-				FString::Printf(TEXT("%s的Action存在NULL"), *GetOwner()->GetName()));
-		}
-	}
 }

@@ -22,8 +22,6 @@ class  AARPGMainCharacter : public AARPGCharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
-
-	
 	
 public:
 	// Sets default values for this character's properties

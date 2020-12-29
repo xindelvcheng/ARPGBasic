@@ -22,6 +22,9 @@ class TESTPROJECT_API UARPGAimComponent : public UARPGSceneComponent
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGAimComponent",meta=(AllowPrivateAccess))
 	AAimTargetActor* AimTargetActor;
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGAimComponent",meta=(AllowPrivateAccess))
+	TSubclassOf<AAimTargetActor> AimPromptActorClass;
+
 	bool bAimTargetResultIsValid;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGAimComponent",meta=(AllowPrivateAccess))

@@ -26,22 +26,13 @@ void UARPGActorComponent::SetOwnerCharacter(AARPGCharacter* NewOwner)
 void UARPGActorComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
 }
 
 void UARPGActorComponent::InitializeComponent()
 {
 	Super::InitializeComponent();
 
-	if (AARPGCharacter* Character = Cast<AARPGCharacter>(GetOwner()))
-	{
-		SetOwnerCharacter(Character);
-	}
-	else
-	{
-		UARPGGameInstanceSubsystem::PrintLogToScreen(
-            FString::Printf(TEXT("%s的Owner和Instigator都未指定为一个ARPGCharacter，可能会引起错误！"), *GetFullName()));
-	}
+	OwnerCharacter = GetOwner<AARPGCharacter>();
 }
 
 

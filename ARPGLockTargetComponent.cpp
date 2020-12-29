@@ -10,11 +10,12 @@
 #include "Camera/CameraComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 
+
 // Sets default values for this component's properties
 UARPGLockTargetComponent::UARPGLockTargetComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	
+
 	// ...
 	if (UARPGBasicSettings::Get())
 	{
@@ -53,46 +54,66 @@ void UARPGLockTargetComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 AARPGCharacter* UARPGLockTargetComponent::ToggleLockTarget()
 {
-	if (DetectLockTarget())
+	AARPGCharacter* CandidateTarget = DetectLockTarget();
+	if (CandidateTarget)
 	{
+		LockingTarget = CandidateTarget;
 		LockedTargets.Emplace(LockingTarget);
 		LockingTarget->GetCharacterLockTargetComponent()->GetWidget()->SetVisibility(ESlateVisibility::Visible);
 		SetComponentTickEnabled(true);
+
+		LockingTarget->GetCharacterStatusComponent()->OnCharacterDeath.AddDynamic(
+			this, &UARPGLockTargetComponent::BindToLockTargetDeath);
 		return LockingTarget;
 	}
 	
-
 	//未找到下一个满足条件的可锁定对象，视为玩家想解除当前锁定
-	if (LockingTarget && LockingTarget->GetCharacterLockTargetComponent())
+	if (LockingTarget && LockingTarget->GetCharacterLockTargetComponent() && LockingTarget->
+            GetCharacterLockTargetComponent()->GetWidget())
 	{
 		LockingTarget->GetCharacterLockTargetComponent()->GetWidget()->SetVisibility(ESlateVisibility::Hidden);
 		LockingTarget = nullptr;
 		SetComponentTickEnabled(false);
+		LockedTargets.Empty();
 	}
-	LockedTargets.Empty();
+	
 	return nullptr;
+}
+
+
+void UARPGLockTargetComponent::BindToLockTargetDeath()
+{
+	LockingTarget->GetCharacterLockTargetComponent()->GetWidget()->SetVisibility(ESlateVisibility::Hidden);
+	LockingTarget = nullptr;
+	SetComponentTickEnabled(false);
 }
 
 AARPGCharacter* UARPGLockTargetComponent::DetectLockTarget()
 {
 	UKismetSystemLibrary::BoxTraceMulti(GetWorld(), AttachedCharacter->GetActorLocation(),
-                                                  AttachedCharacter->GetActorLocation()+ AttachedCharacter->GetActorForwardVector()* DetectDistance,
-                                                  DetectHalfSize,
-                                                  AttachedCharacter->GetActorRotation()
-                                                  , ETraceTypeQuery::TraceTypeQuery2, false,
-                                                  ActorsToIgnore,
-                                                  bDrawDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
-                                                  OutHits, true);
+	                                    AttachedCharacter->GetActorLocation() + AttachedCharacter->
+	                                    GetActorForwardVector() * DetectDistance,
+	                                    DetectHalfSize,
+	                                    AttachedCharacter->GetActorRotation()
+	                                    , ETraceTypeQuery::TraceTypeQuery2, false,
+	                                    ActorsToIgnore,
+	                                    bDrawDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
+	                                    OutHits, true);
 
 
 	for (const FHitResult HitResult : OutHits)
 	{
 		const auto CandidateTarget = Cast<AARPGCharacter>(HitResult.GetActor());
-		if (!LockedTargets.Contains(CandidateTarget) && CandidateTarget && CandidateTarget!=AttachedCharacter && CandidateTarget->GetCharacterLockTargetComponent())
+		if (!LockedTargets.Contains(CandidateTarget) && CandidateTarget && CandidateTarget != AttachedCharacter &&
+			CandidateTarget->GetCharacterLockTargetComponent())
 		{
-			LockingTarget = CandidateTarget;
-			return LockingTarget;
+			return CandidateTarget;
 		}
 	}
 	return nullptr;
+}
+
+AARPGCharacter* UARPGLockTargetComponent::GetLockingTarget()
+{
+	return LockingTarget;
 }

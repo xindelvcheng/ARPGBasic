@@ -8,7 +8,7 @@
 #include "ARPGGamingMenuWidget.h"
 #include "ARPGStatusWidget.h"
 #include "ARPGWidgetsLab.h"
-#include "GameItemWidget.h"
+#include "CollectableItemWidget.h"
 #include "Engine/DataTable.h"
 #include "Engine/DeveloperSettings.h"
 #include "Sound/SoundCue.h"
@@ -46,7 +46,7 @@ public:
     TSoftClassPtr<UARPGNotifyWidget> NotifyWidgetClass;
 
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
-    TSoftClassPtr<UGameItemWidget> GameItemWidgetClass;
+    TSoftClassPtr<UCollectableItemWidget> GameItemWidgetClass;
 
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
     TSoftClassPtr<UARPGPromptWidget> PromptWidgetClass;

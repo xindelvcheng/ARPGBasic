@@ -3,57 +3,57 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ARPGGameItem.h"
 #include "Blueprint/UserWidget.h"
 
 
-#include "GameItemWidget.generated.h"
+#include "CollectableItemWidget.generated.h"
 
+class AARPGCollectableObject;
 class UImage;
 class UTextBlock;
 
 /**
- * 
+ * 用于显示物品的小窗体，若未绑定物体，其是不可见的
  */
 UCLASS()
-class  UGameItemWidget : public UUserWidget
+class  UCollectableItemWidget : public UUserWidget
 {
 	GENERATED_BODY()
+
+	TArray<FDelegateHandle> DelegateHandles;
 
 protected:
 	virtual bool Initialize() override;
 	
 	UPROPERTY(VisibleAnywhere,BlueprintReadWrite,Category="GameItemWidget",meta=(BindWidget))
-	UImage* Image_Icon;
+	UImage* Image_ItemIcon;
 	
 	UPROPERTY(VisibleAnywhere,BlueprintReadWrite,Category="GameItemWidget",meta=(BindWidget))
 	UImage* Image_BeSelectedIcon;
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadWrite,Category="GameItemWidget",meta=(BindWidget))
-	UTextBlock* TextBlock_Number;
+	UTextBlock* TextBlock_ItemNum;
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadWrite,Category="GameItemWidget",meta=(BindWidget))
-	UTextBlock* TextBlock_GameItemDisplayName;
+	UTextBlock* TextBlock_ItemDisplayName;
 
 	UPROPERTY(BlueprintReadOnly,Category="GameItemWidget")
-	TWeakObjectPtr<AARPGGameItem> GameItem;
+	TWeakObjectPtr<AARPGCollectableObject> Item;
+	
+	virtual void OnWidgetBeSelected();
+
+	virtual void OnWidgetDeselected();
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void SetupGameItemWidget(AARPGGameItem* NewGameItem);
+	void BindToItem(AARPGCollectableObject* NewGameItem);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "GameItemWidget")
+	UFUNCTION(BlueprintImplementableEvent, DisplayName="OnWidgetBeSelected",Category = "GameItemWidget")
 	void BPFunc_OnWidgetBeSelected();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "GameItemWidget")
+	UFUNCTION(BlueprintImplementableEvent,DisplayName="OnWidgetDeselected", Category = "GameItemWidget")
 	void BPFunc_OnWidgetDeselected();
 	
-	UFUNCTION(BlueprintCallable,DisplayName="SelectGameItemWidget", Category = "GameItemWidget")
-	void SelectGameItemWidget();
 
-	UFUNCTION(BlueprintCallable,DisplayName="DeselectGameItemWidget", Category = "GameItemWidget")
-	void DeselectGameItemWidget();
-	
+	void ClearItemWidgetAndUnbindDelegates();
 };
-
-typedef UGameItemWidget USpellWidget;

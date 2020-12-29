@@ -5,21 +5,15 @@
 #include "GameFramework/Actor.h"
 
 #include "APRGGameSaver.h"
-#include "CharacterStatusComponent.h"
 #include "CoreMinimal.h"
 
-#include <vector>
-
-
-#include "ARPGMainCharacter.h"
-#include "ARPGPlayerController.h"
-
-#include "ARPGStatusWidget.h"
-#include "ARPGGameItem.h"
 
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "ARPGGameInstanceSubsystem.generated.h"
 
+class UARPGStatusWidget;
+class AARPGPlayerController;
+class AARPGMainCharacter;
 class USaveGame;
 class UActorMoveRecord;
 
@@ -84,26 +78,17 @@ public:
 	))
 	static UARPGStatusWidget* GetMainCharacterStatusWidget(const UObject* WorldContextObject);
 
-	void SetMainCharacter(AARPGMainCharacter* NewMainCharacter) { MainCharacter = NewMainCharacter; }
+	void SetMainCharacter(AARPGMainCharacter* NewMainCharacter);
 
-	void SetMainCharacterController(AARPGPlayerController* NewMainCharacterController)
-	{
-		MainCharacterController = NewMainCharacterController;
-	}
+	void SetMainCharacterController(AARPGPlayerController* NewMainCharacterController);
 
-	void SetMainCharacterStatusWidget(UARPGStatusWidget* NewARPGStatusWidget) { StatusWidget = NewARPGStatusWidget; }
+	void SetMainCharacterStatusWidget(UARPGStatusWidget* NewARPGStatusWidget);
 
 	DECLARE_MULTICAST_DELEGATE(FSetupPlayerEvent)
 	FSetupPlayerEvent OnPlayerSetupEnd;
 
 	void SetupPlayer(AARPGMainCharacter* NewMainCharacter, AARPGPlayerController* NewMainCharacterController,
-	                 UARPGStatusWidget* NewARPGStatusWidget)
-	{
-		MainCharacter = NewMainCharacter;
-		MainCharacterController = NewMainCharacterController;
-		StatusWidget = NewARPGStatusWidget;
-		OnPlayerSetupEnd.Broadcast();
-	}
+	                 UARPGStatusWidget* NewARPGStatusWidget);
 
 
 	UFUNCTION(BlueprintCallable,meta=(WorldContext=WorldContextObject))
@@ -184,19 +169,7 @@ public:
 
 	template <typename T>
 	static T* SpawnActor(UClass* ActorClass, FTransform Transform, AARPGCharacter* OwnerCharacter,
-	                     FActorInitializeDelegate ActorInitializeDelegate = {})
-	{
-		if (T* Actor = OwnerCharacter->GetWorld()->SpawnActorDeferred<T>(
-			ActorClass, Transform, OwnerCharacter, OwnerCharacter,
-			ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
-		{
-			ActorInitializeDelegate.ExecuteIfBound(Actor);
-			Actor->FinishSpawning(Transform);
-			return Actor;
-		}
-		PrintLogToScreen(FString::Printf(TEXT("%s生成Actor出现错误"), *OwnerCharacter->GetName()));
-		return nullptr;
-	}
+	                     FActorInitializeDelegate ActorInitializeDelegate = {});
 
 	template <typename T>
 	static T* SpawnActor(AARPGCharacter* OwnerCharacter, FTransform Transform = {})
@@ -204,6 +177,8 @@ public:
 		return SpawnActor<T>(T::StaticClass(), Transform, OwnerCharacter);
 	}
 };
+
+
 
 
 UCLASS()

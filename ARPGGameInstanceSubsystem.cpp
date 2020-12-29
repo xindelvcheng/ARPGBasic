@@ -11,9 +11,10 @@
 
 #include "APRGGameSaver.h"
 #include "ARPGBasicSettings.h"
-#include "GameItemWidget.h"
+#include "ARPGCharacter.h"
+#include "CollectableItemWidget.h"
 #include "ARPGPlayerController.h"
-#include "ARPGGameItemsManagerComponent.h"
+#include "ARPGCollectionComponent.h"
 
 #include "TranscendentalCombatComponent.h"
 #include "TranscendentalLawsSystem.h"
@@ -88,6 +89,30 @@ UARPGStatusWidget* UARPGGameInstanceSubsystem::GetMainCharacterStatusWidget(cons
 	return nullptr;
 }
 
+void UARPGGameInstanceSubsystem::SetMainCharacter(AARPGMainCharacter* NewMainCharacter)
+{
+	MainCharacter = NewMainCharacter; 
+}
+
+void UARPGGameInstanceSubsystem::SetMainCharacterController(AARPGPlayerController* NewMainCharacterController)
+{
+	MainCharacterController = NewMainCharacterController;
+}
+
+void UARPGGameInstanceSubsystem::SetMainCharacterStatusWidget(UARPGStatusWidget* NewARPGStatusWidget)
+{
+	StatusWidget = NewARPGStatusWidget;
+}
+
+void UARPGGameInstanceSubsystem::SetupPlayer(AARPGMainCharacter* NewMainCharacter,
+	AARPGPlayerController* NewMainCharacterController, UARPGStatusWidget* NewARPGStatusWidget)
+{
+	MainCharacter = NewMainCharacter;
+	MainCharacterController = NewMainCharacterController;
+	StatusWidget = NewARPGStatusWidget;
+	OnPlayerSetupEnd.Broadcast();
+}
+
 void UARPGGameInstanceSubsystem::ShowNotify(const UObject* WorldContextObject, UTexture2D* Icon, FText Title,
                                             FText Content)
 {
@@ -104,6 +129,22 @@ void UARPGGameInstanceSubsystem::ShowNotify(const UObject* WorldContextObject, U
 			PrintLogToScreen(UKismetTextLibrary::Conv_TextToString(Title));
 		}
 	}
+}
+
+template <typename T>
+T* UARPGGameInstanceSubsystem::SpawnActor(UClass* ActorClass, FTransform Transform, AARPGCharacter* OwnerCharacter,
+    FActorInitializeDelegate ActorInitializeDelegate)
+{
+	if (T* Actor = OwnerCharacter->GetWorld()->SpawnActorDeferred<T>(
+            ActorClass, Transform, OwnerCharacter, OwnerCharacter,
+            ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
+	{
+		ActorInitializeDelegate.ExecuteIfBound(Actor);
+		Actor->FinishSpawning(Transform);
+		return Actor;
+	}
+	PrintLogToScreen(FString::Printf(TEXT("%s生成Actor出现错误"), *OwnerCharacter->GetName()));
+	return nullptr;
 }
 
 void UARPGGameInstanceSubsystem::RandomChoice(float chance, EChoice& Choice)

@@ -29,23 +29,21 @@ AARPGGameItem::AARPGGameItem()
 		{
 			PromptFX->SetTemplate(BasicSettings->DefaultGameItemPickUpPromptVisualEffect.LoadSynchronous());
 		}
-
-		if (!ItemIcon)
-		{
-			ItemIcon = BasicSettings->DefaultGameItemIcon.LoadSynchronous();
-		}
 	}
 	
 	BillboardComponent = CreateDefaultSubobject<UBillboardComponent>(TEXT("BillboardComponent"));
 	BillboardComponent->SetupAttachment(RootComponent);
-	BillboardComponent->SetSprite(ItemIcon);
+	if (!BillboardComponent->Sprite)
+	{
+		BillboardComponent->SetSprite(GetItemIcon());
+	}
 }
 
 // Called when the game starts or when spawned
 void AARPGGameItem::BeginPlay()
 {
 	Super::BeginPlay();
-	if (!PromptFX->Template || !ItemIcon)
+	if (!PromptFX->Template || !GetItemIcon())
 	{
 		UARPGGameInstanceSubsystem::PrintLogToScreen(FString::Printf(TEXT("%s道具未指定美术资源"), *GetName()));
 	}
@@ -81,8 +79,13 @@ void AARPGGameItem::OnBeUsed(AARPGCharacter* User)
 	
 }
 
-void AARPGGameItem::UseGameItem(AARPGCharacter* User)
+bool AARPGGameItem::TryToUseGameItem(AARPGCharacter* User)
 {
-	OnBeUsed(User);
-	BPFunc_OnBeUsed(User);
+	if (GetItemNumber() > 0)
+	{
+		OnBeUsed(User);
+		BPFunc_OnBeUsed(User);
+		return true;
+	}
+	return false;
 }

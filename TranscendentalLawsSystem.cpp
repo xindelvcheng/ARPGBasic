@@ -52,23 +52,23 @@ void ATranscendentalLawsSystem::Init(AARPGCharacter* NewAttachedCharacter,
 
 void ATranscendentalLawsSystem::Activate()
 {
-	checkf(AttachedCharacter.IsValid()&&AttachedCharacterCombatComponent.IsValid(), TEXT("错误，激活仙道时未指定用户"))
-
-	if (MeleeAttackCollectionActions.IsValidIndex(0))
-	{
-		AttachedCharacterCombatComponent->MeleeAttackCollectionActions.Emplace(MeleeAttackCollectionActions[0]);
-		AttachedCharacterCombatComponent->CurrentMeleeAttackCollection = MeleeAttackCollectionActions[0];
-	}
+	// checkf(AttachedCharacter.IsValid()&&AttachedCharacterCombatComponent.IsValid(), TEXT("错误，激活仙道时未指定用户"))
+	//
+	// if (MeleeAttackCollectionActions.IsValidIndex(0))
+	// {
+	// 	AttachedCharacterCombatComponent->MeleeAttackCollectionActions.Emplace(MeleeAttackCollectionActions[0]);
+	// 	AttachedCharacterCombatComponent->CurrentMeleeAttackCollection = MeleeAttackCollectionActions[0];
+	// }
 }
 
 void ATranscendentalLawsSystem::DeActivate()
 {
-	AttachedCharacterCombatComponent->MeleeAttackCollectionActions.RemoveAll([&](const AARPGAction* Action)-> bool
-	{
-		return MeleeAttackCollectionActions.Contains(Action);
-	});
-	AttachedCharacterCombatComponent->CurrentMeleeAttackCollection = AttachedCharacterCombatComponent->
-		MeleeAttackCollectionActions[0];
+	// AttachedCharacterCombatComponent->MeleeAttackCollectionActions.RemoveAll([&](const AARPGAction* Action)-> bool
+	// {
+	// 	return MeleeAttackCollectionActions.Contains(Action);
+	// });
+	// AttachedCharacterCombatComponent->CurrentMeleeAttackCollection = AttachedCharacterCombatComponent->
+	// 	MeleeAttackCollectionActions[0];
 }
 
 void ATranscendentalLawsSystem::BeginPlay()
@@ -86,7 +86,7 @@ void ATranscendentalLawsSystem::SpawnActionActors(const TArray<TSubclassOf<AARPG
 			AARPGAction* Action = AARPGAction::CreateARPGAction<AARPGAction>(
             ActionClass, AttachedCharacter.Get(), FActionFinishDelegate::CreateUObject(
                 AttachedCharacterCombatComponent.Get(),
-                &UARPGCharacterCombatComponent::BindToOnActionFinished));
+                &UARPGCharacterCombatComponent::BindToActionFinished));
 			ActionActors.Add(Action);
 		}else
 		{

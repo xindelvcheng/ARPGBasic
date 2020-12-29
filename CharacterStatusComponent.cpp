@@ -12,6 +12,13 @@
 #include "ARPGSpecialEffectsSubsystem.h"
 
 
+void UCharacterStatusComponent::InitializeComponent()
+{
+    Super::InitializeComponent();
+
+    ReInitCharacterProperties();
+}
+
 void UCharacterStatusComponent::ReInitCharacterProperties(UCharacterConfigPrimaryDataAsset* CharacterConfigDataAsset)
 {
     if (CharacterConfigDataAsset)
@@ -51,18 +58,18 @@ void UCharacterStatusComponent::SetCurrentHP(const int NewCurrentHP)
     if (this->CurrentHP <= 0)
     {
         OnCharacterDeath.Broadcast();
-        if (AttachCharacter)
+        if (GetOwnerCharacter())
         {
-            AttachCharacter->SetCanBeDamaged(false);
-            if (AttachCharacter->GetMesh())
+            GetOwnerCharacter()->SetCanBeDamaged(false);
+            if (GetOwnerCharacter()->GetMesh())
             {
-                AttachCharacter->GetMesh()->PlayAnimation(DeathAnimation, false);
+                GetOwnerCharacter()->GetMesh()->PlayAnimation(DeathAnimation, false);
             }
 
             UARPGSpecialEffectsSubsystem* SpecialEffectsSubsystem = UARPGSpecialEffectsSubsystem::Get(GetWorld());
             if (AARPGMainCharacter* MainCharacter = UARPGGameInstanceSubsystem::GetMainCharacter(GetWorld()))
             {
-                if (AttachCharacter != MainCharacter)
+                if (GetOwnerCharacter() != MainCharacter)
                 {
                     MainCharacter->UpdateCoins(Coins);
                     if (SpecialEffectsSubsystem && SpecialEffectsSubsystem->PositiveSoundEffects.IsValidIndex(0))
@@ -72,11 +79,11 @@ void UCharacterStatusComponent::SetCurrentHP(const int NewCurrentHP)
                 }
             }
 
-            if (AttachCharacter && SpecialEffectsSubsystem && SpecialEffectsSubsystem->NegativeVisualEffects.
+            if (GetOwnerCharacter() && SpecialEffectsSubsystem && SpecialEffectsSubsystem->NegativeVisualEffects.
                 IsValidIndex(0))
             {
                 UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SpecialEffectsSubsystem->NegativeVisualEffects[0],
-                                                         AttachCharacter->GetActorLocation());
+                                                         GetOwnerCharacter()->GetActorLocation());
             }
             FTimerHandle TimerHandle;
             GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([&]()
@@ -141,7 +148,6 @@ UCharacterStatusComponent::UCharacterStatusComponent()
     PrimaryComponentTick.bCanEverTick = false;
 
     // ...
-    AttachCharacter = Cast<AARPGCharacter>(GetOwner());
 }
 
 bool UCharacterStatusComponent::LevelUp(const ESpecialties Specialty)
