@@ -174,11 +174,11 @@ void UARPGStatusWidget::BindToMainCharacter(AARPGMainCharacter* MainCharacter)
 		{
 			AARPGGameItem* GameItem = Cast<AARPGGameItem>(Item);
 			UCollectableItemWidget* GameItemWidget = GameItemUIMap.FindRef(GameItem);
-			GameItemUIMap.Remove(GameItem);
 			GameItemWidget->ClearItemWidgetAndUnbindDelegates();
+			GameItemUIMap.Remove(GameItem);
 		});
 	}
-	SpellsManagerComponent = MainCharacter->GetSpellsManagerComponent();
+	SpellsManagerComponent = MainCharacter->GetCharacterSpellsManagerComponent();
 	if (SpellsManagerComponent.IsValid())
 	{
 		SpellsManagerComponent->OnCollectionRefresh().AddLambda([&]()
@@ -213,13 +213,14 @@ void UARPGStatusWidget::BindToMainCharacter(AARPGMainCharacter* MainCharacter)
 			SpellsNum++;
 		});
 
-		SpellsManagerComponent->OnRemoveItemFromCollection().AddLambda([&](AARPGCollectableObject* Item)
-		{
-			AARPGGameItem* Spell = Cast<AARPGGameItem>(Item);
-			UCollectableItemWidget* GameItemWidget = SpellUIMap.FindRef(Spell);
-			SpellUIMap.Remove(Spell);
-			GameItemWidget->ClearItemWidgetAndUnbindDelegates();
-		});
+		/*TODO：如果将法术改为可按位置随意摆放，此处取消注释*/
+		// SpellsManagerComponent->OnRemoveItemFromCollection().AddLambda([&](AARPGCollectableObject* Item)
+		// {
+		// 	AARPGGameItem* Spell = Cast<AARPGGameItem>(Item);
+		// 	UCollectableItemWidget* GameItemWidget = SpellUIMap.FindRef(Spell);
+		// 	GameItemWidget->ClearItemWidgetAndUnbindDelegates();
+		// 	SpellUIMap.Remove(Spell);
+		// });
 	}
 }
 

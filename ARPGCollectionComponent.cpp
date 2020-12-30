@@ -104,6 +104,21 @@ bool UARPGCollectionComponent::RemoveSelectedItem()
 	return true;
 }
 
+bool UARPGCollectionComponent::RemoveItem(AARPGCollectableObject* GameItem)
+{
+	if (BagGameItems.IsValidIndex(SelectedItemIndex) && GameItem == BagGameItems[SelectedItemIndex])
+	{
+		SelectPreviousItem();
+	}
+	
+	BagGameItems.Remove(GameItem);
+
+	/*TODO：如果将法术改为可按位置随意摆放，此处需改为RemoveItemFromCollectionEvent事件*/
+	// RemoveItemFromCollectionEvent.Broadcast(GameItem);
+	CollectionRefreshEvent.Broadcast();
+	return true;
+}
+
 bool UARPGCollectionComponent::SelectNextItem()
 {
 	if (BagGameItems.Num() <= 0)

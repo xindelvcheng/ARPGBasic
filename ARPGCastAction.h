@@ -284,6 +284,8 @@ protected:
 
 	virtual bool CheckActionActivateConditionAndPayCost() override;
 
+	virtual FName GetItemName() const override{return FName{UKismetTextLibrary::Conv_TextToString(GetGameItemDisplayName())};};
+
 public:
 	virtual void Tick(float DeltaSeconds) override;
 

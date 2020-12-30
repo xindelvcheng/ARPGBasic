@@ -178,7 +178,7 @@ public:
 	}
 
 
-	virtual UARPGSpellsManagerComponent* GetSpellsManagerComponent()
+	virtual UARPGSpellsManagerComponent* GetCharacterSpellsManagerComponent()
 	{
 		return SpellsManagerComponent;
 	}

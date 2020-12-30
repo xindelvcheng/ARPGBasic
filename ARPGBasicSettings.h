@@ -58,7 +58,7 @@ public:
     TSoftClassPtr<UARPGEnemyHPBarWidget> EnemyHPBarWidgetClass;
 
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG GUI Config")
-    TSoftClassPtr<UARPGGamingMenuContentItemWidget> GamingMenuContentItemWidgetClass;
+    TSoftClassPtr<UARPGPageContentItemWidget> GameMenuContentItemWidgetClass;
 
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG 3D GUI Config")
     TSoftClassPtr<AAimTargetActor> AimPromptActorClass;

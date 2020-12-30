@@ -40,6 +40,12 @@ class AARPGCollectableObject : public AARPGActor
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="GameItem Settings",meta=(AllowPrivateAccess))
 	FText ItemDescription;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="GameItem Flag",meta=(AllowPrivateAccess))
+	bool IsUnique;
+
+	UPROPERTY(BlueprintReadOnly,Category="GameItem Flag",meta=(AllowPrivateAccess))
+	bool IsInBag;
 
 	DECLARE_MULTICAST_DELEGATE_OneParam(FItemChangeEvent,AARPGCollectableObject*);
 	DECLARE_MULTICAST_DELEGATE_OneParam(FItemExhaustEvent,AARPGCollectableObject*);
@@ -64,7 +70,7 @@ public:
 	};
 	
 	
-	virtual const FName& GetItemName() const
+	virtual FName GetItemName() const
 	{
 		return ItemName;
 	}
@@ -167,6 +173,26 @@ public:
 	{
 		return ItemDeselectedEvent;	
 	}
+
+	virtual bool GetIsInBag() const
+	{
+		return IsInBag;
+	}
+
+	virtual void SetIsInBag(const bool bGameItemIsInBag)
+	{
+		IsInBag = bGameItemIsInBag;
+	}
+
+	virtual bool GetIsUnique() const
+	{
+		return IsUnique;
+	}
+
+	virtual void SetIsUnique(const bool bGameItemIsUnique)
+	{
+		IsUnique = bGameItemIsUnique;
+	}
 };
 
 UCLASS( ClassGroup=(ARPGBasic))
@@ -199,6 +225,9 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="ARPGCollectionComponent")
 	bool RemoveSelectedItem();
+	
+	UFUNCTION(BlueprintCallable,Category="ARPGCollectionComponent")
+    bool RemoveItem(AARPGCollectableObject* GameItem);
 
 	UFUNCTION(BlueprintCallable,Category="ARPGCollectionComponent")
 	bool SelectNextItem();
@@ -207,7 +236,7 @@ public:
 	bool SelectPreviousItem();
 
 	UFUNCTION(BlueprintCallable,Category="ARPGCollectionComponent")
-	TArray<AARPGCollectableObject*> GetAllItems() const
+	TArray<AARPGCollectableObject*> GetAllItems()const 
 	{
 		return BagGameItems;
 	}

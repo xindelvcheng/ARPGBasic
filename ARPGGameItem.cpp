@@ -57,7 +57,7 @@ AARPGGameItem* AARPGGameItem::PickUpGameItem(AARPGCharacter* Character)
 {
 	BoxCollision->DestroyComponent();
 	RootComponent = PromptFX;
-	IsInBag = true;
+	SetIsInBag(true);
 	SetOwnerCharacter(Character);
 
 	FMoveFinishDelegate MoveFinishDelegate;

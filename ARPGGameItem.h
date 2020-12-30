@@ -31,11 +31,6 @@ class AARPGGameItem : public AARPGCollectableObject
 	UBillboardComponent* BillboardComponent;
 
 
-	UPROPERTY(BlueprintReadOnly,Category="GameItem Flag",meta=(AllowPrivateAccess))
-	bool IsInBag;
-
-	UPROPERTY(BlueprintReadOnly,Category="GameItem Flag",meta=(AllowPrivateAccess))
-	bool IsUnique;
 
 protected:
 	// Called when the game starts or when spawned
@@ -78,25 +73,5 @@ public:
 	virtual UBillboardComponent* GetBillboardComponent() const
 	{
 		return BillboardComponent;
-	}
-
-	virtual bool GetIsInBag() const
-	{
-		return IsInBag;
-	}
-
-	virtual void SetIsInBag(const bool bGameItemIsInBag)
-	{
-		IsInBag = bGameItemIsInBag;
-	}
-
-	virtual bool GetIsUnique() const
-	{
-		return IsUnique;
-	}
-
-	virtual void SetIsUnique(const bool bGameItemIsUnique)
-	{
-		IsUnique = bGameItemIsUnique;
 	}
 };
