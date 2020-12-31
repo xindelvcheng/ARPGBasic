@@ -54,3 +54,13 @@ class UARPGSpellManagerPageWidget : public UARPGPageWidget
 	virtual TArray<UARPGPageContentItemWidget*> SetupContent() override;
 };
 
+
+UCLASS()
+class UARPGSystemWidget : public UARPGPageWidget
+{
+	GENERATED_BODY()
+
+	virtual TArray<UARPGPageContentItemWidget*> SetupContent() override;
+};
+
+

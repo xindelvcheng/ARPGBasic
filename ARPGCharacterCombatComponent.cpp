@@ -25,7 +25,10 @@ void UARPGCharacterCombatComponent::InitializeComponent()
 {
 	Super::InitializeComponent();
 
-	ReInitCharacterActions();
+	if (GetOwnerCharacter())
+	{
+		ReInitCharacterActions();
+	}
 }
 
 

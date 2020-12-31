@@ -10,6 +10,7 @@
 #include "Components/Image.h"
 #include "Components/ScrollBox.h"
 #include "Components/TextBlock.h"
+#include "Components/WidgetSwitcher.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "ARPGUISubsystem.generated.h"
 
@@ -20,6 +21,7 @@ class UARPGTabWidget;
 class UARPGPageContentItemWidget;
 class UARPGTitleWidget;
 class UARPGButton;
+class UARPGWidget;
 
 /**
  * 管理游戏中的所有UI的子系统
@@ -53,12 +55,17 @@ class UARPGButton : public UButton
 
 	FButtonClickEvent ButtonClickEvent;
 
+	TWeakObjectPtr<UARPGWidget> OwnerWidget;
+
 	UFUNCTION()
 	void BindToOnClick() { ButtonClickEvent.Broadcast(this); };
 public:
 	UARPGButton() { OnClicked.AddDynamic(this, &UARPGButton::BindToOnClick); };
 
 	virtual FButtonClickEvent& OnButtonClick() { return ButtonClickEvent; }
+
+	template<typename T>
+	T* GetParentWidget();
 };
 
 UCLASS()
@@ -132,8 +139,8 @@ class UARPGTabWidget : public UARPGWidget
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGGameSettingsWidget",meta=(BindWidget,AllowPrivateAccess))
 	UHorizontalBox* HorizontalBox_TitleBar;
 
-	UPROPERTY(BlueprintReadOnly,Category="ARPGGameSettingsWidget",meta=(AllowPrivateAccess))
-	TMap<UARPGButton*, UARPGPageWidget*> TabButtonsMap;
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGGameSettingsWidget",meta=(BindWidget,AllowPrivateAccess))
+	UWidgetSwitcher* WidgetSwitcher_Content;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGGameSettingsWidget",meta=(AllowPrivateAccess))
 	TSubclassOf<UARPGTitleWidget> TitleClass;

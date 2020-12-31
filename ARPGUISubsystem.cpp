@@ -3,9 +3,24 @@
 
 #include "ARPGUISubsystem.h"
 
+#include "ARPGGameInstanceSubsystem.h"
+
 void UARPGUISubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+}
+
+template<typename T>
+T* UARPGButton::GetParentWidget()
+{
+	UObject* Parent = GetOuter();
+	T* Result = Cast<T>(Parent);
+	while (Parent && !Result)
+	{
+		Parent = Parent->GetOuter();
+		Result = Cast<T>(Parent);
+	}
+	return Result;
 }
 
 void UARPGWidget::NativePreConstruct()
@@ -37,21 +52,31 @@ void UARPGTabWidget::NativePreConstruct()
 
 	/*NativePreConstruct似乎修改一次属性就调用一次*/
 	HorizontalBox_TitleBar->ClearChildren();
-	TabButtonsMap.Empty();
+	WidgetSwitcher_Content->ClearChildren();
 	
 	for (FTabWidgetPageConfig TabWidgetPageConfig : TabWidgetPageConfigs)
 	{
 		UARPGTitleWidget* TitleWidget = CreateWidget<UARPGTitleWidget>(this, TitleClass);
+		if (!TitleWidget)
+		{
+			continue;
+		}
 		TitleWidget->SetTitleName(TabWidgetPageConfig.TitleName);
 		TitleWidget->SetTitleIcon(TabWidgetPageConfig.TitleIcon);
 		TitleWidget->SetOwnerCharacter(GetOwnerCharacter());
 		TitleWidget->SetOwnerPlayerController(GetOwnerPlayerController());
 		HorizontalBox_TitleBar->AddChildToHorizontalBox(TitleWidget);
-		
+
 		UARPGPageWidget* PageWidget = CreateWidget<UARPGPageWidget>(this, TabWidgetPageConfig.PageClass);
+		
+		if (!PageWidget)
+		{
+			continue;
+		}
 		PageWidget->SetOwnerCharacter(GetOwnerCharacter());
 		PageWidget->SetOwnerPlayerController(GetOwnerPlayerController());
-		PageWidget->AddToViewport();
+		PageWidget->Show();
+		
 		AddPage(TitleWidget->GetTriggerPageSwitchButton(), PageWidget);
 	}
 }
@@ -59,36 +84,17 @@ void UARPGTabWidget::NativePreConstruct()
 void UARPGTabWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-
-	//创建该窗体时自动激活第一页
-	if (!CurrentActiveWidget)
-	{
-		if (UARPGTitleWidget* TitleWidget = Cast<UARPGTitleWidget>(HorizontalBox_TitleBar->GetChildAt(0)))
-		{
-			if (UARPGButton* SwitchButton = TitleWidget->GetTriggerPageSwitchButton())
-			{
-				SwitchButton->OnButtonClick().Broadcast(TitleWidget->GetTriggerPageSwitchButton());
-			}
-		}
-	}
+	UARPGTitleWidget* TitleWidget = Cast<UARPGTitleWidget>(HorizontalBox_TitleBar->GetChildAt(0));
+	TitleWidget->GetTriggerPageSwitchButton()->OnButtonClick().Broadcast(TitleWidget->GetTriggerPageSwitchButton());
 }
 
 void UARPGTabWidget::AddPage(UARPGButton* TriggerButton, UARPGPageWidget* PageWidget)
 {
-	TabButtonsMap.Add(TriggerButton, PageWidget);
+	WidgetSwitcher_Content->AddChild(PageWidget);
 	TriggerButton->OnButtonClick().AddLambda([&](UARPGButton* Button)
 	{
-		if (UARPGPageWidget* AssociatedWidget = TabButtonsMap.FindRef(Button))
-		{
-			if (AssociatedWidget != CurrentActiveWidget)
-			{
-				if (CurrentActiveWidget)
-				{
-					CurrentActiveWidget->Hide();
-				}
-				AssociatedWidget->Show();
-			}
-		}
+		WidgetSwitcher_Content->SetActiveWidgetIndex(HorizontalBox_TitleBar->GetChildIndex(Button->GetParentWidget<UARPGTitleWidget>()));
+		Button->GetParentWidget<UARPGTitleWidget>()->Show();
 	});
 }
 

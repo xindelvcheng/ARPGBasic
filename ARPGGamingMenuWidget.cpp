@@ -30,6 +30,11 @@ void UARPGGameMenuWidget::NativeConstruct()
 TArray<UARPGPageContentItemWidget*> UARPGSpellManagerPageWidget::SetupContent()
 {
 	TArray<UARPGPageContentItemWidget*> Content;
+	if (!GetOwnerCharacter())
+	{
+		UARPGGameInstanceSubsystem::PrintLogToScreen(TEXT("编辑器状态下无法查看角色信息"));
+		return TArray<UARPGPageContentItemWidget*>{};	
+	}
 
 	if (UARPGCharacterCombatComponent* CharacterCombatComponent = GetOwnerCharacter()->GetCharacterCombatComponent())
 	{
@@ -38,7 +43,7 @@ TArray<UARPGPageContentItemWidget*> UARPGSpellManagerPageWidget::SetupContent()
 			UARPGSingleButtonItemWidget* ItemWidget = CreateWidget<UARPGSingleButtonItemWidget>(
 				this, GetItemWidgetClass());
 			Content.Add(ItemWidget);
-			
+
 			ItemWidget->SetItemName(Action->GetGameItemDisplayName());
 
 			if (!Action->GetIsInBag())
@@ -73,8 +78,26 @@ TArray<UARPGPageContentItemWidget*> UARPGSpellManagerPageWidget::SetupContent()
 					}
 				}
 			});
-			
 		}
+	}
+	return Content;
+}
+
+TArray<UARPGPageContentItemWidget*> UARPGSystemWidget::SetupContent()
+{
+	TArray<UARPGPageContentItemWidget*> Content;
+
+	if (UARPGSingleButtonItemWidget* ItemWidget = CreateWidget<UARPGSingleButtonItemWidget>(
+		this, GetItemWidgetClass())
+	)
+	{
+		ItemWidget->SetItemName(FText::FromString(TEXT("退出游戏")));
+		ItemWidget->GetOperationButton()->OnButtonClick().AddLambda([this](UButton*)
+		{
+			UKismetSystemLibrary::QuitGame(GetOwnerPlayerController(), GetOwnerPlayerController(),
+			                               EQuitPreference::Quit, true);
+		});
+		Content.Add(ItemWidget);
 	}
 	return Content;
 }
