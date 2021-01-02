@@ -13,7 +13,6 @@ class TESTPROJECT_API UARPGActorComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-	
 	UPROPERTY(BlueprintReadOnly,meta=(AllowPrivateAccess))
 	TWeakObjectPtr<AARPGCharacter> OwnerCharacter;
 public:	

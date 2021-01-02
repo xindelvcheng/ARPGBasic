@@ -77,7 +77,7 @@ AARPGSpecialEffectCreature::AARPGSpecialEffectCreature()
 		if (UARPGBasicSettings* BasicSettings = UARPGBasicSettings::Get())
 		{
 			DamageIncreaseVFX = BasicSettings->DefaultDamageIncreaseVFX.LoadSynchronous();
-			DamageDetectionBox->SetDamageIncreaseVfx(DamageIncreaseVFX);
+			DamageDetectionBox->SetDamageIncreaseVFX(DamageIncreaseVFX);
 		}
 	}
 
@@ -135,7 +135,7 @@ AARPGSpecialEffectCreature* AARPGSpecialEffectCreature::Create(
 	FTransform Transform,
 	AARPGCharacter* CreatureOwnerCharacter)
 {
-	if (const auto SpecialEffectCreature = UARPGCoreSubsystem::SpawnActor<AARPGSpecialEffectCreature>(
+	if (const auto SpecialEffectCreature = UARPGStaticFunctions::SpawnActor<AARPGSpecialEffectCreature>(
 		CreatureClass, Transform, CreatureOwnerCharacter))
 	{
 		return SpecialEffectCreature;

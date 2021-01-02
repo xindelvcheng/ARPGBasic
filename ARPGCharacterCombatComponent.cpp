@@ -192,7 +192,7 @@ bool UARPGCharacterCombatComponent::TryToCastSpell(AARPGCastAction* Spell)
 		else
 		{
 			Spell->SetActorTransform(
-				UARPGCoreSubsystem::GetActorNearPositionTransform(GetOwnerCharacter(),
+				UARPGStaticFunctions::GetActorNearPositionTransform(GetOwnerCharacter(),
 				                                                          {
 					                                                          Spell->GetMaxDistance(), 0, 0
 				                                                          }, FRotator{}));

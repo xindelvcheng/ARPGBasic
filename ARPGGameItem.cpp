@@ -38,6 +38,8 @@ AARPGGameItem::AARPGGameItem()
 	{
 		BillboardComponent->SetSprite(GetItemIcon());
 	}
+
+	ActorMovementComponent = CreateDefaultSubobject<UARPGActorTowardsActorMovement>(TEXT("ActorMovementComponent"));
 }
 
 // Called when the game starts or when spawned
@@ -61,18 +63,15 @@ AARPGGameItem* AARPGGameItem::PickUpGameItem(AARPGCharacter* Character)
 	SetIsInBag(true);
 	SetOwnerCharacter(Character);
 
-	FMoveFinishDelegate MoveFinishDelegate;
-	MoveFinishDelegate.BindDynamic(this, &AARPGGameItem::BindToHasBeenTaken);
-	UARPGCoreSubsystem::MoveActorTowardActorWithScale(this, GetOwnerCharacter(), MoveFinishDelegate);
+	ActorMovementComponent->MoveTowardsActorWithScale(Character);
+	UARPGStaticFunctions::DelayDo(GetWorld(),FTimerDelegate::CreateLambda([this]()
+	{
+		PromptFX->DestroyComponent();
+		PromptFX = nullptr;
+	}),5);
 
 	OnBeTaken(Character);
 	return this;
-}
-
-void AARPGGameItem::BindToHasBeenTaken()
-{
-	PromptFX->DestroyComponent();
-	PromptFX = nullptr;
 }
 
 void AARPGGameItem::OnBeUsed(AARPGCharacter* User)

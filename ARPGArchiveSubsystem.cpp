@@ -255,7 +255,7 @@ void UARPGArchiveSubsystem::OnLevelLoaded()
 	{
 		for (auto GameItemArchiveStruct : GameSaver->GameItems)
 		{
-			AARPGGameItem* GameItem = UARPGCoreSubsystem::SpawnActor<AARPGGameItem>(
+			AARPGGameItem* GameItem = UARPGStaticFunctions::SpawnActor<AARPGGameItem>(
 				GameItemArchiveStruct.GameItemClass.LoadSynchronous(), GameItemArchiveStruct.Transform, MainCharacter);
 			if (GameItem)
 			{

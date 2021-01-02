@@ -6,6 +6,7 @@
 
 
 #include "ARPGActor.h"
+#include "ARPGActorMovement.h"
 #include "ARPGCollectionComponent.h"
 #include "Components/BoxComponent.h"
 #include "ARPGGameItem.generated.h"
@@ -30,7 +31,8 @@ class AARPGGameItem : public AARPGCollectableObject
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="GameItem Basic Component",meta=(AllowPrivateAccess))
 	UBillboardComponent* BillboardComponent;
 
-
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="GameItem Basic Component",meta=(AllowPrivateAccess))
+	UARPGActorTowardsActorMovement* ActorMovementComponent;
 
 protected:
 	// Called when the game starts or when spawned
@@ -49,8 +51,6 @@ public:
 	UFUNCTION(BlueprintCallable,Category="GameItem")
 	AARPGGameItem* PickUpGameItem(AARPGCharacter* Character);
 
-	UFUNCTION()
-	void BindToHasBeenTaken();
 
 	UFUNCTION(BlueprintCallable,DisplayName="UseGameItem",Category="GameItem")
 	bool TryToUseGameItem(AARPGCharacter* User);

@@ -106,12 +106,12 @@ void UARPGProgressBar::PostEditChangeProperty(FPropertyChangedEvent& PropertyCha
 
 	if (PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(UARPGProgressBar, OriginalPixelSize))
 	{
-		OriginalRelativeSize = OriginalPixelSize / UARPGCoreSubsystem::GetScreenSize();
+		OriginalRelativeSize = OriginalPixelSize / UARPGStaticFunctions::GetScreenSize();
 	}
 	else if (PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(
 		UARPGProgressBar, OriginalRelativeSize))
 	{
-		OriginalPixelSize = OriginalRelativeSize * UARPGCoreSubsystem::GetScreenSize();
+		OriginalPixelSize = OriginalRelativeSize * UARPGStaticFunctions::GetScreenSize();
 	}
 	
 	if (UCanvasPanelSlot* CanvasPanelSlot = Cast<UCanvasPanelSlot>(this->Slot))

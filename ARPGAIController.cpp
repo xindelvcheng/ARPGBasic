@@ -6,6 +6,7 @@
 #include "ARPGCharacter.h"
 #include "ARPGCoreSubsystem.h"
 #include "ARPGLockTargetComponent.h"
+#include "ARPGStaticFunctions.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -82,7 +83,7 @@ void AARPGSimpleAIController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Action_MoveToTarget = UARPGCoreSubsystem::SpawnActor<AAction_MoveToTarget>(ControlledCharacter.Get());
+	Action_MoveToTarget = UARPGStaticFunctions::SpawnActor<AAction_MoveToTarget>(ControlledCharacter.Get());
 }
 
 void AARPGSimpleAIController::Tick(float DeltaSeconds)
