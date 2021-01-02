@@ -13,109 +13,42 @@
 #include "ARPGDamageSubsystem.h"
 #include "ARPGGameInstanceSubsystem.h"
 
-template <typename T>
-void UARPGSpecialEffectsSubsystem::LoadEffectsAssets(TArray<T*>& Effects,
-                                                     TArray<TSoftObjectPtr<T>> EffectSoftObjectPtrs)
-{
-	for (TSoftObjectPtr<T> Effect : EffectSoftObjectPtrs)
-	{
-		Effects.Emplace(Effect.LoadSynchronous());
-	}
-}
 
 void UARPGSpecialEffectsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	if (UARPGBasicSettings::Get())
-	{
-		const auto ARPGBasicSettings = UARPGBasicSettings::Get();
-		LoadEffectsAssets(PositiveSoundEffects, ARPGBasicSettings->PositiveSoundEffects);
-		LoadEffectsAssets(NegativeSoundEffects, ARPGBasicSettings->NegativeSoundEffects);
-		LoadEffectsAssets(NeutralSoundEffects, ARPGBasicSettings->NeutralSoundEffects);
-		LoadEffectsAssets(PositiveVisualEffects, ARPGBasicSettings->PositiveVisualEffects);
-		LoadEffectsAssets(NegativeVisualEffects, ARPGBasicSettings->NegativeVisualEffects);
-	}
+	LoadEffectsAssets();
 }
 
-void UARPGSpecialEffectsSubsystem::PlaySoundEffect2D(const UObject* WorldContextObject, EEffectCategory EffectCategory,
-                                                     int Index)
+void UARPGSpecialEffectsSubsystem::LoadEffectsAssets()
 {
-	if (UARPGSpecialEffectsSubsystem* ARPGSpecialEffectsSubsystemInstance = Get(WorldContextObject->GetWorld()))
+	if (const auto ARPGBasicSettings = UARPGBasicSettings::Get())
 	{
-		switch (EffectCategory)
+		for (auto NameSoundPair : ARPGBasicSettings->SoundEffects)
 		{
-		case EEffectCategory::PositiveSoundEffects:
-			UGameplayStatics::PlaySound2D(WorldContextObject,
-			                              ARPGSpecialEffectsSubsystemInstance->PositiveSoundEffects.IsValidIndex(Index)
-				                              ? ARPGSpecialEffectsSubsystemInstance->PositiveSoundEffects[Index]
-				                              : nullptr);
-			break;
-		case EEffectCategory::NegativeSoundEffects:
-			UGameplayStatics::PlaySound2D(WorldContextObject,
-			                              ARPGSpecialEffectsSubsystemInstance->NegativeSoundEffects.IsValidIndex(Index)
-				                              ? ARPGSpecialEffectsSubsystemInstance->NegativeSoundEffects[Index]
-				                              : nullptr);
-			break;
-		case EEffectCategory::NeutralSoundEffects:
-			UGameplayStatics::PlaySound2D(WorldContextObject,
-			                              ARPGSpecialEffectsSubsystemInstance->NeutralSoundEffects.IsValidIndex(Index)
-				                              ? ARPGSpecialEffectsSubsystemInstance->NeutralSoundEffects[Index]
-				                              : nullptr);
-			break;
-		default:
-			UARPGGameInstanceSubsystem::PrintLogToScreen(TEXT("错误，PlaySoundEffect2D函数只能播放音效"));
+			SoundEffects.Add(NameSoundPair.Key, NameSoundPair.Value.LoadSynchronous());
+		}
+		for (auto NameParticlePair : ARPGBasicSettings->ParticleEffects)
+		{
+			ParticleEffects.Add(NameParticlePair.Key, NameParticlePair.Value.LoadSynchronous());
 		}
 	}
 }
 
-
-void UARPGSpecialEffectsSubsystem::PlaySpecialEffectAtLocation(const UObject* WorldContextObject,
-                                                               EEffectCategory EffectCategory, int Index,
-                                                               FVector Location)
+void UARPGSpecialEffectsSubsystem::PlaySoundEffect2D(FName EffectName)
 {
-	if (UARPGSpecialEffectsSubsystem* ARPGSpecialEffectsSubsystemInstance = Get(WorldContextObject->GetWorld()))
+	if (USoundBase* SoundResource = SoundEffects.FindRef(EffectName))
 	{
-		switch (EffectCategory)
-		{
-		case EEffectCategory::PositiveSoundEffects:
-			UGameplayStatics::PlaySoundAtLocation(WorldContextObject,
-			                                      ARPGSpecialEffectsSubsystemInstance->PositiveSoundEffects.
-			                                      IsValidIndex(Index)
-				                                      ? ARPGSpecialEffectsSubsystemInstance->PositiveSoundEffects[Index]
-				                                      : nullptr, Location);
-			break;
-		case EEffectCategory::NegativeSoundEffects:
-			UGameplayStatics::PlaySoundAtLocation(WorldContextObject,
-			                                      ARPGSpecialEffectsSubsystemInstance->NegativeSoundEffects.
-			                                      IsValidIndex(Index)
-				                                      ? ARPGSpecialEffectsSubsystemInstance->NegativeSoundEffects[Index]
-				                                      : nullptr, Location);
-			break;
-		case EEffectCategory::NeutralSoundEffects:
-			UGameplayStatics::PlaySoundAtLocation(WorldContextObject,
-			                                      ARPGSpecialEffectsSubsystemInstance->NeutralSoundEffects.IsValidIndex(
-				                                      Index)
-				                                      ? ARPGSpecialEffectsSubsystemInstance->NeutralSoundEffects[Index]
-				                                      : nullptr, Location);
-			break;
-		case EEffectCategory::PositiveVisualEffects:
-			UGameplayStatics::SpawnEmitterAtLocation(WorldContextObject,
-			                                         ARPGSpecialEffectsSubsystemInstance->PositiveVisualEffects.
-			                                         IsValidIndex(Index)
-				                                         ? ARPGSpecialEffectsSubsystemInstance->PositiveVisualEffects[
-					                                         Index]
-				                                         : nullptr, Location);
-			break;
-		case EEffectCategory::NegativeVisualEffects:
-			UGameplayStatics::SpawnEmitterAtLocation(WorldContextObject,
-			                                         ARPGSpecialEffectsSubsystemInstance->NegativeVisualEffects.
-			                                         IsValidIndex(Index)
-				                                         ? ARPGSpecialEffectsSubsystemInstance->NegativeVisualEffects[
-					                                         Index]
-				                                         : nullptr, Location);
-			break;
-		}
+		UGameplayStatics::PlaySound2D(this, SoundResource);
+	}
+}
+
+void UARPGSpecialEffectsSubsystem::PlaySpecialEffectAtLocation(FName EffectName, FVector Location)
+{
+	if (USoundBase* SoundResource = SoundEffects.FindRef(EffectName))
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, SoundResource, Location);
 	}
 }
 
@@ -123,9 +56,9 @@ void UARPGSpecialEffectsSubsystem::PlaySpecialEffectAtLocation(const UObject* Wo
 AARPGSpecialEffectCreature::AARPGSpecialEffectCreature()
 {
 	PrimaryActorTick.bCanEverTick = false;
-	
+
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("DefaultRootSceneComponent"));
-	
+
 	DamageDetectionBox = CreateDefaultSubobject<UARPGDamageBoxComponent>(TEXT("DamageDetectionBox"));
 	DamageDetectionBox->SetupAttachment(RootComponent);
 
@@ -137,7 +70,7 @@ AARPGSpecialEffectCreature::AARPGSpecialEffectCreature()
 			DamageDetectionBox->SetDamageIncreaseVfx(DamageIncreaseVFX);
 		}
 	}
-	
+
 	if (DamageType != nullptr)
 	{
 		DamageDetectionBox->SetDamageType(DamageType);
@@ -146,7 +79,7 @@ AARPGSpecialEffectCreature::AARPGSpecialEffectCreature()
 #if WITH_EDITOR
 	DebugParticleSystem = CreateDefaultSubobject<UParticleSystemComponent>("DebugParticleSystem");
 	DebugParticleSystem->SetupAttachment(RootComponent);
-#endif	
+#endif
 }
 
 void AARPGSpecialEffectCreature::BeginPlay()

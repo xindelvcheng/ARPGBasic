@@ -76,19 +76,10 @@ public:
     TSoftObjectPtr<UTexture2D> DefaultAbilityIcon;
     
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
-    TArray<TSoftObjectPtr<USoundCue>> PositiveSoundEffects;
+    TMap<FName,TSoftObjectPtr<USoundCue>> SoundEffects;
 
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
-    TArray<TSoftObjectPtr<USoundCue>> NegativeSoundEffects;
-
-    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
-    TArray<TSoftObjectPtr<USoundCue>> NeutralSoundEffects;
-
-    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
-    TArray<TSoftObjectPtr<UParticleSystem>> PositiveVisualEffects;
-
-    UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
-    TArray<TSoftObjectPtr<UParticleSystem>> NegativeVisualEffects;
+    TMap<FName,TSoftObjectPtr<UParticleSystem>> ParticleEffects;
 
     UPROPERTY(Config,EditAnywhere,BlueprintReadWrite,Category="ARPG Special Effect Config")
     TSoftObjectPtr<UParticleSystem> DefaultGameItemPickUpPromptVisualEffect;

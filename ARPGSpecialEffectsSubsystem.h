@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 
 
-
 #include "ARPGActor.h"
 #include "Components/BoxComponent.h"
 #include "Engine/DataTable.h"
@@ -17,14 +16,15 @@
 class UARPGDamageBoxComponent;
 class AARPGCharacter;
 
-UENUM(BlueprintType)
-enum class EEffectCategory:uint8
+USTRUCT()
+struct FPlaySoundDescription
 {
-	PositiveSoundEffects,
-	NegativeSoundEffects,
-	NeutralSoundEffects,
-	PositiveVisualEffects,
-	NegativeVisualEffects
+	GENERATED_BODY()
+
+	FName SoundName;
+	float VolumeMultiplier;
+	float PitchMultiplier;
+	float StartTime;
 };
 
 /**
@@ -35,26 +35,16 @@ class UARPGSpecialEffectsSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 
-	template <typename T>
-	void LoadEffectsAssets(TArray<T*>& Effects, TArray<TSoftObjectPtr<T>> EffectSoftObjectPtrs);
+	void LoadEffectsAssets();
 
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
 	UPROPERTY(BlueprintReadOnly,Category="ARPGSpecialEffectsSubsystem")
-	TArray<USoundCue*> PositiveSoundEffects;
+	TMap<FName, USoundBase*> SoundEffects;
 
 	UPROPERTY(BlueprintReadOnly,Category="ARPGSpecialEffectsSubsystem")
-	TArray<USoundCue*> NegativeSoundEffects;
-
-	UPROPERTY(BlueprintReadOnly,Category="ARPGSpecialEffectsSubsystem")
-	TArray<USoundCue*> NeutralSoundEffects;
-
-	UPROPERTY(BlueprintReadOnly,Category="ARPGSpecialEffectsSubsystem")
-	TArray<UParticleSystem*> PositiveVisualEffects;
-
-	UPROPERTY(BlueprintReadOnly,Category="ARPGSpecialEffectsSubsystem")
-	TArray<UParticleSystem*> NegativeVisualEffects;
+	TMap<FName, UParticleSystem*> ParticleEffects;
 
 	static UARPGSpecialEffectsSubsystem* Get(UWorld* World)
 	{
@@ -66,12 +56,17 @@ public:
 		return nullptr;
 	}
 
-	UFUNCTION(BlueprintCallable,meta=(WorldContext=WorldContextObject))
-	static void PlaySoundEffect2D(const UObject* WorldContextObject, EEffectCategory EffectCategory, int Index);
+	UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffectsSubsystem")
+	void PlaySoundEffect2D(FName EffectName);
 
-	UFUNCTION(BlueprintCallable,meta=(WorldContext=WorldContextObject))
-	static void PlaySpecialEffectAtLocation(const UObject* WorldContextObject, EEffectCategory EffectCategory,
-	                                        int Index, FVector Location);
+	UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffectsSubsystem")
+	void PlaySpecialEffectAtLocation(FName EffectName, FVector Location);
+
+	UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffectsSubsystem")
+	USoundBase* GetSoundEffectResource(FName EffectName) { return SoundEffects.FindRef(EffectName); }
+
+	UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffectsSubsystem")
+	UParticleSystem* GetParticleEffectResource(FName EffectName) { return ParticleEffects.FindRef(EffectName); }
 };
 
 
@@ -119,7 +114,7 @@ protected:
 
 	/*该组件仅在编译器模式下被初始化，用于调试粒子系统匹配伤害盒子*/
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-    UParticleSystemComponent* DebugParticleSystem;
+	UParticleSystemComponent* DebugParticleSystem;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
 	float DamageWeight = 1;
