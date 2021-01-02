@@ -10,7 +10,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "ARPGCharacter.h"
 #include "ARPGDamageBoxComponent.h"
-#include "ARPGDamageSubsystem.h"
 #include "ARPGCoreSubsystem.h"
 #include "ARPGStaticFunctions.h"
 
@@ -109,12 +108,7 @@ void AARPGSpecialEffectCreature::BeginPlay()
 		//注册伤害判定
 		GetWorldTimerManager().SetTimer(StartTimerHandle, FTimerDelegate::CreateLambda([&]()
 		{
-			if (UARPGDamageSubsystem* DamageSubsystem = UARPGDamageSubsystem::Get(GetWorld()))
-			{
-				Task.DamageDetectRecord = DamageSubsystem->RegisterToDamageDetect(
-					DamageDetectionBox, GetOwnerCharacter(),
-					FDamageDetectedDelegate{});
-			}
+			DamageDetectionBox->EnableDamageDetected();
 		}), Task.DamageStartTime, false);
 
 		//取消伤害判定
@@ -122,10 +116,7 @@ void AARPGSpecialEffectCreature::BeginPlay()
 		Task.DamageEndTime = Task.DamageStartTime + Task.Duration;
 		GetWorldTimerManager().SetTimer(EndTimerHandle, FTimerDelegate::CreateLambda([&]()
 		{
-			if (UARPGDamageSubsystem* DamageSubsystem = UARPGDamageSubsystem::Get(GetWorld()))
-			{
-				DamageSubsystem->UnRegisterToDamageDetect(Task.DamageDetectRecord);
-			}
+			DamageDetectionBox->DisableDamageDetected();
 		}), Task.DamageEndTime, false);
 	}
 }

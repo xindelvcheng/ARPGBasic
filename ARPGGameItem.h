@@ -38,12 +38,12 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	virtual void OnBeTaken(AARPGCharacter* Character);
+	virtual void OnBeTaken(AARPGCharacter* Character) { ; }
 
 	UFUNCTION(BlueprintImplementableEvent,Category="GameItem",DisplayName="OnBeUsed")
-    void BPFunc_OnBeUsed(AARPGCharacter* User);
-	
-	virtual void OnBeUsed(AARPGCharacter* User);
+	void BPFunc_OnBeUsed(AARPGCharacter* User);
+
+	virtual void OnBeUsed(AARPGCharacter* User) { ; }
 public:
 	// Sets default values for this actor's properties
 	AARPGGameItem();
@@ -54,7 +54,7 @@ public:
 
 	UFUNCTION(BlueprintCallable,DisplayName="UseGameItem",Category="GameItem")
 	bool TryToUseGameItem(AARPGCharacter* User);
-	
+
 	virtual UBoxComponent* GetBoxCollision() const
 	{
 		return BoxCollision;

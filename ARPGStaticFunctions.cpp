@@ -54,7 +54,7 @@ T* UARPGStaticFunctions::SpawnActor(UClass* ActorClass, FTransform Transform, AA
 		Actor->FinishSpawning(Transform);
 		return Actor;
 	}
-	UARPGStaticFunctions::PrintLogToScreen(FString::Printf(TEXT("%s生成Actor出现错误"), *OwnerCharacter->GetName()));
+	PrintLogToScreen(FString::Printf(TEXT("%s生成Actor出现错误"), *OwnerCharacter->GetName()));
 	return nullptr;
 }
 

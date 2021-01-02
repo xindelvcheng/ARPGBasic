@@ -6,7 +6,6 @@
 
 #include "ARPGCharacter.h"
 #include "ARPGDamageBoxComponent.h"
-#include "ARPGDamageSubsystem.h"
 #include "ARPGCoreSubsystem.h"
 #include "ARPGStaticFunctions.h"
 #include "CharacterStatusComponent.h"
@@ -19,29 +18,26 @@ void UMeleeDamageDetectAnimNotifyState::NotifyBegin(USkeletalMeshComponent* Mesh
 	
 	if (AARPGCharacter* OwnerCharacter = Cast<AARPGCharacter>(MeshComp->GetOwner()))
 	{
-		if (UARPGDamageSubsystem::Get(OwnerCharacter->GetWorld()))
+		//如果没有指定WeaponDamageBoxCollision，取该角色的第一个UARPGDamageBoxComponent作为如果没有指定WeaponDamageBoxCollision
+		if (!WeaponDamageBoxCollision)
 		{
-			//如果没有指定WeaponDamageBoxCollision，取该角色的第一个UARPGDamageBoxComponent作为如果没有指定WeaponDamageBoxCollision
+			WeaponDamageBoxCollision = Cast<UARPGDamageBoxComponent>(
+                OwnerCharacter->GetComponentByClass(UARPGDamageBoxComponent::StaticClass()));
 			if (!WeaponDamageBoxCollision)
 			{
-				WeaponDamageBoxCollision = Cast<UARPGDamageBoxComponent>(
-					OwnerCharacter->GetComponentByClass(UARPGDamageBoxComponent::StaticClass()));
-				if (!WeaponDamageBoxCollision)
-				{
-					UARPGStaticFunctions::PrintLogToScreen(
-						TEXT(
-							"错误，使用UMeleeDamageDetectAnimNotifyState检测伤害的角色必须指定WeaponDamageBoxCollision(应为包裹武器的UARPGDamageBoxComponent)"),
-						15, FColor::Red);
-					return;
-				}
+				UARPGStaticFunctions::PrintLogToScreen(
+                    TEXT(
+                        "错误，使用UMeleeDamageDetectAnimNotifyState检测伤害的角色必须指定WeaponDamageBoxCollision(应为包裹武器的UARPGDamageBoxComponent)"),
+                    15, FColor::Red);
+				return;
 			}
-			FDamageDetectDescriptionStruct DetectDescription{
-				true, DamageBoxHalfSizeInTrace, true, DamageWeight, DamageBias, VelocityDamageBonusWeight,
-                DamageTypeClass
-            };
-			WeaponDamageBoxCollision->SetDetectDescription(std::move(DetectDescription));
-			WeaponDamageBoxCollision->Activate(false);
 		}
+		FDamageDetectDescriptionStruct DetectDescription{
+			true, DamageBoxHalfSizeInTrace, true, DamageWeight, DamageBias, VelocityDamageBonusWeight,
+            DamageTypeClass
+        };
+		WeaponDamageBoxCollision->SetDetectDescription(std::move(DetectDescription));
+		WeaponDamageBoxCollision->EnableDamageDetected();
 	}
 }
 
@@ -51,6 +47,6 @@ void UMeleeDamageDetectAnimNotifyState::NotifyEnd(USkeletalMeshComponent* MeshCo
 
 	if (WeaponDamageBoxCollision)
 	{
-		WeaponDamageBoxCollision->Deactivate();
+		WeaponDamageBoxCollision->DisableDamageDetected();
 	}
 }

@@ -52,10 +52,6 @@ void AARPGGameItem::BeginPlay()
 	}
 }
 
-void AARPGGameItem::OnBeTaken(AARPGCharacter* Character)
-{
-}
-
 AARPGGameItem* AARPGGameItem::PickUpGameItem(AARPGCharacter* Character)
 {
 	BoxCollision->DestroyComponent();
@@ -74,10 +70,6 @@ AARPGGameItem* AARPGGameItem::PickUpGameItem(AARPGCharacter* Character)
 	return this;
 }
 
-void AARPGGameItem::OnBeUsed(AARPGCharacter* User)
-{
-	
-}
 
 bool AARPGGameItem::TryToUseGameItem(AARPGCharacter* User)
 {

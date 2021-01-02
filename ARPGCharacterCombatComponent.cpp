@@ -26,7 +26,8 @@ void UARPGCharacterCombatComponent::InitializeComponent()
 {
 	Super::InitializeComponent();
 
-	if (GetOwnerCharacter())
+	/*GetGameInstance不会nullptr确保在游戏运行中（而不是编辑器中）*/
+	if (GetWorld() && GetWorld()->GetGameInstance())
 	{
 		ReInitCharacterActions();
 	}

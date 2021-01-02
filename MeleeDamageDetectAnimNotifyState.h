@@ -5,12 +5,12 @@
 #include "CoreMinimal.h"
 
 
-#include "ARPGDamageSubsystem.h"
 #include "Animation/AnimNotifies/AnimNotifyState.h"
 #include "Components/BoxComponent.h"
 
 #include "MeleeDamageDetectAnimNotifyState.generated.h"
 
+class UARPGDamageBoxComponent;
 class AARPGCharacter;
 class UCharacterStatusComponent;
 /**
@@ -22,9 +22,6 @@ class UMeleeDamageDetectAnimNotifyState : public UAnimNotifyState
     GENERATED_BODY()
 
     TArray<FHitResult> HitResults;
-
-    UPROPERTY()
-    TWeakObjectPtr<UDamageDetectRecord> DamageDetectRecord;
 
 
 protected:

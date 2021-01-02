@@ -94,9 +94,6 @@ struct FARPGCreatureTimeLineTaskStruct
 	TWeakObjectPtr<UAudioComponent> AudioComponent;
 
 	float DamageEndTime;
-
-	UPROPERTY()
-	class UDamageDetectRecord* DamageDetectRecord;
 };
 
 UCLASS(Blueprintable)

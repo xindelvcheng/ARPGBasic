@@ -6,20 +6,11 @@
 
 #include "ARPGBasicSettings.h"
 #include "ARPGCharacter.h"
-#include "ARPGDamageSubsystem.h"
+#include "ARPGDamageTypes.h"
+
 
 void UARPGDamageBoxComponent::SetDamageValue(float DamageWeightCoefficient)
 {
-	UnRegisterToDamageDetectIfRegistered();
-
-	DetectDescription = {
-		true, FVector{}, true,
-		DamageWeight * DamageWeightCoefficient, DamageBias, VelocityDamageBonusWeight,
-		DamageType
-	};
-
-	RegisterToDamageDetect();
-
 	if (DamageWeightCoefficient > 1)
 	{
 		OnDamageIncrease(DamageWeightCoefficient - 1);
@@ -37,51 +28,104 @@ void UARPGDamageBoxComponent::OnDamageIncrease(float DeltaDamageWeightCoefficien
 
 void UARPGDamageBoxComponent::OnDamageDecrease(float DeltaDamageWeightCoefficient)
 {
-
-}
-
-void UARPGDamageBoxComponent::RegisterToDamageDetect()
-{
-	if (AARPGCharacter* OwnerCharacter = Cast<AARPGCharacter>(GetOwner()))
-	{
-		if (UARPGDamageSubsystem* DamageSubsystem = UARPGDamageSubsystem::Get(OwnerCharacter->GetWorld()))
-		{
-			DamageDetectRecord = DamageSubsystem->RegisterToDamageDetect(
-				this, OwnerCharacter, FDamageDetectedDelegate{}, DetectDescription);
-			DamageDetectRecord->bDrawDebug = bDrawDebug;
-		}
-	}
-}
-
-void UARPGDamageBoxComponent::UnRegisterToDamageDetectIfRegistered()
-{
-	if (DamageDetectRecord)
-	{
-		if (UARPGDamageSubsystem* DamageSubsystem = UARPGDamageSubsystem::Get(GetWorld()))
-		{
-			DamageSubsystem->UnRegisterToDamageDetect(DamageDetectRecord);
-		}
-		DamageDetectRecord = nullptr;
-	}
 }
 
 UARPGDamageBoxComponent::UARPGDamageBoxComponent()
 {
 	bAutoActivate = false;
+	PrimaryComponentTick.bCanEverTick = true;
+}
 
-	
+void UARPGDamageBoxComponent::EnableDamageDetected()
+{
+	Timer = 0;
+	LastFrameLocation = GetComponentLocation();
+	PrimaryComponentTick.SetTickFunctionEnable(true);
+}
+
+void UARPGDamageBoxComponent::DisableDamageDetected()
+{
+	PrimaryComponentTick.SetTickFunctionEnable(false);
 }
 
 void UARPGDamageBoxComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AARPGCharacter* OwnerCharacter = GetOwner<AARPGCharacter>();
+	ActorsToIgnore.AddUnique(OwnerCharacter);
+	
+	PrimaryComponentTick.SetTickFunctionEnable(false);
 }
 
-void UARPGDamageBoxComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
-{
-	Super::OnComponentDestroyed(bDestroyingHierarchy);
 
-	UnRegisterToDamageDetectIfRegistered();
+void UARPGDamageBoxComponent::TickComponent(float DeltaTime, ELevelTick TickType,
+                                            FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	Timer += DeltaTime;
+	CurrentFrameLocation = GetComponentLocation();
+
+	if (DamageDetectDescriptionStruct.bUseDamageCenterComponentCurrentBoundsAsDetectBound)
+	{
+		const FBoxSphereBounds BoxBounds = CalcLocalBounds();
+		DamageDetectDescriptionStruct.DamageBoxHalfSizeInTrace = BoxBounds.BoxExtent *
+			GetComponentScale();
+	}
+
+	TArray<FHitResult> HitResults;
+	UKismetSystemLibrary::BoxTraceMultiForObjects(GetWorld(), LastFrameLocation, CurrentFrameLocation,
+	                                              DamageDetectDescriptionStruct.DamageBoxHalfSizeInTrace,
+	                                              GetComponentRotation(),
+	                                              DetectObjectTypes,
+	                                              false,
+	                                              ActorsToIgnore,
+	                                              bDrawDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
+	                                              HitResults,
+	                                              true);
+
+	for (FHitResult HitResult : HitResults)
+	{
+		if (HitResult.GetComponent() != this)
+		{
+			OnHitDetected(HitResult);
+		}
+	}
+
+	LastFrameLocation = CurrentFrameLocation;
+}
+
+void UARPGDamageBoxComponent::OnHitDetected(FHitResult HitResult)
+{
+	HitDetectedEvent.Broadcast(HitResult);
+	float BaseAttack = 1;
+	AARPGCharacter* OwnerCharacter = GetOwner<AARPGCharacter>();
+
+	if (OwnerCharacter)
+	{
+		BaseAttack = OwnerCharacter->GetCharacterStatusComponent()->GetAttack();
+	}
+
+
+	const float BaseDamage = DamageDetectDescriptionStruct.DamageWeight * BaseAttack + DamageDetectDescriptionStruct.
+		DamageBias + GetOwner()->GetVelocity().Size() *
+		DamageDetectDescriptionStruct.VelocityDamageBonusWeight;
+
+	if (UARPGDamageBoxComponent* DamageBoxComponent = Cast<UARPGDamageBoxComponent>(HitResult.GetComponent()))
+	{
+		ElementInteract(DamageBoxComponent);
+	}
+
+	if (DamageDetectDescriptionStruct.CauseDamage)
+	{
+		AActor* HitActor = HitResult.GetActor();
+		UGameplayStatics::ApplyPointDamage(
+			HitActor, BaseDamage,
+			HitResult.Location, HitResult,
+			OwnerCharacter ? OwnerCharacter->GetController() : nullptr,
+			OwnerCharacter, DamageDetectDescriptionStruct.DamageTypeClass);
+	}
 }
 
 void UARPGDamageBoxComponent::ElementInteract(UARPGDamageBoxComponent* EnvironmentDamageBox)
@@ -141,19 +185,4 @@ void UARPGDamageBoxComponent::ElementInteract(UARPGDamageBoxComponent* Environme
 			SetDamageValue(0.5);
 		}
 	}
-}
-
-void UARPGDamageBoxComponent::Activate(bool bReset)
-{
-	Super::Activate(bReset);
-
-	UnRegisterToDamageDetectIfRegistered();
-	RegisterToDamageDetect();
-}
-
-void UARPGDamageBoxComponent::Deactivate()
-{
-	Super::Deactivate();
-
-	UnRegisterToDamageDetectIfRegistered();
 }
