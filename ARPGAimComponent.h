@@ -31,6 +31,8 @@ class TESTPROJECT_API UARPGAimComponent : public UARPGSceneComponent
 	float AimTargetResetDuration = 15;
 
 	FTimerHandle ResetAimTargetTimerHandle;
+	
+	int MaxDistance = 3000;
 
 public:
 	UARPGAimComponent();

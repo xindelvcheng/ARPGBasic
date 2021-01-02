@@ -8,6 +8,8 @@
 #include "ARPGCharacter.h"
 #include "ARPGConfigSubsystem.h"
 #include "ARPGGameInstanceSubsystem.h"
+#include "ARPGMainCharacter.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "particles/ParticleSystemComponent.h"
 
@@ -42,6 +44,12 @@ void UARPGAimComponent::Activate(bool bReset)
 
 	AimTargetActor->SetActorVisibility(true);
 	SetComponentTickEnabled(true);
+
+	if (AARPGMainCharacter* Character = Cast<AARPGMainCharacter>(GetOwner()))
+	{
+		Character->GetCameraBoom()->SetRelativeLocation({300,0,100});
+	}
+	
 }
 
 void UARPGAimComponent::Deactivate()
@@ -50,6 +58,11 @@ void UARPGAimComponent::Deactivate()
 
 	AimTargetActor->SetActorVisibility(false);
 	SetComponentTickEnabled(false);
+
+	if (AARPGMainCharacter* Character = Cast<AARPGMainCharacter>(GetOwner()))
+	{
+		Character->GetCameraBoom()->SetRelativeLocation({0,0,0});
+	}
 
 
 	GetWorld()->GetTimerManager().SetTimer(ResetAimTargetTimerHandle, FTimerDelegate::CreateLambda([&]()
@@ -81,10 +94,11 @@ void UARPGAimComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		const TArray<AActor*> IgnoreActors = {GetOwnerCharacter()};
 		FHitResult HitResult;
 		UKismetSystemLibrary::LineTraceSingle(this, ViewInfo.Location,
-		                                      ViewInfo.Location + ViewInfo.Rotation.Vector() * 3000,
+		                                      ViewInfo.Location + ViewInfo.Rotation.Vector() * MaxDistance,
 		                                      ETraceTypeQuery::TraceTypeQuery1, false, IgnoreActors,
 		                                      EDrawDebugTrace::None, HitResult, true);
-		AimTargetActor->SetActorLocation(HitResult.Location);
+		
+		AimTargetActor->SetActorLocation(HitResult.bBlockingHit?HitResult.Location:HitResult.TraceEnd);
 		AimTargetActor->SetActorRotation((HitResult.Location - GetOwnerCharacter()->GetActorLocation()).Rotation());
 		bAimTargetResultIsValid = true;
 	}

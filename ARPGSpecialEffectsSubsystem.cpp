@@ -185,14 +185,6 @@ void AARPGSpecialEffectCreature::BeginPlay()
 			}
 		}), Task.DamageEndTime, false);
 	}
-
-#if WITH_EDITOR
-	FTimerHandle ResetTimerHandle;
-	GetWorldTimerManager().SetTimer(ResetTimerHandle,FTimerDelegate::CreateLambda([&]()
-	{
-		DebugParticleSystem->ResetParticles();
-	}),1,true);
-#endif	
 }
 
 AARPGSpecialEffectCreature* AARPGSpecialEffectCreature::Create(
