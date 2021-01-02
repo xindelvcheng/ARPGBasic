@@ -16,19 +16,10 @@ class UARPGDamageBoxComponent : public UBoxComponent
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGDamageBoxComponent",meta=(AllowPrivateAccess))
+	/*缓存伤害设置（此处设置不作为默认）*/
 	TSubclassOf<UDamageType> DamageType;
-
-	//基础伤害加成系数
-	UPROPERTY(BlueprintReadWrite,Category="ARPGDamageBoxComponent",meta=(AllowPrivateAccess))
 	float DamageWeight = 1;
-
-	//基础伤害加成偏置
-	UPROPERTY(BlueprintReadWrite,Category="ARPGDamageBoxComponent",meta=(AllowPrivateAccess))
 	float DamageBias = 0;
-
-	//速度伤害加成系数
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGDamageBoxComponent",meta=(AllowPrivateAccess))
 	float VelocityDamageBonusWeight = 0.01;
 
 	UPROPERTY()
@@ -39,7 +30,7 @@ class UARPGDamageBoxComponent : public UBoxComponent
 
 	FDamageDetectDescriptionStruct DetectDescription;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGDamageBoxComponent",meta=(AllowPrivateAccess))
+	UPROPERTY()
 	UParticleSystem* DamageIncreaseVFX;
 
 	void SetDamageValue(float DamageWeightCoefficient);
@@ -50,13 +41,12 @@ protected:
 	virtual void OnDamageIncrease(float DeltaDamageWeightCoefficient);
 	virtual void OnDamageDecrease(float DeltaDamageWeightCoefficient);
 
+	virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
+
 public:
 	UARPGDamageBoxComponent();
 
 	virtual void BeginPlay() override;
-
-
-	virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 	
 	float BaseDamage;
 
@@ -78,13 +68,13 @@ public:
 		this->DetectDescription = NewDetectDescription;
 	}
 
-	virtual UParticleSystem* GetDamageIncreaseVfx()
+	virtual UParticleSystem* GetDamageIncreaseVFX()
 	{
 		return DamageIncreaseVFX;
 	}
 
-	virtual void SetDamageIncreaseVfx(UParticleSystem* CreatureDamageIncreaseVfx)
+	virtual void SetDamageIncreaseVFX(UParticleSystem* CreatureDamageIncreaseVFX)
 	{
-		DamageIncreaseVFX = CreatureDamageIncreaseVfx;
+		DamageIncreaseVFX = CreatureDamageIncreaseVFX;
 	}
 };

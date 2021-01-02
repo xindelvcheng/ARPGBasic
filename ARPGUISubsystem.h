@@ -229,8 +229,8 @@ class UARPGSingleButtonItemWidget : public UARPGPageContentItemWidget
 	UARPGButton* Button_Operation;
 
 public:
-	void SetItemName(FText ItemName) { TextBlock_ItemName->SetText(ItemName); }
-	void SetItemValue(FText ItemValue) { TextBlock_ItemValue->SetText(ItemValue); }
+	void SetItemName(FText ItemName){ TextBlock_ItemName->SetText(ItemName); }
+	void SetItemValue(FText ItemValue){ TextBlock_ItemValue->SetText(ItemValue); }
 	void SetItemOperationText(FText ItemOperationText){TextBlock_ItemOperation->SetText(ItemOperationText);};
 
 	virtual UARPGButton* GetOperationButton() { return Button_Operation; }

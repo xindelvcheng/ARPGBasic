@@ -106,7 +106,7 @@ void AARPGSpecialEffectCreature::BeginPlay()
 		Task.ParticleSystemComponent->SetRelativeTransform(Task.VisualEffectRelativeTransform);
 		Task.AudioComponent = UGameplayStatics::SpawnSoundAttached(Task.SoundEffectAsset, RootComponent);
 
-		//进行伤害判定
+		//注册伤害判定
 		GetWorldTimerManager().SetTimer(StartTimerHandle, FTimerDelegate::CreateLambda([&]()
 		{
 			if (UARPGDamageSubsystem* DamageSubsystem = UARPGDamageSubsystem::Get(GetWorld()))

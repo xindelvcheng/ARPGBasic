@@ -93,6 +93,7 @@ TArray<UARPGPageContentItemWidget*> UARPGSystemWidget::SetupContent()
 	)
 	{
 		ItemWidget->SetItemName(FText::FromString(TEXT("退出游戏")));
+		ItemWidget->SetItemOperationText(FText::FromString(TEXT("确定退出")));
 		ItemWidget->GetOperationButton()->OnButtonClick().AddLambda([this](UButton*)
 		{
 			UKismetSystemLibrary::QuitGame(GetOwnerPlayerController(), GetOwnerPlayerController(),

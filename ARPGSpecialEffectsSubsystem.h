@@ -63,10 +63,10 @@ public:
 	void PlaySpecialEffectAtLocation(FName EffectName, FVector Location);
 
 	UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffectsSubsystem")
-	USoundBase* GetSoundEffectResource(FName EffectName) { return SoundEffects.FindRef(EffectName); }
+	USoundBase* GetSoundEffectResource(FName EffectName)const { return SoundEffects.FindRef(EffectName); }
 
 	UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffectsSubsystem")
-	UParticleSystem* GetParticleEffectResource(FName EffectName) { return ParticleEffects.FindRef(EffectName); }
+	UParticleSystem* GetParticleEffectResource(FName EffectName) const{ return ParticleEffects.FindRef(EffectName); }
 };
 
 
