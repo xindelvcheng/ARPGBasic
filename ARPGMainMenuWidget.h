@@ -3,7 +3,7 @@
 #pragma once
 
 #include "APRGGameSaver.h"
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"

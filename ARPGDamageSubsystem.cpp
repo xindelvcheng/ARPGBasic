@@ -4,8 +4,9 @@
 #include "ARPGDamageSubsystem.h"
 
 #include "ARPGCharacter.h"
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
 #include "ARPGDamageBoxComponent.h"
+#include "ARPGStaticFunctions.h"
 
 UDamageDetectRecord* UDamageDetectRecord::Create(UARPGDamageBoxComponent* DamageCenterSceneComponent,
                                                  AARPGCharacter* InstigatorCharacter,
@@ -154,7 +155,7 @@ UDamageDetectRecord* UARPGDamageSubsystem::RegisterToDamageDetect(AActor* Damage
 		                              InstigatorCharacter, DelegateOnDamageDetected,
 		                              DamageDetectDescription);
 	}
-	UARPGGameInstanceSubsystem::PrintLogToScreen(
+	UARPGStaticFunctions::PrintLogToScreen(
 		FString::Printf(TEXT("错误，注册DamageDetect的%s没有UARPGDamageBoxComponent"), *DamageCenterActor->GetName()), 15,
 		FColor::Red);
 	return nullptr;

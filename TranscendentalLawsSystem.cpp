@@ -5,7 +5,8 @@
 #include "ARPGAction.h"
 #include "ARPGCharacter.h"
 #include "ARPGCharacterCombatComponent.h"
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
+#include "ARPGStaticFunctions.h"
 
 
 FText ATranscendentalLawsSystem::GetTranscendentalLawsAttainmentText_Implementation()
@@ -90,7 +91,7 @@ void ATranscendentalLawsSystem::SpawnActionActors(const TArray<TSubclassOf<AARPG
 			ActionActors.Add(Action);
 		}else
 		{
-			UARPGGameInstanceSubsystem::PrintLogToScreen(FString::Printf(TEXT("%s ATranscendentalLawsSystem的Action存在NULL"),*AttachedCharacter->GetName()));
+			UARPGStaticFunctions::PrintLogToScreen(FString::Printf(TEXT("%s ATranscendentalLawsSystem的Action存在NULL"),*AttachedCharacter->GetName()));
 		}
 	}
 }

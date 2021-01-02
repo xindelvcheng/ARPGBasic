@@ -3,7 +3,8 @@
 
 #include "ARPGSceneComponent.h"
 
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
+#include "ARPGStaticFunctions.h"
 
 // Sets default values for this component's properties
 UARPGSceneComponent::UARPGSceneComponent()
@@ -19,7 +20,7 @@ void UARPGSceneComponent::SetOwnerCharacter(AARPGCharacter* NewOwner)
 {
 	if (!NewOwner)
 	{
-		UARPGGameInstanceSubsystem::PrintLogToScreen(
+		UARPGStaticFunctions::PrintLogToScreen(
             FString::Printf(TEXT("%s的Owner不是一个ARPGCharacter，可能会引起错误！"), *GetFullName()));
 	}
 	OwnerCharacter = NewOwner;

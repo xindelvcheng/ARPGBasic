@@ -5,7 +5,7 @@
 #include "GameFramework/Character.h"
 #include "particles/ParticleSystem.h"
 #include "ARPGConfigSubsystem.h"
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
 #include "ARPGCollectionComponent.h"
 #include "CharacterConfigPrimaryDataAsset.h"
 #include "CharacterStatusComponent.h"
@@ -18,6 +18,7 @@
 #include <cmath>
 
 #include "ARPGAimComponent.h"
+#include "ARPGStaticFunctions.h"
 
 
 AARPGCharacter::AARPGCharacter()
@@ -88,7 +89,7 @@ void AARPGCharacter::LoadCharacterConfigDataAsset()
 	}
 	else
 	{
-		UARPGGameInstanceSubsystem::PrintLogToScreen(
+		UARPGStaticFunctions::PrintLogToScreen(
             FString::Printf(TEXT("角色%s未设置CharacterConfigPDataAsset"), *GetName()));
 	}
 }

@@ -6,9 +6,10 @@
 #include "ARPGAction.h"
 #include "ARPGAimComponent.h"
 #include "ARPGCastAction.h"
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
 #include "CharacterConfigPrimaryDataAsset.h"
 #include "ARPGLockTargetComponent.h"
+#include "ARPGStaticFunctions.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -47,7 +48,7 @@ void UARPGCharacterCombatComponent::ReInitCharacterActions()
 
 		if (!GetOwnerCharacter()->GetCharacterConfigDataAsset())
 		{
-			UARPGGameInstanceSubsystem::PrintLogToScreen(
+			UARPGStaticFunctions::PrintLogToScreen(
 				FString::Printf(
 					TEXT("%s设置bUseCharacterDataAssetInit=true却没有配置CharacterConfigDataAsset"),
 					*GetOwnerCharacter()->GetName()));
@@ -74,7 +75,7 @@ void UARPGCharacterCombatComponent::ReInitCharacterActions()
 		}
 		else
 		{
-			UARPGGameInstanceSubsystem::PrintLogToScreen(
+			UARPGStaticFunctions::PrintLogToScreen(
 				FString::Printf(
 					TEXT("生成%s的AARPGMeleeAttackAction发生错误"), GetOwner() ? *GetOwner()->GetName() : *this->GetName()));
 		}
@@ -85,7 +86,7 @@ void UARPGCharacterCombatComponent::ReInitCharacterActions()
 	}
 	else if (GetOwnerCharacter()->GetCharacterConfigDataAsset())
 	{
-		UARPGGameInstanceSubsystem::PrintLogToScreen(
+		UARPGStaticFunctions::PrintLogToScreen(
 			FString::Printf(TEXT("%s的DataAsset未配置MeleeAttacks"), *GetOwner()->GetName()));
 	}
 
@@ -114,7 +115,7 @@ void UARPGCharacterCombatComponent::ReInitCharacterActions()
 		}
 		else
 		{
-			UARPGGameInstanceSubsystem::PrintLogToScreen(
+			UARPGStaticFunctions::PrintLogToScreen(
 				FString::Printf(TEXT("%s的Action存在NULL"), *GetOwner()->GetName()));
 		}
 	}
@@ -191,7 +192,7 @@ bool UARPGCharacterCombatComponent::TryToCastSpell(AARPGCastAction* Spell)
 		else
 		{
 			Spell->SetActorTransform(
-				UARPGGameInstanceSubsystem::GetActorNearPositionTransform(GetOwnerCharacter(),
+				UARPGCoreSubsystem::GetActorNearPositionTransform(GetOwnerCharacter(),
 				                                                          {
 					                                                          Spell->GetMaxDistance(), 0, 0
 				                                                          }, FRotator{}));

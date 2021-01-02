@@ -3,7 +3,7 @@
 
 #include "ARPGActorComponent.h"
 
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
 
 // Sets default values for this component's properties
 UARPGActorComponent::UARPGActorComponent()

@@ -4,7 +4,7 @@
 #include "ARPGAIController.h"
 
 #include "ARPGCharacter.h"
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
 #include "ARPGLockTargetComponent.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
@@ -17,12 +17,12 @@ void AARPGAIController::OnPossess(APawn* InPawn)
 	ControlledCharacter = Cast<AARPGCharacter>(InPawn);
 	checkf(ControlledCharacter.Get(), TEXT("ARPGAIContoller only can possess AARPGCharacter"));
 
-	MainCharacter = UARPGGameInstanceSubsystem::GetMainCharacter(GetWorld());
-	if (!MainCharacter.IsValid() && UARPGGameInstanceSubsystem::Get(GetWorld()))
+	MainCharacter = UARPGCoreSubsystem::GetMainCharacter(GetWorld());
+	if (!MainCharacter.IsValid() && UARPGCoreSubsystem::Get(GetWorld()))
 	{
-		UARPGGameInstanceSubsystem::Get(GetWorld())->OnPlayerSetupEnd.AddLambda([&]()
+		UARPGCoreSubsystem::Get(GetWorld())->OnPlayerSetupEnd.AddLambda([&]()
 		{
-			MainCharacter = UARPGGameInstanceSubsystem::GetMainCharacter(GetWorld());
+			MainCharacter = UARPGCoreSubsystem::GetMainCharacter(GetWorld());
 		});
 	}
 }
@@ -82,7 +82,7 @@ void AARPGSimpleAIController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Action_MoveToTarget = UARPGGameInstanceSubsystem::SpawnActor<AAction_MoveToTarget>(ControlledCharacter.Get());
+	Action_MoveToTarget = UARPGCoreSubsystem::SpawnActor<AAction_MoveToTarget>(ControlledCharacter.Get());
 }
 
 void AARPGSimpleAIController::Tick(float DeltaSeconds)

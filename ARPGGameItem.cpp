@@ -9,7 +9,8 @@
 #include "ARPGAction.h"
 #include "ARPGBasicSettings.h"
 #include "ARPGCharacter.h"
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
+#include "ARPGStaticFunctions.h"
 #include "Components/BillboardComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -45,7 +46,7 @@ void AARPGGameItem::BeginPlay()
 	Super::BeginPlay();
 	if (!PromptFX->Template || !GetItemIcon())
 	{
-		UARPGGameInstanceSubsystem::PrintLogToScreen(FString::Printf(TEXT("%s道具未指定美术资源"), *GetName()));
+		UARPGStaticFunctions::PrintLogToScreen(FString::Printf(TEXT("%s道具未指定美术资源"), *GetName()));
 	}
 }
 
@@ -62,7 +63,7 @@ AARPGGameItem* AARPGGameItem::PickUpGameItem(AARPGCharacter* Character)
 
 	FMoveFinishDelegate MoveFinishDelegate;
 	MoveFinishDelegate.BindDynamic(this, &AARPGGameItem::BindToHasBeenTaken);
-	UARPGGameInstanceSubsystem::MoveActorTowardActorWithScale(this, GetOwnerCharacter(), MoveFinishDelegate);
+	UARPGCoreSubsystem::MoveActorTowardActorWithScale(this, GetOwnerCharacter(), MoveFinishDelegate);
 
 	OnBeTaken(Character);
 	return this;

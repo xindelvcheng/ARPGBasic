@@ -6,7 +6,8 @@
 
 #include "ARPGArchiveSubsystem.h"
 #include "ARPGBasicSettings.h"
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
+#include "ARPGStaticFunctions.h"
 #include "ARPGStatusWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
@@ -34,10 +35,10 @@ void AARPGPlayerController::OnPossess(APawn* InPawn)
 	const auto MainCharacter = Cast<AARPGMainCharacter>(InPawn);
 	if (MainCharacter)
 	{
-		UARPGGameInstanceSubsystem* ARPGGameInstanceSubsystem = UARPGGameInstanceSubsystem::Get(GetWorld());
+		UARPGCoreSubsystem* ARPGGameInstanceSubsystem = UARPGCoreSubsystem::Get(GetWorld());
 		MainCharacter->MainPlayerController = this;
 		UARPGStatusWidget* MainCharacterStatusWidget =
-			UARPGGameInstanceSubsystem::GetMainCharacterStatusWidget(GetWorld());
+			UARPGCoreSubsystem::GetMainCharacterStatusWidget(GetWorld());
 		if (MainCharacterStatusWidget)
 		{
 			MainCharacterStatusWidget->BindToMainCharacter(MainCharacter);
@@ -57,7 +58,7 @@ void AARPGPlayerController::OnPossess(APawn* InPawn)
 #if WITH_EDITOR
 	else
 	{
-		UARPGGameInstanceSubsystem::PrintLogToScreen(TEXT("错误，指定主角未继承自MainCharacter"), 15, FColor::Red);
+		UARPGStaticFunctions::PrintLogToScreen(TEXT("错误，指定主角未继承自MainCharacter"), 15, FColor::Red);
 	}
 #endif
 }

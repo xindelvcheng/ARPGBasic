@@ -8,7 +8,7 @@
 #include "Components/TextBlock.h"
 #include "ARPGWidgetsLab.h"
 
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
 #include "ARPGWidgetsLab.h"
 #include "Components/ScrollBoxSlot.h"
 #include "ARPGCollectionComponent.h"
@@ -72,7 +72,7 @@ void UARPGStatusWidget::BeginDestroy()
 void UARPGStatusWidget::ShowNotify(UTexture2D* Icon, FText Title, FText Content)
 {
 	UARPGNotifyWidget* NotifyWidget = Cast<UARPGNotifyWidget>(
-		CreateWidget(UARPGGameInstanceSubsystem::GetMainCharacterController(GetWorld()), NotifyWidgetClass));
+		CreateWidget(UARPGCoreSubsystem::GetMainCharacterController(GetWorld()), NotifyWidgetClass));
 
 	verifyf(NotifyWidget, TEXT("未指定NotifyWidgetClass"))
 

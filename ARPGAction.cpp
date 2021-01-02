@@ -3,7 +3,8 @@
 #include "ARPGBasicSettings.h"
 #include "ARPGCharacter.h"
 #include "ARPGConfigSubsystem.h"
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
+#include "ARPGStaticFunctions.h"
 #include "GameFramework/GameModeBase.h"
 
 
@@ -86,18 +87,17 @@ T* AARPGAction::CreateARPGAction(TSubclassOf<AARPGAction> ActionClass, AARPGChar
                                  FTransform Transform,
                                  FActionFinishDelegate ActionFinishedDelegate, int ActionExclusiveGroupID)
 {
-
-	if (T* Action = GEngine->GetWorldFromContextObject(ActionOwnerCharacter,EGetWorldErrorMode::Assert)->SpawnActorDeferred<T>(
-		ActionClass, Transform, ActionOwnerCharacter, ActionOwnerCharacter,
-		ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
+	if (T* Action = GEngine->GetWorldFromContextObject(ActionOwnerCharacter, EGetWorldErrorMode::Assert)->
+	                         SpawnActorDeferred<T>(
+		                         ActionClass, Transform, ActionOwnerCharacter, ActionOwnerCharacter,
+		                         ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
 	{
 		Action->ExclusiveGroupID = ActionExclusiveGroupID;
 		Action->ActionFinishedEvent.Add(ActionFinishedDelegate);
 		Action->FinishSpawning(Transform);
 		return Action;
 	};
-	UARPGGameInstanceSubsystem::PrintLogToScreen(
-		FString::Printf(TEXT("%s生成Action出现错误"), *ActionOwnerCharacter->GetName()));
+	UARPGStaticFunctions::PrintLogToScreen(FString::Printf(TEXT("%s生成Action出现错误"), *ActionOwnerCharacter->GetName()));
 	return nullptr;
 }
 
@@ -257,11 +257,11 @@ void AARPGMultiMontageAction::OnActionActivate()
 void AARPGMultiMontageAction::OnMontageStop(UAnimMontage* Montage, bool bInterrupted)
 {
 	Super::OnMontageStop(Montage, bInterrupted);
-	
+
 	GetWorldTimerManager().SetTimer(ResetTimerHandle, FTimerDelegate::CreateLambda([&]()
-    {
-        MontageIndex = 0;
-    }), ResetDelay, false);
+	{
+		MontageIndex = 0;
+	}), ResetDelay, false);
 }
 
 void AARPGMultiMontageAction::OnActionFinished(AARPGAction* Action)

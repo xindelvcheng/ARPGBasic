@@ -6,7 +6,8 @@
 
 #include "ARPGCharacter.h"
 #include "ARPGBasicSettings.h"
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
+#include "ARPGStaticFunctions.h"
 #include "Blueprint/WidgetTree.h"
 #include "CharacterStatusComponent.h"
 #include "Components/Image.h"
@@ -105,12 +106,12 @@ void UARPGProgressBar::PostEditChangeProperty(FPropertyChangedEvent& PropertyCha
 
 	if (PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(UARPGProgressBar, OriginalPixelSize))
 	{
-		OriginalRelativeSize = OriginalPixelSize / UARPGGameInstanceSubsystem::GetScreenSize();
+		OriginalRelativeSize = OriginalPixelSize / UARPGCoreSubsystem::GetScreenSize();
 	}
 	else if (PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(
 		UARPGProgressBar, OriginalRelativeSize))
 	{
-		OriginalPixelSize = OriginalRelativeSize * UARPGGameInstanceSubsystem::GetScreenSize();
+		OriginalPixelSize = OriginalRelativeSize * UARPGCoreSubsystem::GetScreenSize();
 	}
 	
 	if (UCanvasPanelSlot* CanvasPanelSlot = Cast<UCanvasPanelSlot>(this->Slot))
@@ -126,7 +127,7 @@ bool UARPGPromptWidget::Initialize()
 
 	if (!Button_Yes || !Button_No || !TextBlock_PromptText)
 	{
-		UARPGGameInstanceSubsystem::PrintLogToScreen(TEXT("ARPGPromptWidget未合理设置"));
+		UARPGStaticFunctions::PrintLogToScreen(TEXT("ARPGPromptWidget未合理设置"));
 		return false;
 	}
 

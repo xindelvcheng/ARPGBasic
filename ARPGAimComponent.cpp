@@ -7,7 +7,7 @@
 #include "ARPGBasicSettings.h"
 #include "ARPGCharacter.h"
 #include "ARPGConfigSubsystem.h"
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
 #include "ARPGMainCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -31,7 +31,7 @@ void UARPGAimComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	AimTargetActor = UARPGGameInstanceSubsystem::SpawnActor<AAimTargetActor>(
+	AimTargetActor = UARPGCoreSubsystem::SpawnActor<AAimTargetActor>(
 		AimPromptActorClass, FTransform{}, GetOwnerCharacter());
 
 	bAimTargetResultIsValid = false;

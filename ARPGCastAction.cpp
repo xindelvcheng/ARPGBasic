@@ -10,9 +10,10 @@
 
 #include "ARPGCharacter.h"
 #include "ARPGConfigSubsystem.h"
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "ARPGSpecialEffectsSubsystem.h"
+#include "ARPGStaticFunctions.h"
 
 void AARPGCastAction::InitTasks()
 {
@@ -70,7 +71,7 @@ AARPGCastAction* AARPGCastAction::Create(AARPGCharacter* ActionOwnerCharacter,
 		Action->FinishSpawning(FTransform{});
 		return Action;
 	};
-	UARPGGameInstanceSubsystem::PrintLogToScreen(
+	UARPGStaticFunctions::PrintLogToScreen(
 		FString::Printf(TEXT("%s生成AARPGCastAction出现错误"), *ActionOwnerCharacter->GetName()));
 	return nullptr;
 }
@@ -99,7 +100,7 @@ AARPGCastAction* AARPGCastAction::Create(AARPGCharacter* ActionOwnerCharacter, c
 		}
 	}
 
-	UARPGGameInstanceSubsystem::PrintLogToScreen(FString::Printf(TEXT("生成技能执行者%s失败，配置错误"), *SpellName.ToString()),15,FColor::Red);
+	UARPGStaticFunctions::PrintLogToScreen(FString::Printf(TEXT("生成技能执行者%s失败，配置错误"), *SpellName.ToString()),15,FColor::Red);
 	return nullptr;
 }
 

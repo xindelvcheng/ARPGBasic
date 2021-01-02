@@ -11,7 +11,8 @@
 #include "ARPGCharacter.h"
 #include "ARPGDamageBoxComponent.h"
 #include "ARPGDamageSubsystem.h"
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
+#include "ARPGStaticFunctions.h"
 
 
 void UARPGSpecialEffectsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -42,6 +43,10 @@ void UARPGSpecialEffectsSubsystem::PlaySoundEffect2D(FName EffectName)
 	{
 		UGameplayStatics::PlaySound2D(this, SoundResource);
 	}
+	else
+	{
+		UARPGStaticFunctions::PrintLogToScreen(TEXT("UARPGSpecialEffectsSubsystem:PlaySoundEffect2D未找到指定音乐资源"));
+	}
 }
 
 void UARPGSpecialEffectsSubsystem::PlaySpecialEffectAtLocation(FName EffectName, FVector Location)
@@ -49,6 +54,11 @@ void UARPGSpecialEffectsSubsystem::PlaySpecialEffectAtLocation(FName EffectName,
 	if (USoundBase* SoundResource = SoundEffects.FindRef(EffectName))
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, SoundResource, Location);
+	}
+	else
+	{
+		UARPGStaticFunctions::PrintLogToScreen(
+			TEXT("UARPGSpecialEffectsSubsystem:PlaySpecialEffectAtLocation未找到指定音乐资源"));
 	}
 }
 
@@ -125,12 +135,12 @@ AARPGSpecialEffectCreature* AARPGSpecialEffectCreature::Create(
 	FTransform Transform,
 	AARPGCharacter* CreatureOwnerCharacter)
 {
-	if (const auto SpecialEffectCreature = UARPGGameInstanceSubsystem::SpawnActor<AARPGSpecialEffectCreature>(
+	if (const auto SpecialEffectCreature = UARPGCoreSubsystem::SpawnActor<AARPGSpecialEffectCreature>(
 		CreatureClass, Transform, CreatureOwnerCharacter))
 	{
 		return SpecialEffectCreature;
 	}
 
-	UARPGGameInstanceSubsystem::PrintLogToScreen(FString::Printf(TEXT("ARPGSpecialEffectCreature初始化出现错误")));
+	UARPGStaticFunctions::PrintLogToScreen(FString::Printf(TEXT("ARPGSpecialEffectCreature初始化出现错误")));
 	return nullptr;
 }

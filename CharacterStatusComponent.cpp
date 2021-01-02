@@ -8,7 +8,7 @@
 #include "ARPGBasicSettings.h"
 #include "CharacterConfigPrimaryDataAsset.h"
 #include "ARPGCharacter.h"
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
 #include "ARPGMainCharacter.h"
 #include "ARPGSpecialEffectsSubsystem.h"
 
@@ -68,7 +68,7 @@ void UCharacterStatusComponent::SetCurrentHP(const int NewCurrentHP)
 			}
 
 
-			if (AARPGMainCharacter* MainCharacter = UARPGGameInstanceSubsystem::GetMainCharacter(GetWorld()))
+			if (AARPGMainCharacter* MainCharacter = UARPGCoreSubsystem::GetMainCharacter(GetWorld()))
 			{
 				if (GetOwnerCharacter() != MainCharacter)
 				{

@@ -5,7 +5,8 @@
 
 
 #include "ARPGBasicSettings.h"
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
+#include "ARPGStaticFunctions.h"
 #include "AssetRegistryModule.h"
 #include "Engine/DataTable.h"
 
@@ -44,7 +45,7 @@ void UARPGConfigSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 #if WITH_EDITOR
 		if (!bBasicConfigComplete)
 		{
-			UARPGGameInstanceSubsystem::PrintLogToScreen(TEXT("错误，ARPG未完成基本项目设置"), 15, FColor::Red);
+			UARPGStaticFunctions::PrintLogToScreen(TEXT("错误，ARPG未完成基本项目设置"), 15, FColor::Red);
 		}
 #endif
 	}

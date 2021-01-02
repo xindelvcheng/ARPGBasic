@@ -9,7 +9,7 @@
 
 
 #include "Subsystems/GameInstanceSubsystem.h"
-#include "ARPGGameInstanceSubsystem.generated.h"
+#include "ARPGCoreSubsystem.generated.h"
 
 class UARPGStatusWidget;
 class AARPGPlayerController;
@@ -35,7 +35,7 @@ enum class EChoice:uint8
 };
 
 UCLASS()
-class UARPGGameInstanceSubsystem : public UGameInstanceSubsystem
+class UARPGCoreSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 	/*此三个变量在ARPG Player Controller的OnPosses回调中赋值，蓝图中可以获得*/
@@ -98,22 +98,16 @@ public:
 	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",meta=(ExpandEnumAsExecs="Choice"))
 	static void RandomChoice(float ChanceA, EChoice& Choice);
 
-	static void PrintLogToScreen(FString Message, float Time = 5, FColor Color = FColor::Yellow);
-	static void PrintLogToScreen(FText Message, float Time = 5, FColor Color = FColor::Yellow);
-	static void PrintLogToScreen(float Message, float Time = 5, FColor Color = FColor::Yellow);
-	static void PrintLogToScreen(UObject* Message, float Time = 5, FColor Color = FColor::Yellow);
-
-
 	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",BlueprintPure)
 	static FTransform GetActorNearPositionTransform(AActor* OriginActor,
 	                                                const FVector LocationOffset,
 	                                                const FRotator RotationOffset);
 
-	static UARPGGameInstanceSubsystem* Get(UWorld* World)
+	static UARPGCoreSubsystem* Get(UWorld* World)
 	{
 		if (World && World->GetGameInstance())
 		{
-			return World->GetGameInstance()->GetSubsystem<UARPGGameInstanceSubsystem>();
+			return World->GetGameInstance()->GetSubsystem<UARPGCoreSubsystem>();
 		}
 
 		return nullptr;

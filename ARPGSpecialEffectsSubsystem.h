@@ -48,7 +48,7 @@ public:
 
 	static UARPGSpecialEffectsSubsystem* Get(UWorld* World)
 	{
-		if (World && World->GetGameInstance() && World->GetGameInstance()->GetSubsystem<UARPGSpecialEffectsSubsystem>())
+		if (World && World->GetGameInstance())
 		{
 			return World->GetGameInstance()->GetSubsystem<UARPGSpecialEffectsSubsystem>();
 		}
@@ -112,7 +112,7 @@ protected:
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
 	UARPGDamageBoxComponent* DamageDetectionBox;
 
-	/*该组件仅在编译器模式下被初始化，用于调试粒子系统匹配伤害盒子*/
+	/*该组件仅用于调试粒子系统匹配伤害盒子*/
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
 	UParticleSystemComponent* DebugParticleSystem;
 
@@ -152,7 +152,7 @@ public:
 	}
 };
 
-/*用于罗列项目中所有的粒子特效*/
+/*开发阶段用于罗列项目中所有的粒子特效*/
 USTRUCT(BlueprintType)
 struct FParticleSystemListRow : public FTableRowBase
 {

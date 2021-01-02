@@ -5,7 +5,7 @@
 
 
 #include "ARPGBasicSettings.h"
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
 #include "Tasks/AITask_MoveTo.h"
 #include "AIModule/Classes/AIController.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
@@ -62,7 +62,7 @@ void AARPGNonPlayerCharacter::HideHPBar()
 
 void AARPGNonPlayerCharacter::OnNPCDeath()
 {
-    AARPGMainCharacter* MainCharacter = UARPGGameInstanceSubsystem::GetMainCharacter(GetWorld());
+    AARPGMainCharacter* MainCharacter = UARPGCoreSubsystem::GetMainCharacter(GetWorld());
     if (MainCharacter)
     {
         MainCharacter->UpdateCoins(GetCoins());

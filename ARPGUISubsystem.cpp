@@ -3,7 +3,7 @@
 
 #include "ARPGUISubsystem.h"
 
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
 
 void UARPGUISubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {

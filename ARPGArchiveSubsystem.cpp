@@ -7,12 +7,13 @@
 #include "Kismet/KismetTextLibrary.h"
 #include "Engine/Classes/Engine/LevelStreaming.h"
 
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
 #include "APRGGameSaver.h"
 #include "ARPGBasicSettings.h"
 #include "CollectableItemWidget.h"
 #include "ARPGPlayerController.h"
 #include "ARPGCollectionComponent.h"
+#include "ARPGStaticFunctions.h"
 
 #include "TranscendentalCombatComponent.h"
 #include "TranscendentalLawsSystem.h"
@@ -61,13 +62,13 @@ void UARPGArchiveSubsystem::Deinitialize()
 
 bool UARPGArchiveSubsystem::SaveArchive(FString ArchiveName, FSaveGameDelegate CompleteDelegate)
 {
-	UARPGGameInstanceSubsystem::ShowNotify(GetWorld(), UARPGBasicSettings::Get()->Icons[0].LoadSynchronous(),
+	UARPGCoreSubsystem::ShowNotify(GetWorld(), UARPGBasicSettings::Get()->Icons[0].LoadSynchronous(),
 	                                       FText::FromString(TEXT("正在保存游戏")), FText::FromString(TEXT("")));
 	OnGameSaving.Broadcast();
 	GameSaver = Cast<UAPRGGameSaver>(UGameplayStatics::CreateSaveGameObject(UAPRGGameSaver::StaticClass()));
 	GameSaver->CurrentMap = CurrentStreamingLevelName;
 
-	if (auto MainCharacter = UARPGGameInstanceSubsystem::GetMainCharacter(this))
+	if (auto MainCharacter = UARPGCoreSubsystem::GetMainCharacter(this))
 	{
 		GameSaver->MainCharacterTransform = MainCharacter->GetTransform();
 	}
@@ -125,7 +126,7 @@ bool UARPGArchiveSubsystem::SaveArchive(FString ArchiveName, FSaveGameDelegate C
 				ArchiveManager, ArchiveManageSlot, 0);
 			OnGameSaveSuccess.Broadcast();
 			CompleteDelegate.ExecuteIfBound();
-			UARPGGameInstanceSubsystem::ShowNotify(GetWorld(), UARPGBasicSettings::Get()->Icons[0].LoadSynchronous(),
+			UARPGCoreSubsystem::ShowNotify(GetWorld(), UARPGBasicSettings::Get()->Icons[0].LoadSynchronous(),
 			                                       FText::FromString(TEXT("游戏已保存")), FText::FromString(TEXT("")));
 		});
 	UGameplayStatics::AsyncSaveGameToSlot(GameSaver, ArchiveName, 0, AsyncSaveGameToSlotDelegate);
@@ -193,7 +194,7 @@ void UARPGArchiveSubsystem::BPFunc_LoadArchive(UObject* WorldContextObject, int 
 void UARPGArchiveSubsystem::OnLevelLoaded()
 {
 	OnLevelLoadSuccess.Broadcast();
-	if (auto MainCharacter = UARPGGameInstanceSubsystem::GetMainCharacter(GetWorld()))
+	if (auto MainCharacter = UARPGCoreSubsystem::GetMainCharacter(GetWorld()))
 	{
 		MainCharacter->SetActorTransform(GameSaver->MainCharacterTransform);
 	}
@@ -229,12 +230,12 @@ void UARPGArchiveSubsystem::OnLevelLoaded()
 		{
 			if (auto MainCharacter = Cast<AARPGMainCharacter>(Character))
 			{
-				UARPGGameInstanceSubsystem::Get(GetWorld())->SetMainCharacter(MainCharacter);
+				UARPGCoreSubsystem::Get(GetWorld())->SetMainCharacter(MainCharacter);
 				UGameplayStatics::GetPlayerController(GetWorld(), 0)->Possess(Character);
 			}
 			else
 			{
-				UARPGGameInstanceSubsystem::PrintLogToScreen(TEXT("错误，主角不是AARPGMainCharacter子类"));
+				UARPGStaticFunctions::PrintLogToScreen(TEXT("错误，主角不是AARPGMainCharacter子类"));
 			}
 		}
 		else
@@ -250,11 +251,11 @@ void UARPGArchiveSubsystem::OnLevelLoaded()
 	//从存档还原道具
 	TArray<AARPGGameItem*> Bag;
 
-	if (auto MainCharacter = UARPGGameInstanceSubsystem::GetMainCharacter(this))
+	if (auto MainCharacter = UARPGCoreSubsystem::GetMainCharacter(this))
 	{
 		for (auto GameItemArchiveStruct : GameSaver->GameItems)
 		{
-			AARPGGameItem* GameItem = UARPGGameInstanceSubsystem::SpawnActor<AARPGGameItem>(
+			AARPGGameItem* GameItem = UARPGCoreSubsystem::SpawnActor<AARPGGameItem>(
 				GameItemArchiveStruct.GameItemClass.LoadSynchronous(), GameItemArchiveStruct.Transform, MainCharacter);
 			if (GameItem)
 			{

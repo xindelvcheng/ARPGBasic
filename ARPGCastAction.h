@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "ARPGAction.h"
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
 #include "Engine/DataTable.h"
 
 #include "ARPGCastAction.generated.h"

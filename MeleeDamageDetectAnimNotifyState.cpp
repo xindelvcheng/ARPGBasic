@@ -7,7 +7,8 @@
 #include "ARPGCharacter.h"
 #include "ARPGDamageBoxComponent.h"
 #include "ARPGDamageSubsystem.h"
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
+#include "ARPGStaticFunctions.h"
 #include "CharacterStatusComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -27,7 +28,7 @@ void UMeleeDamageDetectAnimNotifyState::NotifyBegin(USkeletalMeshComponent* Mesh
 					OwnerCharacter->GetComponentByClass(UARPGDamageBoxComponent::StaticClass()));
 				if (!WeaponDamageBoxCollision)
 				{
-					UARPGGameInstanceSubsystem::PrintLogToScreen(
+					UARPGStaticFunctions::PrintLogToScreen(
 						TEXT(
 							"错误，使用UMeleeDamageDetectAnimNotifyState检测伤害的角色必须指定WeaponDamageBoxCollision(应为包裹武器的UARPGDamageBoxComponent)"),
 						15, FColor::Red);

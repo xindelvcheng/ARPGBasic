@@ -6,8 +6,9 @@
 #include "Kismet/KismetTextLibrary.h"
 #include "ARPGBasicSettings.h"
 #include "ARPGMainCharacter.h"
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
 #include "ARPGPlayerController.h"
+#include "ARPGStaticFunctions.h"
 #include "CharacterStatusComponent.h"
 #include "TranscendentalCombatComponent.h"
 #include "TranscendentalLawsSystem.h"
@@ -32,7 +33,7 @@ TArray<UARPGPageContentItemWidget*> UARPGSpellManagerPageWidget::SetupContent()
 	TArray<UARPGPageContentItemWidget*> Content;
 	if (!GetOwnerCharacter())
 	{
-		UARPGGameInstanceSubsystem::PrintLogToScreen(TEXT("编辑器状态下无法查看角色信息"));
+		UARPGStaticFunctions::PrintLogToScreen(TEXT("编辑器状态下无法查看角色信息"));
 		return TArray<UARPGPageContentItemWidget*>{};	
 	}
 

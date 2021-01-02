@@ -3,7 +3,8 @@
 
 #include "ARPGActor.h"
 
-#include "ARPGGameInstanceSubsystem.h"
+#include "ARPGCoreSubsystem.h"
+#include "ARPGStaticFunctions.h"
 
 void AARPGActor::PostActorCreated()
 {
@@ -17,7 +18,7 @@ void AARPGActor::PostActorCreated()
 			Character = Cast<AARPGCharacter>(GetOwner());
 			if (!Character)
 			{
-				UARPGGameInstanceSubsystem::PrintLogToScreen(
+				UARPGStaticFunctions::PrintLogToScreen(
                     FString::Printf(TEXT("%s的Owner和Instigator都未指定为一个ARPGCharacter，可能会引起错误！"), *GetFullName()));
 				
 			}
