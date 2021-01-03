@@ -54,7 +54,7 @@ void UARPGDamageBoxComponent::BeginPlay()
 
 	AARPGCharacter* OwnerCharacter = GetOwner<AARPGCharacter>();
 	ActorsToIgnore.AddUnique(OwnerCharacter);
-	
+
 	PrimaryComponentTick.SetTickFunctionEnable(false);
 }
 
@@ -99,18 +99,6 @@ void UARPGDamageBoxComponent::TickComponent(float DeltaTime, ELevelTick TickType
 void UARPGDamageBoxComponent::OnHitDetected(FHitResult HitResult)
 {
 	HitDetectedEvent.Broadcast(HitResult);
-	float BaseAttack = 1;
-	AARPGCharacter* OwnerCharacter = GetOwner<AARPGCharacter>();
-
-	if (OwnerCharacter)
-	{
-		BaseAttack = OwnerCharacter->GetCharacterStatusComponent()->GetAttack();
-	}
-
-
-	const float BaseDamage = DamageDetectDescriptionStruct.DamageWeight * BaseAttack + DamageDetectDescriptionStruct.
-		DamageBias + GetOwner()->GetVelocity().Size() *
-		DamageDetectDescriptionStruct.VelocityDamageBonusWeight;
 
 	if (UARPGDamageBoxComponent* DamageBoxComponent = Cast<UARPGDamageBoxComponent>(HitResult.GetComponent()))
 	{
@@ -120,11 +108,29 @@ void UARPGDamageBoxComponent::OnHitDetected(FHitResult HitResult)
 	if (DamageDetectDescriptionStruct.CauseDamage)
 	{
 		AActor* HitActor = HitResult.GetActor();
-		UGameplayStatics::ApplyPointDamage(
-			HitActor, BaseDamage,
-			HitResult.Location, HitResult,
-			OwnerCharacter ? OwnerCharacter->GetController() : nullptr,
-			OwnerCharacter, DamageDetectDescriptionStruct.DamageTypeClass);
+		if (AARPGCharacter* OwnerCharacter = GetOwner<AARPGCharacter>())
+		{
+			const float BaseAttack = OwnerCharacter->GetCharacterStatusComponent()->GetAttack();
+			const float BaseDamage = DamageDetectDescriptionStruct.DamageWeight * BaseAttack +
+				DamageDetectDescriptionStruct.DamageBias + GetOwner()->GetVelocity().Size() *
+				DamageDetectDescriptionStruct.VelocityDamageBonusWeight;
+
+
+			UGameplayStatics::ApplyPointDamage(
+				HitActor, BaseDamage,
+				HitResult.Location, HitResult,
+				OwnerCharacter->GetController(),
+				OwnerCharacter, DamageDetectDescriptionStruct.DamageTypeClass);
+		}
+		else //机关伤害
+		{
+			UGameplayStatics::ApplyPointDamage(
+				HitActor, DamageDetectDescriptionStruct.DamageBias,
+				HitResult.Location, HitResult,
+				nullptr,
+				nullptr,
+				DamageDetectDescriptionStruct.DamageTypeClass);
+		}
 	}
 }
 
