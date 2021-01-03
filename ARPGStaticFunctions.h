@@ -25,6 +25,8 @@ public:
 	static void PrintLogToScreen(float Message, float Time = 5, FColor Color = FColor::Yellow);
 	static void PrintLogToScreen(UObject* Message, float Time = 5, FColor Color = FColor::Yellow);
 
+	static void PrintLogToLog(FString Message);
+
 	DECLARE_DELEGATE_OneParam(FActorInitializeDelegate, AActor*);
 	template <typename T>
 	static T* SpawnActor(UClass* ActorClass, FTransform Transform, AARPGCharacter* OwnerCharacter,

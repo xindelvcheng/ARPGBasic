@@ -30,6 +30,11 @@ void UARPGStaticFunctions::PrintLogToScreen(UObject* Message, float Time, FColor
 	PrintLogToScreen(Message->GetFullName(), Time, Color);
 }
 
+void UARPGStaticFunctions::PrintLogToLog(FString Message)
+{
+	UE_LOG(LogTemp,Warning,TEXT("%s"),*Message);
+}
+
 void UARPGStaticFunctions::RandomChoice(float chance, EChoice& Choice)
 {
 	if (chance >= FMath::FRand())

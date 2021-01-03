@@ -95,7 +95,7 @@ void UARPGAimComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		const TArray<AActor*> IgnoreActors = {GetOwnerCharacter()};
 		FHitResult HitResult;
 		UKismetSystemLibrary::LineTraceSingle(this, ViewInfo.Location,
-		                                      ViewInfo.Location + ViewInfo.Rotation.Vector() * MaxDistance,
+		                                      ViewInfo.Location + ViewInfo.Rotation.Vector() * AimRadius,
 		                                      ETraceTypeQuery::TraceTypeQuery1, false, IgnoreActors,
 		                                      EDrawDebugTrace::None, HitResult, true);
 		

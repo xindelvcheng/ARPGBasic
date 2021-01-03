@@ -11,6 +11,8 @@
 
 class AAimTargetActor;
 
+//TODO：将瞄准组件修改为围绕主角周围的一个圈的方向，释放法术（法术向前移动）
+
 /**
  * 
  */
@@ -31,8 +33,9 @@ class TESTPROJECT_API UARPGAimComponent : public UARPGSceneComponent
 	float AimTargetResetDuration = 15;
 
 	FTimerHandle ResetAimTargetTimerHandle;
-	
-	int MaxDistance = 3000;
+
+	/*瞄准光圈的半径*/
+	float AimRadius = 500;
 
 public:
 	UARPGAimComponent();

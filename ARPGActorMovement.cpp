@@ -5,6 +5,9 @@
 
 #include <complex>
 
+#include "ARPGStaticFunctions.h"
+#include "Kismet/KismetStringLibrary.h"
+
 
 // Sets default values for this component's properties
 UARPGActorTimeFunctionMovement::UARPGActorTimeFunctionMovement()
@@ -23,6 +26,27 @@ void UARPGActorTimeFunctionMovement::Move(FMoveFunction NewMoveFunction)
 	MoveFunction = NewMoveFunction;
 }
 
+void UARPGActorTimeFunctionMovement::MoveForward()
+{
+	FMoveFunction NewMoveFunction;
+	NewMoveFunction.BindDynamic(this, &UARPGActorTimeFunctionMovement::MoveForwardFunction);
+	Move(NewMoveFunction);
+}
+
+
+// ReSharper disable once CppMemberFunctionMayBeConst
+FTransform UARPGActorTimeFunctionMovement::MoveForwardFunction(float Time)
+{
+	FTransform Transform;
+	
+	if (AActor* OwnerActor = GetOwner())
+	{
+		const FVector XYForwardVector = FVector{OwnerActor->GetActorForwardVector().X,OwnerActor->GetActorForwardVector().Y,0}.GetSafeNormal();
+		Transform.SetLocation(XYForwardVector * Time * 5);
+	}
+	
+	return Transform;
+}
 
 // Called every frame
 void UARPGActorTimeFunctionMovement::TickComponent(float DeltaTime, ELevelTick TickType,
@@ -41,6 +65,7 @@ void UARPGActorTimeFunctionMovement::TickComponent(float DeltaTime, ELevelTick T
 				OriginTransform.GetLocation() + MoveFunction.Execute(Timer).GetLocation() * 100,
 				OriginTransform.GetScale3D() * MoveFunction.Execute(Timer).GetScale3D()
 			});
+			UARPGStaticFunctions::PrintLogToLog(UKismetStringLibrary::Conv_VectorToString(OriginTransform.GetLocation() + MoveFunction.Execute(Timer).GetLocation() * 100));
 		};
 	}
 }
@@ -64,7 +89,7 @@ UARPGActorTowardsActorMovement::UARPGActorTowardsActorMovement()
 
 void UARPGActorTowardsActorMovement::MoveTowardsActor(AActor* Target, float NewAcceptableRadius)
 {
-	MoveTowardsActor(Target,FMoveFunction{},NewAcceptableRadius);
+	MoveTowardsActor(Target, FMoveFunction{}, NewAcceptableRadius);
 }
 
 void UARPGActorTowardsActorMovement::MoveTowardsActor(AActor* Target, FMoveFunction AdditionalFunction,
@@ -78,14 +103,14 @@ void UARPGActorTowardsActorMovement::MoveTowardsActor(AActor* Target, FMoveFunct
 void UARPGActorTowardsActorMovement::MoveTowardsActorWithScale(AActor* Target)
 {
 	FMoveFunction NewAdditionalFunction;
-	NewAdditionalFunction.BindDynamic(this,&UARPGActorTowardsActorMovement::ScaleFunction);
-	MoveTowardsActor(Target,NewAdditionalFunction);
+	NewAdditionalFunction.BindDynamic(this, &UARPGActorTowardsActorMovement::ScaleFunction);
+	MoveTowardsActor(Target, NewAdditionalFunction);
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
 FTransform UARPGActorTowardsActorMovement::ScaleFunction(float Time)
 {
 	FTransform Transform;
-	Transform.SetScale3D( Transform.GetScale3D()*std::exp(-Time/50));
+	Transform.SetScale3D(Transform.GetScale3D() * std::exp(-Time / 50));
 	return Transform;
 }

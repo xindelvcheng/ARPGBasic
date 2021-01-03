@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 
-#include "ARPGActorComponent.h"
 #include "Components/ActorComponent.h"
 #include "ARPGActorMovement.generated.h"
 
@@ -26,9 +25,15 @@ private:
 public:
 	// Sets default values for this component's properties
 	UARPGActorTimeFunctionMovement();
+	
 	UFUNCTION(BlueprintCallable,Category="ARPGActorMovement")
 	void Move(FMoveFunction NewMoveFunction);
 
+	UFUNCTION(BlueprintCallable,Category="ARPGActorMovement")
+    void MoveForward();
+
+	UFUNCTION()
+	FTransform MoveForwardFunction(float Time);
 
 	virtual float GetTimer()
 	{
