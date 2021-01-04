@@ -3,6 +3,8 @@
 
 #include "ARPGAimComponent.h"
 
+#include <complex>
+
 
 #include "ARPGBasicSettings.h"
 #include "ARPGCharacter.h"
@@ -48,9 +50,11 @@ void UARPGAimComponent::Activate(bool bReset)
 
 	if (AARPGMainCharacter* Character = Cast<AARPGMainCharacter>(GetOwner()))
 	{
-		Character->GetCameraBoom()->SetRelativeLocation({300,0,100});
+		/*瞄准时调整视角*/
+		Character->GetCameraBoom()->TargetArmLength = 0;
+		Character->GetCameraBoom()->SetRelativeLocation(
+			Character->GetMesh()->GetSocketTransform(TEXT("head"), ERelativeTransformSpace::RTS_Actor).GetLocation()+FVector{0,0,50});
 	}
-	
 }
 
 void UARPGAimComponent::Deactivate()
@@ -62,7 +66,9 @@ void UARPGAimComponent::Deactivate()
 
 	if (AARPGMainCharacter* Character = Cast<AARPGMainCharacter>(GetOwner()))
 	{
-		Character->GetCameraBoom()->SetRelativeLocation({0,0,0});
+		/*取消瞄准时还原视角*/
+		Character->GetCameraBoom()->TargetArmLength = 300;
+		Character->GetCameraBoom()->SetRelativeLocation({0, 0, 0});
 	}
 
 
@@ -92,15 +98,10 @@ void UARPGAimComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	{
 		FMinimalViewInfo ViewInfo;
 		GetOwnerCharacter()->CalcCamera(0, ViewInfo);
-		const TArray<AActor*> IgnoreActors = {GetOwnerCharacter()};
-		FHitResult HitResult;
-		UKismetSystemLibrary::LineTraceSingle(this, ViewInfo.Location,
-		                                      ViewInfo.Location + ViewInfo.Rotation.Vector() * AimRadius,
-		                                      ETraceTypeQuery::TraceTypeQuery1, false, IgnoreActors,
-		                                      EDrawDebugTrace::None, HitResult, true);
-		
-		AimTargetActor->SetActorLocation(HitResult.bBlockingHit?HitResult.Location:HitResult.TraceEnd);
-		AimTargetActor->SetActorRotation((HitResult.Location - GetOwnerCharacter()->GetActorLocation()).Rotation());
+		AimTargetActor->SetActorLocation(GetOwner()->GetActorLocation() + ViewInfo.Rotation.Vector() * AimRadius);
+		/*如果角度不对就调整AAimTargetActor的本地朝向*/
+		AimTargetActor->SetActorRotation(ViewInfo.Rotation);
+
 		bAimTargetResultIsValid = true;
 	}
 }

@@ -34,7 +34,10 @@ class TESTPROJECT_API UARPGAimComponent : public UARPGSceneComponent
 
 	FTimerHandle ResetAimTargetTimerHandle;
 
-	/*瞄准光圈的半径*/
+	/*标准光圈的高度(cm)*/
+	float AimObjectHeight = 70;
+	
+	/*瞄准光圈的半径(cm)*/
 	float AimRadius = 500;
 
 public:
