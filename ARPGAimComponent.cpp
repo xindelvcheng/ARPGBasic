@@ -3,18 +3,11 @@
 
 #include "ARPGAimComponent.h"
 
-#include <complex>
-
-
 #include "ARPGBasicSettings.h"
 #include "ARPGCharacter.h"
-#include "ARPGConfigSubsystem.h"
-#include "ARPGCoreSubsystem.h"
 #include "ARPGMainCharacter.h"
 #include "ARPGStaticFunctions.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Kismet/KismetSystemLibrary.h"
-#include "particles/ParticleSystemComponent.h"
 
 UARPGAimComponent::UARPGAimComponent()
 {
