@@ -6,32 +6,6 @@
 #include "ARPGCoreSubsystem.h"
 #include "ARPGStaticFunctions.h"
 
-void AARPGActor::PostActorCreated()
-{
-	Super::PostActorCreated();
-
-	if (!OwnerCharacter.IsValid())
-	{
-		AARPGCharacter* Character = Cast<AARPGCharacter>(GetInstigator());
-		if (!Character)
-		{
-			Character = Cast<AARPGCharacter>(GetOwner());
-			if (!Character)
-			{
-				UARPGStaticFunctions::PrintLogToScreen(
-                    FString::Printf(TEXT("%s的Owner和Instigator都未指定为一个ARPGCharacter，可能会引起错误！"), *GetFullName()));
-				
-			}
-		}
-		SetOwnerCharacter(Character);
-	}
-}
-
-void AARPGActor::SetOwnerCharacter(AARPGCharacter* NewOwner)
-{
-	OwnerCharacter = NewOwner; 
-}
-
 // Sets default values
 AARPGActor::AARPGActor()
 {

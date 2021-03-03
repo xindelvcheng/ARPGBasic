@@ -17,6 +17,10 @@ class AARPGMainCharacter;
 class USaveGame;
 class UActorMoveRecord;
 
+/*TODO：构建事件路由*/
+/*Instigator,EventName*/
+DECLARE_MULTICAST_DELEGATE_TwoParams(FARPGEvent,UObject*,FName);
+
 /**
 * 管理游戏进程的子系统
 */
@@ -29,6 +33,8 @@ class UARPGCoreSubsystem : public UGameInstanceSubsystem
 	TWeakObjectPtr<AARPGPlayerController> MainCharacterController;
 	TWeakObjectPtr<UARPGStatusWidget> StatusWidget;
 
+	FARPGEvent ARPGEvent;
+
 
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
@@ -37,6 +43,7 @@ protected:
 	UPROPERTY()
 	UUserWidget* LoadingWidget;
 public:
+	
 
 	DECLARE_MULTICAST_DELEGATE_OneParam(FPreLoadMapDelegate, const FString& /* MapName */);
 	FPreLoadMapDelegate PreLoadMap;

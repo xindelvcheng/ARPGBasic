@@ -16,6 +16,8 @@
 class UARPGDamageBoxComponent;
 class AARPGCharacter;
 
+/*TODO:将AARPGSpecialEffectCreature分离为法术造物，并将其改为移动*/
+
 USTRUCT()
 struct FPlaySoundDescription
 {
@@ -69,85 +71,6 @@ public:
 	UParticleSystem* GetParticleEffectResource(FName EffectName) const{ return ParticleEffects.FindRef(EffectName); }
 };
 
-
-USTRUCT(BlueprintType)
-struct FARPGCreatureTimeLineTaskStruct
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-	float DamageStartTime = 0.3;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-	float Duration = 0.2;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-	USoundBase* SoundEffectAsset;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-	UParticleSystem* VisualEffectAsset;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-	FTransform VisualEffectRelativeTransform;
-
-	TWeakObjectPtr<UParticleSystemComponent> ParticleSystemComponent;
-	TWeakObjectPtr<UAudioComponent> AudioComponent;
-
-	float DamageEndTime;
-};
-
-UCLASS(Blueprintable)
-class AARPGSpecialEffectCreature : public AARPGActor
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpecialEffect",meta=(AllowPrivateAccess))
-	UParticleSystem* DamageIncreaseVFX;
-
-protected:
-
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-	UARPGDamageBoxComponent* DamageDetectionBox;
-
-	/*该组件仅用于调试粒子系统匹配伤害盒子*/
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-	UParticleSystemComponent* DebugParticleSystem;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-	float DamageWeight = 1;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-	float DamageBias = 10;
-
-
-	virtual void BeginPlay() override;
-
-
-public:
-	AARPGSpecialEffectCreature();
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-	TSubclassOf<UDamageType> DamageType;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-	TArray<FARPGCreatureTimeLineTaskStruct> TimeLineTasks;
-
-
-	UFUNCTION(BlueprintCallable,Category="ARPGSpecialEffectCreature",DisplayName="CreateARPGSpecialEffectCreature")
-	static AARPGSpecialEffectCreature* Create(TSubclassOf<AARPGSpecialEffectCreature> CreatureClass,
-	                                          FTransform Transform, AARPGCharacter* CreatureOwnerCharacter);
-
-
-	virtual UParticleSystem* GetDamageIncreaseVFX()
-	{
-		return DamageIncreaseVFX;
-	}
-
-	virtual void SetDamageIncreaseVFX(UParticleSystem* CreatureDamageIncreaseVfx)
-	{
-		DamageIncreaseVFX = CreatureDamageIncreaseVfx;
-	}
-};
 
 /*开发阶段用于罗列项目中所有的粒子特效*/
 USTRUCT(BlueprintType)

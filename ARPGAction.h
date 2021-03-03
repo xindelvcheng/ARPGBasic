@@ -13,7 +13,7 @@ class AARPGCharacter;
 class AARPGAction;
 DECLARE_DELEGATE_OneParam(FActionFinishDelegate, AARPGAction*);
 
-UCLASS(Blueprintable)
+UCLASS(Blueprintable,HideCategories=("GameItemFlag"))
 class AARPGAction : public AARPGCollectableObject
 {
 	GENERATED_BODY()
@@ -60,8 +60,6 @@ public:
 
 	int GetActionExclusiveGroupID() const { return ExclusiveGroupID; }
 
-	virtual void InitWithOwningCharacter(AARPGCharacter* NewOwningCharacter);
-
 	UFUNCTION(BlueprintCallable,Category="ARPGAction")
 	bool TryToActivateAction(AARPGCharacter* User = nullptr, AARPGCharacter* Target = nullptr);
 
@@ -80,11 +78,10 @@ public:
 		return ActionFinishedEvent;
 	}
 
-	
-	
-	virtual int GetItemNumber() const override{return -1;};
 
-	virtual FText GetItemNumberText() const override{return FText{};};
+	virtual int GetItemNumber() const override { return -1; };
+
+	virtual FText GetItemNumberText() const override { return FText{}; };
 };
 
 
@@ -104,8 +101,6 @@ protected:
 
 
 	virtual void OnActionActivate() override;
-
-	virtual void SetOwnerCharacter(AARPGCharacter* NewOwner) override;
 
 	UFUNCTION()
 	void BindToMontageBegin(UAnimMontage* Montage);
@@ -177,6 +172,7 @@ class AARPGMeleeAttackAction : public AARPGMontageAction
 
 	UPROPERTY(BlueprintReadOnly,Category="ARPGMeleeAttackAction",meta=(AllowPrivateAccess))
 	int MeleeAttackIndex;
+
 
 public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGMeleeAttackCollection",meta=(AllowPrivateAccess=true))

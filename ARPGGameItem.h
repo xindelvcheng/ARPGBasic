@@ -32,7 +32,7 @@ class AARPGGameItem : public AARPGCollectableObject
 	UBillboardComponent* BillboardComponent;
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="GameItem Basic Component",meta=(AllowPrivateAccess))
-	UARPGActorTowardsActorMovement* ActorMovementComponent;
+	UARPGActorTowardsActorMovementComponent* ActorMovementComponent;
 
 protected:
 	// Called when the game starts or when spawned

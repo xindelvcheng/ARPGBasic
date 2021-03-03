@@ -32,6 +32,7 @@ void AARPGAction::BeginPlay()
 
 AARPGAction::AARPGAction()
 {
+	
 }
 
 void AARPGAction::FinishAction()
@@ -48,11 +49,6 @@ void AARPGAction::InterruptAction(AARPGCharacter* Causer)
 
 	OnActionInterrupted(Causer);
 	BPFunc_OnActionInterrupted(Causer);
-}
-
-void AARPGAction::InitWithOwningCharacter(AARPGCharacter* NewOwningCharacter)
-{
-	SetOwnerCharacter(NewOwningCharacter);
 }
 
 bool AARPGAction::TryToActivateAction(AARPGCharacter* User, AARPGCharacter* Target)
@@ -133,14 +129,8 @@ void AARPGMontageAction::BindDelegateToOwnerCharacterAnimInstance()
 void AARPGMontageAction::OnActionActivate()
 {
 	Super::OnActionActivate();
-	GetOwnerCharacter()->PlayAnimMontage(ActionMontage, PlayRate, StartSectionName);
-}
-
-void AARPGMontageAction::SetOwnerCharacter(AARPGCharacter* NewOwner)
-{
-	Super::SetOwnerCharacter(NewOwner);
-
 	BindDelegateToOwnerCharacterAnimInstance();
+	GetOwnerCharacter()->PlayAnimMontage(ActionMontage, PlayRate, StartSectionName);
 }
 
 void AARPGMontageAction::BeginPlay()

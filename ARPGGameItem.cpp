@@ -39,7 +39,7 @@ AARPGGameItem::AARPGGameItem()
 		BillboardComponent->SetSprite(GetItemIcon());
 	}
 
-	ActorMovementComponent = CreateDefaultSubobject<UARPGActorTowardsActorMovement>(TEXT("ActorMovementComponent"));
+	ActorMovementComponent = CreateDefaultSubobject<UARPGActorTowardsActorMovementComponent>(TEXT("ActorMovementComponent"));
 }
 
 // Called when the game starts or when spawned
@@ -57,7 +57,6 @@ AARPGGameItem* AARPGGameItem::PickUpGameItem(AARPGCharacter* Character)
 	BoxCollision->DestroyComponent();
 	RootComponent = PromptFX;
 	SetIsInBag(true);
-	SetOwnerCharacter(Character);
 
 	ActorMovementComponent->MoveTowardsActorWithScale(Character);
 	UARPGStaticFunctions::DelayDo(GetWorld(),FTimerDelegate::CreateLambda([this]()

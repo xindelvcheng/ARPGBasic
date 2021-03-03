@@ -16,11 +16,37 @@ struct FDamageDetectDescriptionStruct
 	bool bUseDamageCenterComponentCurrentBoundsAsDetectBound = true;
 	/*DamageBoxHalfSizeInTrace在bUseDamageCenterComponentCurrentBoundsAsDetectBound = true（默认）时无效*/
 	FVector DamageBoxHalfSizeInTrace = FVector(100, 100, 100);
-	bool CauseDamage = true;
+	bool bCauseDamage = true;
 	float DamageWeight = 1;
 	float DamageBias = 0;
 	float VelocityDamageBonusWeight = 0.01;
 	TSubclassOf<UDamageType> DamageTypeClass;
+
+	FDamageDetectDescriptionStruct() = default;
+
+	/*使用UARPGDamageBoxComponent大小作为伤害检测范围*/
+	FDamageDetectDescriptionStruct(bool bCauseDamage, float DamageWeight, float DamageBias,
+	                               float VelocityDamageBonusWeight, const TSubclassOf<UDamageType>& DamageTypeClass)
+		: bCauseDamage(bCauseDamage),
+		  DamageWeight(DamageWeight),
+		  DamageBias(DamageBias),
+		  VelocityDamageBonusWeight(VelocityDamageBonusWeight),
+		  DamageTypeClass(DamageTypeClass)
+	{
+	}
+
+	/*手动指定伤害盒子的大小（而不使用UARPGDamageBoxComponent大小作为伤害检测范围）*/
+	FDamageDetectDescriptionStruct(const FVector& DamageBoxHalfSizeInTrace, bool bCauseDamage, float DamageWeight,
+	                               float DamageBias, float VelocityDamageBonusWeight,
+	                               const TSubclassOf<UDamageType>& DamageTypeClass)
+		: DamageBoxHalfSizeInTrace(DamageBoxHalfSizeInTrace),
+		  bCauseDamage(bCauseDamage),
+		  DamageWeight(DamageWeight),
+		  DamageBias(DamageBias),
+		  VelocityDamageBonusWeight(VelocityDamageBonusWeight),
+		  DamageTypeClass(DamageTypeClass)
+	{
+	}
 };
 
 
@@ -42,6 +68,9 @@ class UARPGDamageBoxComponent : public UBoxComponent
 	// ReSharper disable once CppUE4ProbableMemoryIssuesWithUObjectsInContainer
 	TArray<AActor*> ActorsToIgnore;
 
+	// ReSharper disable once CppUE4ProbableMemoryIssuesWithUObjectsInContainer
+	TSet<AActor*> ActorDamagedInSingleAttack;
+
 	TArray<TEnumAsByte<EObjectTypeQuery>> DetectObjectTypes{ObjectTypeQuery1, ObjectTypeQuery2, ObjectTypeQuery3};
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGDamageBoxComponent",meta=(AllowPrivateAccess))
@@ -52,14 +81,15 @@ class UARPGDamageBoxComponent : public UBoxComponent
 	UPROPERTY()
 	UParticleSystem* DamageIncreaseVFX;
 
-	DECLARE_MULTICAST_DELEGATE_OneParam(FDamageDetectedEvent, FHitResult);
-	FDamageDetectedEvent HitDetectedEvent;
+	DECLARE_MULTICAST_DELEGATE_OneParam(FDamageDetectedDelegate, FHitResult);
+	FDamageDetectedDelegate HitDetectedDelegate;
 
 	virtual void OnHitDetected(FHitResult HitResult);
 
-	void SetDamageValue(float DamageWeightCoefficient);
+	void CauseDamage(FHitResult HitResult);
 
 protected:
+	void SetDamageValue(float DamageWeightCoefficient);
 	virtual void OnDamageIncrease(float DeltaDamageWeightCoefficient);
 	virtual void OnDamageDecrease(float DeltaDamageWeightCoefficient);
 
@@ -67,6 +97,7 @@ protected:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
+	
 public:
 	UARPGDamageBoxComponent();
 
@@ -97,8 +128,14 @@ public:
 		DamageIncreaseVFX = CreatureDamageIncreaseVFX;
 	}
 
-	virtual FDamageDetectedEvent& OnHitDetected()
+	virtual FDamageDetectedDelegate& OnHitDetected()
 	{
-		return HitDetectedEvent;
+		return HitDetectedDelegate;
 	}
+
+	void SetDebugEnable(bool bShowDebug);
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDamageDetectedEvent, FHitResult, HitResult);
+	UPROPERTY(BlueprintAssignable,Category="ARPGDamageBoxComponent")
+	FDamageDetectedEvent DamageDetectedEvent;
 };

@@ -13,19 +13,12 @@ class AARPGActor : public AActor
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly,meta=(AllowPrivateAccess))
-	TWeakObjectPtr<AARPGCharacter> OwnerCharacter;
-
-protected:
-	virtual void PostActorCreated() override;
-	
 public:
-
-	FORCEINLINE AARPGCharacter* GetOwnerCharacter() const { return OwnerCharacter.Get(); }
-	virtual void SetOwnerCharacter(AARPGCharacter* NewOwner);
 
 	// Sets default values for this actor's properties
 	AARPGActor();
+
+	FORCEINLINE AARPGCharacter* GetOwnerCharacter() const { return GetOwner<AARPGCharacter>(); }
 
 	void SetActorVisibility(bool bNewVisibility);
 
@@ -34,8 +27,7 @@ protected:
 	virtual void BeginPlay() override;
 
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
 };

@@ -23,7 +23,9 @@ class  UARPGConfigSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 
+	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	void CheckARPGBasicConfig();
 
 public:
 	static UARPGConfigSubsystem* Get(UWorld* World);

@@ -4,8 +4,7 @@
 
 #include "CoreMinimal.h"
 
-
-
+#include <functional>
 #include "ARPGActorComponent.h"
 #include "Components/ActorComponent.h"
 #include "Engine/DataTable.h"
@@ -47,31 +46,52 @@ public:
 		this->MaxValue = maxValue;
 	}
 
-	void SetMaxValue(const T& maxValue)
-	{
-		this->MaxValue = maxValue;
-		ChangedDelegate.Broadcast(Value, MaxValue, Specialty);
-	}
-
 	void operator=(const T& value)
 	{
-		this->Value = value <= MaxValue ? value : MaxValue;
+		this->Value = value < MaxValue ? value : MaxValue;
 		ChangedDelegate.Broadcast(Value, MaxValue, Specialty);
 	}
 
 	void operator+=(const T& deltaValue)
 	{
-		this->Value = Value + deltaValue <= MaxValue ? Value + deltaValue : MaxValue;
+		this->Value = Value + deltaValue < 0 ? 0 : Value + deltaValue > MaxValue ? MaxValue : Value + deltaValue;
 		ChangedDelegate.Broadcast(Value, MaxValue, Specialty);
 	}
 
 	void operator-=(const T& deltaValue)
 	{
-		this->Value = Value - deltaValue >= 0 ? Value + deltaValue : 0;
+		this->Value = Value - deltaValue < 0 ? 0 : Value - deltaValue > MaxValue ? MaxValue : Value - deltaValue;
 		ChangedDelegate.Broadcast(Value, MaxValue, Specialty);
 	}
 
+	void operator*=(const T& alpha)
+	{
+		this->Value = Value * alpha < 0 ? 0 : Value * alpha > MaxValue ? MaxValue : Value * alpha;
+		ChangedDelegate.Broadcast(Value, MaxValue, Specialty);
+	}
+
+	void operator/=(const T& alpha)
+	{
+		this->Value = Value / alpha < 0 ? 0 : Value / alpha > MaxValue ? MaxValue : Value / alpha;
+		ChangedDelegate.Broadcast(Value, MaxValue, Specialty);
+	}
+
+
+	T GetValue() { return Value; }
+	T GetMaxValue() { return MaxValue; }
 	int GetSpecialty() const { return Specialty; }
+
+	void SetValue(const T& value)
+	{
+		this->Value = value < MaxValue ? value : MaxValue;
+		ChangedDelegate.Broadcast(Value, MaxValue, Specialty);
+	}
+
+	void SetMaxValue(const T& maxValue)
+	{
+		this->MaxValue = maxValue;
+		ChangedDelegate.Broadcast(Value, MaxValue, Specialty);
+	}
 
 	void AddSpecialty()
 	{
@@ -91,6 +111,12 @@ public:
 	}
 
 	FPropertyChangeEvent& OnChanged() { return ChangedDelegate; }
+
+	void BindLambdaToOnChanged(const std::function<void (float Value, float MaxValue, int Specialty)>& Lambda)
+	{
+		ChangedDelegate.AddLambda(Lambda);
+		ChangedDelegate.Broadcast(Value, MaxValue, Specialty);
+	}
 };
 
 UENUM(BlueprintType)

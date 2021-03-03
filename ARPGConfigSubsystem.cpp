@@ -10,13 +10,17 @@
 #include "AssetRegistryModule.h"
 #include "Engine/DataTable.h"
 
+
 void UARPGConfigSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
 	// 检查是否完成基本项目设置
+	CheckARPGBasicConfig();
+}
 
-
+void UARPGConfigSubsystem::CheckARPGBasicConfig()
+{
 	if (UARPGBasicSettings* BasicSettings = UARPGBasicSettings::Get())
 	{
 		AbilityConfigDataTable = BasicSettings->AbilityConfigDataTable.LoadSynchronous();
@@ -32,16 +36,18 @@ void UARPGConfigSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		DefaultGameItemIcon = BasicSettings->DefaultGameItemIcon.LoadSynchronous();
 		DefaultAbilityIcon = BasicSettings->DefaultAbilityIcon.LoadSynchronous();
 
+		
+
 		const bool bBasicConfigComplete = StatusWidgetClass
-			&& NotifyWidgetClass
-			&& GameItemWidgetClass
-			&& PromptWidgetClass
-			&& LockTargetWidgetClass
-			&& AbilityConfigDataTable
-			&& DefaultGameplayIcon
-			&& DefaultGameItemIcon
-			&& DefaultAbilityIcon
-			&& AimPromptActorClass;
+            && NotifyWidgetClass
+            && GameItemWidgetClass
+            && PromptWidgetClass
+            && LockTargetWidgetClass
+            /*&& AbilityConfigDataTable*/
+            && DefaultGameplayIcon
+            && DefaultGameItemIcon
+            && DefaultAbilityIcon
+            && AimPromptActorClass;
 #if WITH_EDITOR
 		if (!bBasicConfigComplete)
 		{
@@ -50,6 +56,7 @@ void UARPGConfigSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 #endif
 	}
 }
+
 
 UARPGConfigSubsystem* UARPGConfigSubsystem::Get(UWorld* World)
 {

@@ -9,7 +9,7 @@
 
 #include "ARPGCastAction.generated.h"
 
-class AARPGSpecialEffectCreature;
+class ASpellawCreature;
 class AARPGCastAction;
 DECLARE_DYNAMIC_DELEGATE(FTaskDelegate);
 
@@ -142,7 +142,7 @@ struct FSimpleTaskStruct
 	float Duration = 0.5;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
-	TSubclassOf<AARPGSpecialEffectCreature> SpecialEffectCreatureClass;
+	TSubclassOf<ASpellawCreature> SpecialEffectCreatureClass;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
 	FGridLayoutStruct LayoutDescription;
@@ -197,10 +197,10 @@ class UARPGSimpleTask : public UTask
 {
 	GENERATED_BODY()
 
-	TSubclassOf<AARPGSpecialEffectCreature> SpecialEffectCreatureClass;
+	TSubclassOf<ASpellawCreature> SpecialEffectCreatureClass;
 
 	UPROPERTY()
-	AARPGSpecialEffectCreature* SpecialEffectCreature;
+	ASpellawCreature* SpecialEffectCreature;
 
 	FGridLayoutStruct LayoutDescription;
 
@@ -250,6 +250,16 @@ class AARPGCastAction : public AARPGMultiMontageAction
 
 	void InitTasks();
 
+	void StartAllTask();
+
+	void StopAllTask();
+
+	virtual void Tick(float DeltaSeconds) override;
+
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
 public:
 	AARPGCastAction();
 
@@ -279,25 +289,13 @@ public:
 		return MaxDistance;
 	}
 
+	
+
 protected:
 	virtual void BeginPlay() override;
 
 	virtual bool CheckActionActivateConditionAndPayCost() override;
 
-	virtual FName GetItemName() const override{return FName{UKismetTextLibrary::Conv_TextToString(GetGameItemDisplayName())};};
-
-public:
-	virtual void Tick(float DeltaSeconds) override;
-
-
 	virtual void OnActionActivate() override;
 	virtual void OnActionFinished(AARPGAction* Action) override;
-
-	void StartAllTask();
-
-	void StopAllTask();
-
-#if WITH_EDITOR
-	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-#endif
 };

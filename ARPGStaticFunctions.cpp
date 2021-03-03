@@ -3,9 +3,12 @@
 
 #include "ARPGStaticFunctions.h"
 
+#include "Kismet/KismetStringLibrary.h"
 
 #include "ARPGCharacter.h"
-#include "Kismet/KismetStringLibrary.h"
+#include "ARPGCoreSubsystem.h"
+#include "ARPGPlayerController.h"
+
 
 void UARPGStaticFunctions::PrintLogToScreen(FString Message, float Time, FColor Color)
 {
@@ -25,14 +28,29 @@ void UARPGStaticFunctions::PrintLogToScreen(float Message, float Time, FColor Co
 	PrintLogToScreen(UKismetStringLibrary::Conv_FloatToString(Message), Time, Color);
 }
 
+void UARPGStaticFunctions::PrintLogToScreen(FVector Message, float Time, FColor Color)
+{
+	PrintLogToScreen(UKismetStringLibrary::Conv_VectorToString(Message), Time, Color);
+}
+
+void UARPGStaticFunctions::PrintLogToScreen(FRotator Message, float Time, FColor Color)
+{
+	PrintLogToScreen(UKismetStringLibrary::Conv_RotatorToString(Message), Time, Color);
+}
+
+void UARPGStaticFunctions::PrintLogToScreen(FTransform Message, float Time, FColor Color)
+{
+	PrintLogToScreen(UKismetStringLibrary::Conv_TransformToString(Message), Time, Color);
+}
+
 void UARPGStaticFunctions::PrintLogToScreen(UObject* Message, float Time, FColor Color)
 {
 	PrintLogToScreen(Message->GetFullName(), Time, Color);
 }
 
-void UARPGStaticFunctions::PrintLogToLog(FString Message)
+void UARPGStaticFunctions::PrintMessageToLog(FString Message)
 {
-	UE_LOG(LogTemp,Warning,TEXT("%s"),*Message);
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *Message);
 }
 
 void UARPGStaticFunctions::RandomChoice(float chance, EChoice& Choice)
@@ -80,12 +98,44 @@ FTimerHandle UARPGStaticFunctions::DelayDo(UWorld* World, FTimerDelegate TaskDel
 	FTimerHandle TimerHandle;
 	if (World)
 	{
-		World->GetTimerManager().SetTimer(TimerHandle,TaskDelegate,Delay,false);
-	}else
+		World->GetTimerManager().SetTimer(TimerHandle, TaskDelegate, Delay, false);
+	}
+	else
 	{
 		PrintLogToScreen(TEXT("UARPGStaticFunctions::DelayDo:错误，World无效"));
 	}
 	return TimerHandle;
+}
+
+void UARPGStaticFunctions::SetInputMode(AController* Controller, EInputMode InputMode)
+{
+	/*此处省去了对参数判空，因为Cast<>(nullptr)的结果只会是nullptr*/
+	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	{
+		switch (InputMode)
+		{
+		case EInputMode::GameOnly:
+			PlayerController->SetInputMode(FInputModeGameOnly{});
+			PlayerController->SetShowMouseCursor(false);
+			break;
+		case EInputMode::UIOnly:
+			PlayerController->SetInputMode(FInputModeUIOnly{});
+			PlayerController->SetShowMouseCursor(true);
+			break;
+		case EInputMode::GameAndUI:
+			PlayerController->SetInputMode(FInputModeGameAndUI{});
+			PlayerController->SetShowMouseCursor(true);
+			break;
+		}
+	}
+}
+
+void UARPGStaticFunctions::SetInputMode(UObject* WorldContextObject, EInputMode InputMode)
+{
+	if (APlayerController* MainPlayerController = UARPGCoreSubsystem::GetMainCharacterController(WorldContextObject))
+	{
+		SetInputMode(MainPlayerController, InputMode);
+	}
 }
 
 FVector2D UARPGStaticFunctions::GetScreenSize()

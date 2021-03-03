@@ -9,26 +9,6 @@
 #include "ARPGDamageTypes.h"
 
 
-void UARPGDamageBoxComponent::SetDamageValue(float DamageWeightCoefficient)
-{
-	if (DamageWeightCoefficient > 1)
-	{
-		OnDamageIncrease(DamageWeightCoefficient - 1);
-	}
-	else
-	{
-		OnDamageDecrease(1 - DamageWeightCoefficient);
-	}
-}
-
-void UARPGDamageBoxComponent::OnDamageIncrease(float DeltaDamageWeightCoefficient)
-{
-	UGameplayStatics::SpawnEmitterAttached(DamageIncreaseVFX, this);
-}
-
-void UARPGDamageBoxComponent::OnDamageDecrease(float DeltaDamageWeightCoefficient)
-{
-}
 
 UARPGDamageBoxComponent::UARPGDamageBoxComponent()
 {
@@ -41,10 +21,12 @@ void UARPGDamageBoxComponent::EnableDamageDetected()
 	Timer = 0;
 	LastFrameLocation = GetComponentLocation();
 	PrimaryComponentTick.SetTickFunctionEnable(true);
+	ActorDamagedInSingleAttack.Empty();
 }
 
 void UARPGDamageBoxComponent::DisableDamageDetected()
 {
+	ActorDamagedInSingleAttack.Empty();
 	PrimaryComponentTick.SetTickFunctionEnable(false);
 }
 
@@ -52,10 +34,10 @@ void UARPGDamageBoxComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	PrimaryComponentTick.SetTickFunctionEnable(false);
+
 	AARPGCharacter* OwnerCharacter = GetOwner<AARPGCharacter>();
 	ActorsToIgnore.AddUnique(OwnerCharacter);
-
-	PrimaryComponentTick.SetTickFunctionEnable(false);
 }
 
 
@@ -63,6 +45,7 @@ void UARPGDamageBoxComponent::TickComponent(float DeltaTime, ELevelTick TickType
                                             FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
 
 	Timer += DeltaTime;
 	CurrentFrameLocation = GetComponentLocation();
@@ -87,7 +70,7 @@ void UARPGDamageBoxComponent::TickComponent(float DeltaTime, ELevelTick TickType
 
 	for (FHitResult HitResult : HitResults)
 	{
-		if (HitResult.GetComponent() != this)
+	if (HitResult.GetComponent() != this)
 		{
 			OnHitDetected(HitResult);
 		}
@@ -96,42 +79,55 @@ void UARPGDamageBoxComponent::TickComponent(float DeltaTime, ELevelTick TickType
 	LastFrameLocation = CurrentFrameLocation;
 }
 
+
+
 void UARPGDamageBoxComponent::OnHitDetected(FHitResult HitResult)
 {
-	HitDetectedEvent.Broadcast(HitResult);
+	HitDetectedDelegate.Broadcast(HitResult);
+	DamageDetectedEvent.Broadcast(HitResult);
 
 	if (UARPGDamageBoxComponent* DamageBoxComponent = Cast<UARPGDamageBoxComponent>(HitResult.GetComponent()))
 	{
 		ElementInteract(DamageBoxComponent);
 	}
 
-	if (DamageDetectDescriptionStruct.CauseDamage)
+	if (DamageDetectDescriptionStruct.bCauseDamage)
 	{
-		AActor* HitActor = HitResult.GetActor();
-		if (AARPGCharacter* OwnerCharacter = GetOwner<AARPGCharacter>())
-		{
-			const float BaseAttack = OwnerCharacter->GetCharacterStatusComponent()->GetAttack();
-			const float BaseDamage = DamageDetectDescriptionStruct.DamageWeight * BaseAttack +
-				DamageDetectDescriptionStruct.DamageBias + GetOwner()->GetVelocity().Size() *
-				DamageDetectDescriptionStruct.VelocityDamageBonusWeight;
-
-
-			UGameplayStatics::ApplyPointDamage(
-				HitActor, BaseDamage,
-				HitResult.Location, HitResult,
-				OwnerCharacter->GetController(),
-				OwnerCharacter, DamageDetectDescriptionStruct.DamageTypeClass);
-		}
-		else //机关伤害
-		{
-			UGameplayStatics::ApplyPointDamage(
-				HitActor, DamageDetectDescriptionStruct.DamageBias,
-				HitResult.Location, HitResult,
-				nullptr,
-				nullptr,
-				DamageDetectDescriptionStruct.DamageTypeClass);
-		}
+		CauseDamage(HitResult);
 	}
+}
+
+void UARPGDamageBoxComponent::CauseDamage(FHitResult HitResult)
+{
+	AActor* HitActor = HitResult.GetActor();
+	if (ActorDamagedInSingleAttack.Contains(HitActor))
+	{
+		return;
+	}
+	if (AARPGCharacter* OwnerCharacter = GetOwner<AARPGCharacter>())
+	{
+		const float BaseAttack = OwnerCharacter->GetCharacterStatusComponent()->GetAttack();
+		const float BaseDamage = DamageDetectDescriptionStruct.DamageWeight * BaseAttack +
+            DamageDetectDescriptionStruct.DamageBias + GetOwner()->GetVelocity().Size() *
+            DamageDetectDescriptionStruct.VelocityDamageBonusWeight;
+
+
+		UGameplayStatics::ApplyPointDamage(
+            HitActor, BaseDamage,
+            HitResult.Location, HitResult,
+            OwnerCharacter->GetController(),
+            OwnerCharacter, DamageDetectDescriptionStruct.DamageTypeClass);
+		ActorDamagedInSingleAttack.Add(HitActor);
+	}
+	else //机关伤害
+		{
+		UGameplayStatics::ApplyPointDamage(
+            HitActor, DamageDetectDescriptionStruct.DamageBias,
+            HitResult.Location, HitResult,
+            nullptr,
+            nullptr,
+            DamageDetectDescriptionStruct.DamageTypeClass);
+		}
 }
 
 void UARPGDamageBoxComponent::ElementInteract(UARPGDamageBoxComponent* EnvironmentDamageBox)
@@ -191,4 +187,31 @@ void UARPGDamageBoxComponent::ElementInteract(UARPGDamageBoxComponent* Environme
 			SetDamageValue(0.5);
 		}
 	}
+}
+
+void UARPGDamageBoxComponent::SetDamageValue(float DamageWeightCoefficient)
+{
+	if (DamageWeightCoefficient > 1)
+	{
+		OnDamageIncrease(DamageWeightCoefficient - 1);
+	}
+	else
+	{
+		OnDamageDecrease(1 - DamageWeightCoefficient);
+	}
+}
+
+void UARPGDamageBoxComponent::OnDamageIncrease(float DeltaDamageWeightCoefficient)
+{
+	UGameplayStatics::SpawnEmitterAttached(DamageIncreaseVFX, this);
+}
+
+void UARPGDamageBoxComponent::OnDamageDecrease(float DeltaDamageWeightCoefficient)
+{
+}
+
+
+void UARPGDamageBoxComponent::SetDebugEnable(bool bShowDebug)
+{
+	bDrawDebug = bShowDebug;
 }

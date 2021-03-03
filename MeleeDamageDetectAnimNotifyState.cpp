@@ -11,42 +11,67 @@
 #include "CharacterStatusComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
+#pragma optimize("",off)
 void UMeleeDamageDetectAnimNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
                                                     float TotalDuration)
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration);
 	
-	if (AARPGCharacter* OwnerCharacter = Cast<AARPGCharacter>(MeshComp->GetOwner()))
+	OwnerCharacter = MeshComp->GetOwner<AARPGCharacter>();
+
+	if (OwnerCharacter)
 	{
-		//如果没有指定WeaponDamageBoxCollision，取该角色的第一个UARPGDamageBoxComponent作为如果没有指定WeaponDamageBoxCollision
-		if (!WeaponDamageBoxCollision)
+		FindDamageBoxesByNames();
+	}
+
+	FDamageDetectDescriptionStruct DetectDescription{
+		true, DamageWeight, DamageBias, VelocityDamageBonusWeight,
+		DamageTypeClass
+	};
+
+	for (UARPGDamageBoxComponent* DamageBox : DamageBoxes)
+	{
+		if (DamageBox)
 		{
-			WeaponDamageBoxCollision = Cast<UARPGDamageBoxComponent>(
-                OwnerCharacter->GetComponentByClass(UARPGDamageBoxComponent::StaticClass()));
-			if (!WeaponDamageBoxCollision)
-			{
-				UARPGStaticFunctions::PrintLogToScreen(
-                    TEXT(
-                        "错误，使用UMeleeDamageDetectAnimNotifyState检测伤害的角色必须指定WeaponDamageBoxCollision(应为包裹武器的UARPGDamageBoxComponent)"),
-                    15, FColor::Red);
-				return;
-			}
+			DamageBox->SetDetectDescription(std::move(DetectDescription));
+			DamageBox->EnableDamageDetected();
 		}
-		FDamageDetectDescriptionStruct DetectDescription{
-			true, DamageBoxHalfSizeInTrace, true, DamageWeight, DamageBias, VelocityDamageBonusWeight,
-            DamageTypeClass
-        };
-		WeaponDamageBoxCollision->SetDetectDescription(std::move(DetectDescription));
-		WeaponDamageBoxCollision->EnableDamageDetected();
 	}
 }
+#pragma optimize("",on)
 
 void UMeleeDamageDetectAnimNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
 	Super::NotifyEnd(MeshComp, Animation);
 
-	if (WeaponDamageBoxCollision)
+	for (UARPGDamageBoxComponent* DamageBox : DamageBoxes)
 	{
-		WeaponDamageBoxCollision->DisableDamageDetected();
+		if (DamageBox)
+		{
+			DamageBox->DisableDamageDetected();
+		}
+	}
+}
+
+void UMeleeDamageDetectAnimNotifyState::FindDamageBoxesByNames()
+{
+	TArray<UARPGDamageBoxComponent*> DamageBoxCandidates;
+	OwnerCharacter->GetComponents(DamageBoxCandidates);
+
+	if (DamageBoxCandidates.Num() == 0)
+	{
+		UARPGStaticFunctions::PrintLogToScreen(
+			TEXT(
+				"错误，使用UMeleeDamageDetectAnimNotifyState检测伤害的角色必须指定WeaponDamageBoxCollision(应为包裹武器的UARPGDamageBoxComponent)"),
+			15, FColor::Red);
+	}
+
+	for (FName DamageBoxName : DamageBoxNames)
+	{
+		DamageBoxes.Add(*DamageBoxCandidates.FindByPredicate(
+			[DamageBoxName](UARPGDamageBoxComponent* DamageBoxCandidate)
+			{
+				return DamageBoxCandidate ? DamageBoxCandidate->GetFName() == DamageBoxName : false;
+			}));
 	}
 }

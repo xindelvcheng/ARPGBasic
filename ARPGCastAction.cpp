@@ -14,6 +14,7 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "ARPGSpecialEffectsSubsystem.h"
 #include "ARPGStaticFunctions.h"
+#include "SpellawCreature.h"
 
 void AARPGCastAction::InitTasks()
 {
@@ -191,7 +192,7 @@ void UARPGSimpleTask::OnTaskExecuted()
 	OwnerAction->GetWorldTimerManager().SetTimer(StartTimerHandle, FTimerDelegate::CreateLambda([&]()
 	{
 		Transform = LayoutDescription.CalculateAbsoluteTransform(OwnerAction->GetActorLocation(),OwnerAction->GetActorRotation());
-		SpecialEffectCreature = AARPGSpecialEffectCreature::Create(SpecialEffectCreatureClass, Transform,
+		SpecialEffectCreature = ASpellawCreature::Create(SpecialEffectCreatureClass, Transform,
 		                                                           OwnerAction->GetOwnerCharacter());
 	}), StartTime, false);
 

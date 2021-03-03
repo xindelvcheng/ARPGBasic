@@ -4,11 +4,13 @@
 
 #include "CoreMinimal.h"
 
+
+#include "ARPGCharacter.h"
 #include "Components/ActorComponent.h"
 #include "TranscendentalLawsSystem.generated.h"
 
 class UARPGCharacterCombatComponent;
-class AARPGCharacter;
+
 class AARPGAction;
 
 UENUM(BlueprintType)

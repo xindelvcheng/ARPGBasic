@@ -19,52 +19,65 @@ class UCharacterStatusComponent;
 UCLASS()
 class UMeleeDamageDetectAnimNotifyState : public UAnimNotifyState
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
-    TArray<FHitResult> HitResults;
+	TArray<FHitResult> HitResults;
+	UPROPERTY()
+	AARPGCharacter* OwnerCharacter;
 
+	UPROPERTY(BlueprintReadOnly,Category="MeleeDamageDetectAnimNotifyState",meta=(AllowPrivateAccess="true"))
+	TArray<UARPGDamageBoxComponent*> DamageBoxes;
+
+	UPROPERTY(BlueprintReadOnly,Category="MeleeDamageDetectAnimNotifyState",meta=(AllowPrivateAccess="true"))
+	TArray<AActor*> ActorsToIgnore;
 
 protected:
-    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Melee Damage Trace")
-    TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes{ObjectTypeQuery1, ObjectTypeQuery2, ObjectTypeQuery3};
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Melee Damage Trace")
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes{ObjectTypeQuery1, ObjectTypeQuery2, ObjectTypeQuery3};
 
-    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Melee Damage Trace")
-    bool bDrawDebug = false;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Melee Damage Trace")
+	bool bDrawDebug = false;
 
-    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Melee Damage Trace")
-    bool CauseDamage = true;
+	
 
 public:
 
-    UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState")
-    FName DamageCenterSocketName = "DamageCenter";
+	UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState")
+	FName DamageCenterSocketName = "DamageCenter";
 
-    UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState")
-    FVector DamageBoxHalfSizeInTrace = FVector(10, 10, 100);
+	UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState")
+	bool bManualSetDamageDetectBoxSize = false;
 
-    UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState")
-    UARPGDamageBoxComponent* WeaponDamageBoxCollision;
+	UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState",meta=(EditCondition="bManualSetDamageDetectBoxSize",EditConditionHides))
+	FVector DamageBoxHalfSizeInTrace = FVector{10, 10, 100};
 
-    //招式伤害加成系数
-    UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState")
-    float DamageWeight = 1;
+	UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState")
+	TArray<FName> DamageBoxNames = {"WeaponDamageBox"};
 
-    //招式伤害加成偏置
-    UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState")
-    float DamageBias = 0;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Melee Damage Trace")
+	bool bCauseDamage = true;
 
-    //速度伤害加成系数
-    UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState")
-    float VelocityDamageBonusWeight = 0.01;
+	//招式伤害加成系数
+	UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState",meta=(EditCondition="bCauseDamage",EditConditionHides))
+	float DamageWeight = 1;
 
-    UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState")
-    TSubclassOf<UDamageType> DamageTypeClass;
+	//招式伤害加成偏置
+	UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState",meta=(EditCondition="bCauseDamage",EditConditionHides))
+	float DamageBias = 0;
 
-    UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState")
-    TArray<AActor*> ActorsToIgnore;
+	//速度伤害加成系数
+	UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState",meta=(EditCondition="bCauseDamage",EditConditionHides))
+	float VelocityDamageBonusWeight = 0.01;
+
+	UPROPERTY(EditAnywhere,Category="MeleeDamageDetectAnimNotifyState",meta=(EditCondition="bCauseDamage",EditConditionHides))
+	TSubclassOf<UDamageType> DamageTypeClass;
+
 
 protected:
-    virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
-                             float TotalDuration) override;
-    virtual void NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
+	virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
+	                         float TotalDuration) override;
+	virtual void NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
+
+private:
+	void FindDamageBoxesByNames();
 };

@@ -5,10 +5,10 @@
 #include "CoreMinimal.h"
 
 
-
 #include "ARPGActor.h"
 #include "ARPGActorComponent.h"
 #include "Components/ActorComponent.h"
+#include "Kismet/KismetStringLibrary.h"
 #include "Kismet/KismetTextLibrary.h"
 
 #include "ARPGCollectionComponent.generated.h"
@@ -18,40 +18,40 @@ class AARPGCharacter;
 class AARPGGameItem;
 class AARPGCastAction;
 
-UCLASS( ClassGroup=(ARPGBasic))
+UCLASS(ClassGroup=(ARPGBasic))
 class AARPGCollectableObject : public AARPGActor
 {
 	GENERATED_BODY()
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="GameItem Settings",meta=(AllowPrivateAccess))
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="GameItem Settings", meta=(AllowPrivateAccess))
 	FName ItemName;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="GameItem Settings",meta=(AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="GameItem Settings", meta=(AllowPrivateAccess))
 	FText GameItemDisplayName;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="GameItem Settings",meta=(AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="GameItem Settings", meta=(AllowPrivateAccess))
 	int ItemNum = 1;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="GameItem Settings",meta=(AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="GameItem Settings", meta=(AllowPrivateAccess))
 	UTexture2D* ItemIcon;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="GameItem Settings",meta=(AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="GameItem Settings", meta=(AllowPrivateAccess))
 	FText ItemIntroduction;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="GameItem Settings",meta=(AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="GameItem Settings", meta=(AllowPrivateAccess))
 	FText ItemDescription;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="GameItem Flag",meta=(AllowPrivateAccess))
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="GameItem Flag", meta=(AllowPrivateAccess))
 	bool IsUnique;
 
-	UPROPERTY(BlueprintReadOnly,Category="GameItem Flag",meta=(AllowPrivateAccess))
+	UPROPERTY(BlueprintReadOnly, Category="GameItem Flag", meta=(AllowPrivateAccess))
 	bool IsInBag;
 
-	DECLARE_MULTICAST_DELEGATE_OneParam(FItemChangeEvent,AARPGCollectableObject*);
-	DECLARE_MULTICAST_DELEGATE_OneParam(FItemExhaustEvent,AARPGCollectableObject*);
-	DECLARE_MULTICAST_DELEGATE_OneParam(FItemBeSelectedEvent,AARPGCollectableObject*);
-	DECLARE_MULTICAST_DELEGATE_OneParam(FItemBeSelectedEvent,AARPGCollectableObject*);
-	
+	DECLARE_MULTICAST_DELEGATE_OneParam(FItemChangeEvent, AARPGCollectableObject*);
+	DECLARE_MULTICAST_DELEGATE_OneParam(FItemExhaustEvent, AARPGCollectableObject*);
+	DECLARE_MULTICAST_DELEGATE_OneParam(FItemBeSelectedEvent, AARPGCollectableObject*);
+	DECLARE_MULTICAST_DELEGATE_OneParam(FItemBeSelectedEvent, AARPGCollectableObject*);
+
 	FItemChangeEvent ItemChangedEvent;
 	FItemExhaustEvent ItemExhaustEvent;
 	FItemBeSelectedEvent ItemBeSelectedEvent;
@@ -63,16 +63,16 @@ public:
 	{
 		ItemBeSelectedEvent.Broadcast(this);
 	};
-	
+
 	void DeselectItem()
 	{
 		ItemDeselectedEvent.Broadcast(this);
 	};
-	
-	
+
+
 	virtual FName GetItemName() const
 	{
-		return ItemName;
+		return !ItemName.IsNone() ? ItemName : FName(*GameItemDisplayName.ToString());
 	}
 
 	virtual void SetItemName(const FName& NewItemName)
@@ -81,9 +81,9 @@ public:
 		ItemChangedEvent.Broadcast(this);
 	}
 
-	virtual const FText& GetGameItemDisplayName() const
+	virtual FText GetGameItemDisplayName() const
 	{
-		return GameItemDisplayName;
+		return !GameItemDisplayName.IsEmpty() ? GameItemDisplayName : FText::FromName(ItemName);
 	}
 
 	virtual void SetItemDisplayName(const FText& NewGameItemDisplayName)
@@ -122,7 +122,7 @@ public:
 	{
 		if ((ItemNum <= 0 && DeltaNumber < 0) || DeltaNumber == 0)
 		{
-			return ;
+			return;
 		}
 		ItemNum = (ItemNum + DeltaNumber) > 0 ? ItemNum + DeltaNumber : 0;
 		ItemChangedEvent.Broadcast(this);
@@ -171,7 +171,7 @@ public:
 
 	virtual FItemBeSelectedEvent& OnItemDeselected()
 	{
-		return ItemDeselectedEvent;	
+		return ItemDeselectedEvent;
 	}
 
 	virtual bool GetIsInBag() const
@@ -195,17 +195,17 @@ public:
 	}
 };
 
-UCLASS( ClassGroup=(ARPGBasic))
+UCLASS(ClassGroup=(ARPGBasic))
 class UARPGCollectionComponent : public UARPGActorComponent
 {
 	GENERATED_BODY()
-	
+
 	UPROPERTY()
 	TArray<AARPGCollectableObject*> BagGameItems;
 
 	int SelectedItemIndex = -1;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGGameItemsManagerComponent",meta=(AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGGameItemsManagerComponent", meta=(AllowPrivateAccess))
 	bool RemoveGameItemFromBagAfterExhaust = false;
 
 	DECLARE_MULTICAST_DELEGATE(FCollectionRefreshEvent);
@@ -213,35 +213,35 @@ class UARPGCollectionComponent : public UARPGActorComponent
 	DECLARE_MULTICAST_DELEGATE_OneParam(FRemoveItemEvent, AARPGCollectableObject*);
 
 	FCollectionRefreshEvent CollectionRefreshEvent;
-	
+
 	FAddItemEvent AddItemToCollectionEvent;
 	FRemoveItemEvent RemoveItemFromCollectionEvent;
 
 public:
 	UARPGCollectionComponent();
 
-	UFUNCTION(BlueprintCallable,Category="ARPGCollectionComponent")
+	UFUNCTION(BlueprintCallable, Category="ARPGCollectionComponent")
 	bool AddItem(AARPGCollectableObject* NewGameItem);
 
-	UFUNCTION(BlueprintCallable,Category="ARPGCollectionComponent")
+	UFUNCTION(BlueprintCallable, Category="ARPGCollectionComponent")
 	bool RemoveSelectedItem();
-	
-	UFUNCTION(BlueprintCallable,Category="ARPGCollectionComponent")
-    bool RemoveItem(AARPGCollectableObject* GameItem);
 
-	UFUNCTION(BlueprintCallable,Category="ARPGCollectionComponent")
+	UFUNCTION(BlueprintCallable, Category="ARPGCollectionComponent")
+	bool RemoveItem(AARPGCollectableObject* GameItem);
+
+	UFUNCTION(BlueprintCallable, Category="ARPGCollectionComponent")
 	bool SelectNextItem();
 
-	UFUNCTION(BlueprintCallable,Category="ARPGCollectionComponent")
+	UFUNCTION(BlueprintCallable, Category="ARPGCollectionComponent")
 	bool SelectPreviousItem();
 
-	UFUNCTION(BlueprintCallable,Category="ARPGCollectionComponent")
-	TArray<AARPGCollectableObject*> GetAllItems()const 
+	UFUNCTION(BlueprintCallable, Category="ARPGCollectionComponent")
+	TArray<AARPGCollectableObject*> GetAllItems() const
 	{
 		return BagGameItems;
 	}
 
-	template<typename T>
+	template <typename T>
 	TArray<T*> GetAllItems() const
 	{
 		TArray<T*> Result;
@@ -251,16 +251,15 @@ public:
 		}
 		return Result;
 	}
-	
+
 	UFUNCTION(BlueprintCallable)
 	int GetBagSelectedItemIndex() const { return this->SelectedItemIndex; }
 
-	template<typename T>
+	template <typename T>
 	T* GetSelectedItem() const
 	{
 		return BagGameItems.IsValidIndex(SelectedItemIndex) ? Cast<T>(BagGameItems[SelectedItemIndex]) : nullptr;
 	}
-
 
 
 protected:
@@ -289,10 +288,9 @@ public:
 	{
 		return RemoveItemFromCollectionEvent;
 	}
-
 };
 
-UCLASS( ClassGroup=(ARPGBasic), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup=(ARPGBasic), meta=(BlueprintSpawnableComponent))
 class UARPGBagComponent : public UARPGCollectionComponent
 {
 	GENERATED_BODY()
@@ -301,8 +299,8 @@ class UARPGBagComponent : public UARPGCollectionComponent
 	FCollectionItemUsedEvent ItemUsedEvent;
 
 public:
-	UFUNCTION(BlueprintCallable,Category="BagSystem")
-    bool TryToUseGameItemInBag(AARPGCharacter* User);
+	UFUNCTION(BlueprintCallable, Category="BagSystem")
+	bool TryToUseGameItemInBag(AARPGCharacter* User);
 
 
 	virtual FCollectionItemUsedEvent& OnItemUsed()
@@ -311,7 +309,7 @@ public:
 	}
 };
 
-UCLASS( ClassGroup=(ARPGBasic), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup=(ARPGBasic), meta=(BlueprintSpawnableComponent))
 class UARPGSpellsManagerComponent : public UARPGCollectionComponent
 {
 	GENERATED_BODY()
@@ -320,9 +318,9 @@ class UARPGSpellsManagerComponent : public UARPGCollectionComponent
 	FSpellActivateEvent SpellActivateEvent;
 
 public:
-	UFUNCTION(BlueprintCallable,Category="BagSystem")
-    bool TryToActivateCurrentSelectedSpell(AARPGCharacter* User = nullptr);
-	
+	UFUNCTION(BlueprintCallable, Category="BagSystem")
+	bool TryToActivateCurrentSelectedSpell(AARPGCharacter* User = nullptr);
+
 	virtual FSpellActivateEvent& OnSpellActivate()
 	{
 		return SpellActivateEvent;

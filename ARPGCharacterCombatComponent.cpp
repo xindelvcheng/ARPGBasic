@@ -104,6 +104,25 @@ void UARPGCharacterCombatComponent::ReInitCharacterActions()
 		}
 	}
 
+	for (const auto ActionClass : AbilityClasses)
+	{
+		if (ActionClass)
+		{
+			AARPGCastAction* ARPGAction = AARPGAction::CreateARPGAction<AARPGCastAction>(
+				ActionClass, GetOwnerCharacter(),
+				FActionFinishDelegate::CreateUObject(
+					this,
+					&UARPGCharacterCombatComponent::BindToActionFinished));
+			AbilityActions.Emplace(ARPGAction);
+			AbilityActionsMap.Emplace(ARPGAction->GetItemName(), ARPGAction);
+		}
+		else
+		{
+			UARPGStaticFunctions::PrintLogToScreen(
+				FString::Printf(TEXT("%s的Action存在NULL"), *GetOwner()->GetName()));
+		}
+	}
+
 
 	for (const auto ActionClass : BuffClasses)
 	{
@@ -146,6 +165,11 @@ void UARPGCharacterCombatComponent::BindToActionFinished(AARPGAction* Action)
 	{
 		ExclusiveGroupActionsMap.Remove(Action->GetActionExclusiveGroupID());
 	}
+
+	if (Cast<AARPGMeleeAttackAction>(Action))
+	{
+		MeleeAttackEndDelegate.Broadcast();
+	}
 }
 
 
@@ -161,6 +185,7 @@ bool UARPGCharacterCombatComponent::TryToMeleeAttack()
 		ExclusiveGroupActionsMap.Add(CurrentMeleeAttackCollection->GetActionExclusiveGroupID(),
 		                             CurrentMeleeAttackCollection);
 		CurrentActiveAction = CurrentMeleeAttackCollection;
+		MeleeAttackStartDelegate.Broadcast();
 		return true;
 	}
 	return false;
@@ -194,9 +219,9 @@ bool UARPGCharacterCombatComponent::TryToCastSpell(AARPGCastAction* Spell)
 		{
 			Spell->SetActorTransform(
 				UARPGStaticFunctions::GetActorNearPositionTransform(GetOwnerCharacter(),
-				                                                          {
-					                                                          Spell->GetMaxDistance(), 0, 0
-				                                                          }, FRotator{}));
+				                                                    {
+					                                                    Spell->GetMaxDistance(), 0, 0
+				                                                    }, FRotator{}));
 		}
 	}
 
@@ -260,3 +285,38 @@ bool UARPGCharacterCombatComponent::ActivateBuff(int BuffIndex, float Duration, 
 	}
 	return false;
 }
+
+
+UActivateActionBlueprintNode* UActivateActionBlueprintNode::ActivateAction(AARPGCharacter* Instigator, FName ActionName)
+{
+	UActivateActionBlueprintNode* ActionBlueprintNode = NewObject<UActivateActionBlueprintNode>();
+	ActionBlueprintNode->ActivateActionInternal(Instigator, ActionName);
+	return ActionBlueprintNode;
+}
+#pragma optimize("",off)
+bool UActivateActionBlueprintNode::ActivateActionInternal(AARPGCharacter* Instigator, FName ActionName)
+{
+	if (!Instigator)
+	{
+		return false;
+	}
+	if (const auto CharacterCombatComponent = Instigator->GetCharacterCombatComponent())
+	{
+		AARPGCastAction* Action = nullptr;
+		for (AARPGCastAction* e : CharacterCombatComponent->GetAbilityActions())
+		{
+			if (e && e->GetItemName() == ActionName)
+			{
+				Action = e;
+				break;
+			}
+		}
+		Action->OnActionFinishedEvent().AddLambda([this](AARPGAction*)
+		{
+			ActionFinished.Broadcast();
+		});
+		return Action->TryToActivateAction();
+	}
+	return false;
+}
+#pragma optimize("",on)

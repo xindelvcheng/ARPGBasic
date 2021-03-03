@@ -9,7 +9,7 @@
 
 
 UCLASS( ClassGroup=(ARPGBasic), meta=(BlueprintSpawnableComponent) )
-class UARPGActorTimeFunctionMovement : public UActorComponent
+class UARPGActorMovementComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
@@ -24,7 +24,7 @@ private:
 
 public:
 	// Sets default values for this component's properties
-	UARPGActorTimeFunctionMovement();
+	UARPGActorMovementComponent();
 	
 	UFUNCTION(BlueprintCallable,Category="ARPGActorMovement")
 	void Move(FMoveFunction NewMoveFunction);
@@ -62,7 +62,7 @@ protected:
 };
 
 UCLASS( ClassGroup=(ARPGBasic), meta=(BlueprintSpawnableComponent) )
-class UARPGActorTowardsActorMovement : public UARPGActorTimeFunctionMovement
+class UARPGActorTowardsActorMovementComponent : public UARPGActorMovementComponent
 {
 	GENERATED_BODY()
 
@@ -73,7 +73,7 @@ protected:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 public:
-	UARPGActorTowardsActorMovement();
+	UARPGActorTowardsActorMovementComponent();
 
     void MoveTowardsActor(AActor* Target, float NewAcceptableRadius = 300);
 

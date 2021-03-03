@@ -11,6 +11,9 @@ class AARPGCharacter;
 UENUM()
 enum class EChoice:uint8 { ChoiceA, ChoiceB };
 
+UENUM(BlueprintType)
+enum class EInputMode:uint8 {GameOnly, UIOnly,GameAndUI};
+
 /**
  * 工具函数库
  */
@@ -23,9 +26,12 @@ public:
 	static void PrintLogToScreen(FString Message, float Time = 5, FColor Color = FColor::Yellow);
 	static void PrintLogToScreen(FText Message, float Time = 5, FColor Color = FColor::Yellow);
 	static void PrintLogToScreen(float Message, float Time = 5, FColor Color = FColor::Yellow);
+	static void PrintLogToScreen(FVector Message, float Time = 5, FColor Color = FColor::Yellow);
+	static void PrintLogToScreen(FRotator Message, float Time = 5, FColor Color = FColor::Yellow);
+	static void PrintLogToScreen(FTransform Message, float Time = 5, FColor Color = FColor::Yellow);
 	static void PrintLogToScreen(UObject* Message, float Time = 5, FColor Color = FColor::Yellow);
 
-	static void PrintLogToLog(FString Message);
+	static void PrintMessageToLog(FString Message);
 
 	DECLARE_DELEGATE_OneParam(FActorInitializeDelegate, AActor*);
 	template <typename T>
@@ -52,4 +58,10 @@ public:
 	                                                const FRotator RotationOffset);
 
 	static FTimerHandle DelayDo(UWorld* World,FTimerDelegate TaskDelegate,float Delay);
+
+	
+	static void SetInputMode(AController* Controller,EInputMode InputMode);
+
+	UFUNCTION(BlueprintCallable,Category="ARPGGameInstanceSubsystem",meta=(WorldContext=WorldContextObject))
+	static void SetInputMode(UObject* WorldContextObject,EInputMode InputMode);
 };

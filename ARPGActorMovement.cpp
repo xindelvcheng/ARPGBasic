@@ -10,7 +10,7 @@
 
 
 // Sets default values for this component's properties
-UARPGActorTimeFunctionMovement::UARPGActorTimeFunctionMovement()
+UARPGActorMovementComponent::UARPGActorMovementComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -19,23 +19,23 @@ UARPGActorTimeFunctionMovement::UARPGActorTimeFunctionMovement()
 	// ...
 }
 
-void UARPGActorTimeFunctionMovement::Move(FMoveFunction NewMoveFunction)
+void UARPGActorMovementComponent::Move(FMoveFunction NewMoveFunction)
 {
 	Timer = 0;
 	OriginTransform = GetOwner()->GetActorTransform();
 	MoveFunction = NewMoveFunction;
 }
 
-void UARPGActorTimeFunctionMovement::MoveForward()
+void UARPGActorMovementComponent::MoveForward()
 {
 	FMoveFunction NewMoveFunction;
-	NewMoveFunction.BindDynamic(this, &UARPGActorTimeFunctionMovement::MoveForwardFunction);
+	NewMoveFunction.BindDynamic(this, &UARPGActorMovementComponent::MoveForwardFunction);
 	Move(NewMoveFunction);
 }
 
 
 // ReSharper disable once CppMemberFunctionMayBeConst
-FTransform UARPGActorTimeFunctionMovement::MoveForwardFunction(float Time)
+FTransform UARPGActorMovementComponent::MoveForwardFunction(float Time)
 {
 	FTransform Transform;
 	
@@ -49,7 +49,7 @@ FTransform UARPGActorTimeFunctionMovement::MoveForwardFunction(float Time)
 }
 
 // Called every frame
-void UARPGActorTimeFunctionMovement::TickComponent(float DeltaTime, ELevelTick TickType,
+void UARPGActorMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
                                                    FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -65,12 +65,12 @@ void UARPGActorTimeFunctionMovement::TickComponent(float DeltaTime, ELevelTick T
 				OriginTransform.GetLocation() + MoveFunction.Execute(Timer).GetLocation() * 100,
 				OriginTransform.GetScale3D() * MoveFunction.Execute(Timer).GetScale3D()
 			});
-			UARPGStaticFunctions::PrintLogToLog(UKismetStringLibrary::Conv_VectorToString(OriginTransform.GetLocation() + MoveFunction.Execute(Timer).GetLocation() * 100));
+			UARPGStaticFunctions::PrintMessageToLog(UKismetStringLibrary::Conv_VectorToString(OriginTransform.GetLocation() + MoveFunction.Execute(Timer).GetLocation() * 100));
 		};
 	}
 }
 
-void UARPGActorTowardsActorMovement::TickComponent(float DeltaTime, ELevelTick TickType,
+void UARPGActorTowardsActorMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
                                                    FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -82,17 +82,17 @@ void UARPGActorTowardsActorMovement::TickComponent(float DeltaTime, ELevelTick T
 	}
 }
 
-UARPGActorTowardsActorMovement::UARPGActorTowardsActorMovement()
+UARPGActorTowardsActorMovementComponent::UARPGActorTowardsActorMovementComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-void UARPGActorTowardsActorMovement::MoveTowardsActor(AActor* Target, float NewAcceptableRadius)
+void UARPGActorTowardsActorMovementComponent::MoveTowardsActor(AActor* Target, float NewAcceptableRadius)
 {
 	MoveTowardsActor(Target, FMoveFunction{}, NewAcceptableRadius);
 }
 
-void UARPGActorTowardsActorMovement::MoveTowardsActor(AActor* Target, FMoveFunction AdditionalFunction,
+void UARPGActorTowardsActorMovementComponent::MoveTowardsActor(AActor* Target, FMoveFunction AdditionalFunction,
                                                       float NewAcceptableRadius)
 {
 	TargetActor = Target;
@@ -100,15 +100,15 @@ void UARPGActorTowardsActorMovement::MoveTowardsActor(AActor* Target, FMoveFunct
 	Move(AdditionalFunction);
 }
 
-void UARPGActorTowardsActorMovement::MoveTowardsActorWithScale(AActor* Target)
+void UARPGActorTowardsActorMovementComponent::MoveTowardsActorWithScale(AActor* Target)
 {
 	FMoveFunction NewAdditionalFunction;
-	NewAdditionalFunction.BindDynamic(this, &UARPGActorTowardsActorMovement::ScaleFunction);
+	NewAdditionalFunction.BindDynamic(this, &UARPGActorTowardsActorMovementComponent::ScaleFunction);
 	MoveTowardsActor(Target, NewAdditionalFunction);
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
-FTransform UARPGActorTowardsActorMovement::ScaleFunction(float Time)
+FTransform UARPGActorTowardsActorMovementComponent::ScaleFunction(float Time)
 {
 	FTransform Transform;
 	Transform.SetScale3D(Transform.GetScale3D() * std::exp(-Time / 50));

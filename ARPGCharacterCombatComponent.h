@@ -6,6 +6,8 @@
 
 #include "ARPGAction.h"
 #include "ARPGActorComponent.h"
+#include "Kismet/BlueprintAsyncActionBase.h"
+
 
 #include "ARPGCharacterCombatComponent.generated.h"
 
@@ -13,9 +15,9 @@ class UCharacterConfigPrimaryDataAsset;
 class AARPGAction;
 class AARPGCastAction;
 class AARPGCharacter;
+DECLARE_MULTICAST_DELEGATE(FARPGMeleeAttackActionDelegate);
 
-
-UCLASS( ClassGroup=(ARPGBasic), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup=(ARPGBasic), meta=(BlueprintSpawnableComponent))
 class UARPGCharacterCombatComponent : public UARPGActorComponent
 {
 	GENERATED_BODY()
@@ -24,50 +26,58 @@ class UARPGCharacterCombatComponent : public UARPGActorComponent
 	TMap<int, AARPGAction*> ExclusiveGroupActionsMap;
 
 	/*技能配置，推荐在角色的CharacterConfigPDataAsset中统一配置（bool bUseCharacterDataAssetInit = true中时此处配置将被覆盖）*/
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGCharacterCombatComponent", meta=(AllowPrivateAccess))
 	bool bUseCharacterDataAssetInit = true;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess,
-		EditCondition="!bUseCharacterDataAssetInit",EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGCharacterCombatComponent", meta=(AllowPrivateAccess,
+		EditCondition="!bUseCharacterDataAssetInit", EditConditionHides))
 	TArray<FMeleeAttackActionDescriptionStruct> MeleeAttacks;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess,
-		EditCondition="!bUseCharacterDataAssetInit",EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGCharacterCombatComponent", meta=(AllowPrivateAccess,
+		EditCondition="!bUseCharacterDataAssetInit", EditConditionHides))
 	bool AllowInterruptBackswing;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess,
-		EditCondition="!bUseCharacterDataAssetInit",EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGCharacterCombatComponent", meta=(AllowPrivateAccess,
+		EditCondition="!bUseCharacterDataAssetInit", EditConditionHides))
 	TArray<TSubclassOf<AARPGCastAction>> AbilityClasses;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess,
-		EditCondition="!bUseCharacterDataAssetInit",EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGCharacterCombatComponent", meta=(AllowPrivateAccess,
+		EditCondition="!bUseCharacterDataAssetInit", EditConditionHides))
 	TArray<FName> SpellNames;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCharacterCombatComponent",meta=(AllowPrivateAccess,
-		EditCondition="!bUseCharacterDataAssetInit",EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGCharacterCombatComponent", meta=(AllowPrivateAccess,
+		EditCondition="!bUseCharacterDataAssetInit", EditConditionHides))
 	TArray<TSubclassOf<AARPGBuff>> BuffClasses;
 
-	
+
 	/*缓存技能释放对象*/
 	UPROPERTY()
 	TArray<AARPGAction*> MeleeAttackCollectionActions;
-	
+
 	UPROPERTY()
 	AARPGAction* CurrentMeleeAttackCollection;
-	
+
 	UPROPERTY()
 	TArray<AARPGCastAction*> AbilityActions;
+
 	
+
 	UPROPERTY()
 	TArray<AARPGBuff*> BuffActions;
+
+	FARPGMeleeAttackActionDelegate MeleeAttackStartDelegate;
+	FARPGMeleeAttackActionDelegate MeleeAttackEndDelegate;
 
 public:
 	// Sets default values for this component's properties
 	UARPGCharacterCombatComponent();
+	
+	UPROPERTY()
+	TMap<FName, AARPGCastAction*> AbilityActionsMap;
 
 protected:
 	virtual void InitializeComponent() override;
-	
+
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
@@ -81,27 +91,26 @@ public:
 	UFUNCTION()
 	void BindToActionFinished(AARPGAction* Action);
 
-	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	UFUNCTION(BlueprintCallable, Category="ARPGCharacterCombatComponent")
 	bool GetIsRigid() const { return IsRigid; }
 
-	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	UFUNCTION(BlueprintCallable, Category="ARPGCharacterCombatComponent")
 	bool GetIsActing() const { return CurrentActiveAction ? true : false; }
 
-	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	UFUNCTION(BlueprintCallable, Category="ARPGCharacterCombatComponent")
 	AARPGAction* GetCurrentActiveAction() const { return CurrentActiveAction; }
 
-	UPROPERTY(BlueprintReadOnly,Category="ARPGCharacterCombatComponent")
+	UPROPERTY(BlueprintReadOnly, Category="ARPGCharacterCombatComponent")
 	AARPGAction* CurrentActiveAction;
 
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCombatEvent);
 
-	UPROPERTY(BlueprintAssignable,BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category="ARPGCharacterCombatComponent")
 	FCombatEvent ActionStart;
 
-	UPROPERTY(BlueprintAssignable,BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category="ARPGCharacterCombatComponent")
 	FCombatEvent ActionEnd;
 
-	UFUNCTION()
 	virtual bool TryToMeleeAttack();
 
 	UFUNCTION()
@@ -116,7 +125,7 @@ public:
 
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRigidEvent, float, Duration);
 
-	UPROPERTY(BlueprintAssignable,Category="ARPGCharacterCombatComponent")
+	UPROPERTY(BlueprintAssignable, Category="ARPGCharacterCombatComponent")
 	FRigidEvent OnRigid;
 	FRigidEvent OnResumeFromRigid;
 
@@ -125,7 +134,7 @@ public:
 
 	bool IsMoving;
 
-	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	UFUNCTION(BlueprintCallable, Category="ARPGCharacterCombatComponent")
 	void ReInitCharacterActions();
 
 
@@ -152,5 +161,27 @@ public:
 		return CurrentMeleeAttackCollection;
 	}
 
-	TArray<AARPGCastAction*> GetAbilityActions() const {return AbilityActions;};
+	TArray<AARPGCastAction*> GetAbilityActions() const { return AbilityActions; };
+
+	FARPGMeleeAttackActionDelegate& OnAttackStart() { return MeleeAttackStartDelegate; }
+
+	FARPGMeleeAttackActionDelegate& OnAttackEnd() { return MeleeAttackEndDelegate; }
+};
+
+UCLASS()
+class UActivateActionBlueprintNode : public UBlueprintAsyncActionBase
+{
+	GENERATED_BODY()
+
+public:
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FActionFinished);
+
+	UPROPERTY(BlueprintAssignable)
+	FActionFinished ActionFinished;
+
+	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true"))
+	static UActivateActionBlueprintNode* ActivateAction(AARPGCharacter* Instigator, FName ActionName);
+
+private:
+	bool ActivateActionInternal(AARPGCharacter* Instigator, FName ActionName);
 };
