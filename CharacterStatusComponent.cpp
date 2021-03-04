@@ -11,13 +11,24 @@
 #include "ARPGCoreSubsystem.h"
 #include "ARPGMainCharacter.h"
 #include "ARPGSpecialEffectsSubsystem.h"
+#include "ARPGStaticFunctions.h"
 
 
 void UCharacterStatusComponent::InitializeComponent()
 {
 	Super::InitializeComponent();
 
-	ReInitCharacterProperties();
+	if (AARPGCharacter* OwnerCharacter = GetDirectlyOwnerCharacter())
+	{
+		OwnerCharacter->OnPostInitializeComponents().AddLambda([this,OwnerCharacter]()
+		{
+			ReInitCharacterProperties(OwnerCharacter->GetCharacterConfigDataAsset());
+		});
+	}
+	else
+	{
+		ReInitCharacterProperties();
+	}
 }
 
 void UCharacterStatusComponent::ReInitCharacterProperties(UCharacterConfigPrimaryDataAsset* CharacterConfigDataAsset)
@@ -59,18 +70,18 @@ void UCharacterStatusComponent::SetCurrentHP(const int NewCurrentHP)
 	if (this->CurrentHP <= 0)
 	{
 		OnCharacterDeath.Broadcast();
-		if (GetOwnerCharacter())
+		if (GetDirectlyOwnerCharacter())
 		{
-			GetOwnerCharacter()->SetCanBeDamaged(false);
-			if (GetOwnerCharacter()->GetMesh())
+			GetDirectlyOwnerCharacter()->SetCanBeDamaged(false);
+			if (GetDirectlyOwnerCharacter()->GetMesh())
 			{
-				GetOwnerCharacter()->GetMesh()->PlayAnimation(DeathAnimation, false);
+				GetDirectlyOwnerCharacter()->GetMesh()->PlayAnimation(DeathAnimation, false);
 			}
 
 
 			if (AARPGMainCharacter* MainCharacter = UARPGCoreSubsystem::GetMainCharacter(GetWorld()))
 			{
-				if (GetOwnerCharacter() != MainCharacter)
+				if (GetDirectlyOwnerCharacter() != MainCharacter)
 				{
 					MainCharacter->UpdateCoins(Coins);
 					if (UARPGSpecialEffectsSubsystem* SpecialEffectsSubsystem = UARPGSpecialEffectsSubsystem::Get(
@@ -79,11 +90,11 @@ void UCharacterStatusComponent::SetCurrentHP(const int NewCurrentHP)
 						SpecialEffectsSubsystem->PlaySoundEffect2D(TEXT("GetMoney"));
 						UGameplayStatics::SpawnEmitterAtLocation(
 							GetWorld(), SpecialEffectsSubsystem->GetParticleEffectResource(TEXT("Death")),
-							GetOwnerCharacter()->GetActorLocation());
+							GetDirectlyOwnerCharacter()->GetActorLocation());
 					}
 				}
 			}
-			
+
 			FTimerHandle TimerHandle;
 			GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([&]()
 			{

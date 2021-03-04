@@ -3,6 +3,8 @@
 
 #include "ARPGActorComponent.h"
 
+
+#include "ARPGCharacter.h"
 #include "ARPGCoreSubsystem.h"
 
 // Sets default values for this component's properties
@@ -14,6 +16,20 @@ UARPGActorComponent::UARPGActorComponent()
 	bWantsInitializeComponent = true;
 
 	// ...
+}
+
+AARPGCharacter* UARPGActorComponent::GetDirectlyOwnerCharacter() const
+{
+	AActor* Owner = GetOwner();
+	while (Owner)
+	{
+		if (AARPGCharacter* GetOwnerCharacter = Cast<AARPGCharacter>(Owner))
+		{
+			return GetOwnerCharacter;
+		}
+		Owner = Owner->GetOwner();
+	}
+	return nullptr;
 }
 
 

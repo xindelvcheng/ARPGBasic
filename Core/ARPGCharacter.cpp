@@ -75,6 +75,8 @@ void AARPGCharacter::PreInitializeComponents()
 	Super::PreInitializeComponents();
 
 	LoadCharacterConfigDataAsset();
+
+	PreInitializeComponentsDelegate.Broadcast();
 }
 
 
@@ -92,12 +94,13 @@ void AARPGCharacter::LoadCharacterConfigDataAsset()
 		UARPGStaticFunctions::PrintLogToScreen(
             FString::Printf(TEXT("角色%s未设置CharacterConfigPDataAsset"), *GetName()));
 	}
+	
 }
 
 void AARPGCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-
+	PostInitializeComponentsDelegate.Broadcast();
 }
 
 float AARPGCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,

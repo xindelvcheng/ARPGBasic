@@ -44,10 +44,10 @@ struct FGroundTypeFootstepSoundPairStruct
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="CharacterFootstepSoundEffect")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CharacterFootstepSoundEffect")
 	EGroundTypeEnum GroundType;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="CharacterFootstepSoundEffect")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CharacterFootstepSoundEffect")
 	USoundBase* FootstepSoundEffect;
 };
 
@@ -60,68 +60,74 @@ class AARPGCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGBASIC",meta=(AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGBASIC", meta=(AllowPrivateAccess))
 	UCharacterConfigPrimaryDataAsset* CharacterConfigDataAsset;
 
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGBASIC",meta=(AllowPrivateAccess))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="ARPGBASIC", meta=(AllowPrivateAccess))
 	class UARPGBagComponent* GameItemsManagerComponent;
 
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGBASIC",meta=(AllowPrivateAccess))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="ARPGBASIC", meta=(AllowPrivateAccess))
 	UARPGSpellsManagerComponent* SpellsManagerComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AimComponent", meta = (AllowPrivateAccess))
 	class UARPGAimComponent* AimComponent;
 
+	DECLARE_MULTICAST_DELEGATE(FCharacterLifeCircleDelegate);
+	FCharacterLifeCircleDelegate PreInitializeComponentsDelegate;
+	FCharacterLifeCircleDelegate PostInitializeComponentsDelegate;
+
 public:
 	// Sets default values for this character's properties
 	AARPGCharacter();
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGBASIC",meta=(AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGBASIC", meta=(AllowPrivateAccess))
 	FName CharacterName = "DefaultCharacter";
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGBASIC",meta=(AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGBASIC", meta=(AllowPrivateAccess))
 	FText CharacterDisplayName;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+
 	virtual void PreInitializeComponents() override;
-	
+
+
 	virtual void PostInitializeComponents() override;
 
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCharacterBasicComponent")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="ARPGCharacterBasicComponent")
 	class UCharacterStatusComponent* CharacterStatusComponent;
 
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCharacterBasicComponent")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="ARPGCharacterBasicComponent")
 	class UTranscendentalCombatComponent* CharacterCombatComponent;
 
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCharacterBasicComponent")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="ARPGCharacterBasicComponent")
 	class UARPGLockTargetComponent* CharacterLockTargetComponent;
 
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCharacterBasicComponent")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="ARPGCharacterBasicComponent")
 	class UARPGAIPerceptionStimuliSourceComponent* AIPerceptionStimuliSourceComponent;
 
 
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
 	                         AActor* DamageCauser) override;
 
-	UPROPERTY(EditAnywhere,Category="ARPGCharacter",meta=(EditCondition="!CharacterConfigDataAsset"))
+	UPROPERTY(EditAnywhere, Category="ARPGCharacter", meta=(EditCondition="!CharacterConfigDataAsset"))
 	TArray<UAnimMontage*> HitReactAnimMontages;
 
 	int HitReactIndex = 0;
 
 	//Tolerance
-	TMap<TSubclassOf<UDamageType>,int> DamageToleranceCounter;
+	TMap<TSubclassOf<UDamageType>, int> DamageToleranceCounter;
 
 	FTimerHandle ResetHitReactIndexTimerHandle;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPG Art Resource")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPG Art Resource")
 	UParticleSystem* ImpactVisualEffect;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPG Art Resource")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPG Art Resource")
 	USoundCue* ImpactSoundEffect;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPG Art Resource")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPG Art Resource")
 	TArray<FGroundTypeFootstepSoundPairStruct> FootstepSoundEffects;
 
 public:
@@ -132,7 +138,7 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	UFUNCTION(BlueprintCallable, Category="ARPGCharacterCombatComponent")
 	FString GetLevelName() const
 	{
 		if (CharacterStatusComponent)
@@ -147,13 +153,13 @@ public:
 	//此函数在AnimInstance中调用，用于播放脚步声
 	virtual void PlayFootStepSoundEffect(EGroundTypeEnum GroundType, float Volume = 1);
 
-	UFUNCTION(BlueprintCallable,Category="ARPGTest")
+	UFUNCTION(BlueprintCallable, Category="ARPGTest")
 	void AddToSpellPanel(int index);
 
 protected:
 
 public:
-	UFUNCTION(CallInEditor,Category="ARPGBASIC")
+	UFUNCTION(CallInEditor, Category="ARPGBASIC")
 	void LoadCharacterConfigDataAsset();
 
 
@@ -192,68 +198,68 @@ public:
 
 	//   转发常用属性到CharacterStatusComponent
 
-	UFUNCTION(BlueprintPure,Category="ARPGBASIC")
+	UFUNCTION(BlueprintPure, Category="ARPGBASIC")
 	int GetCharacterLevel() const
 	{
 		return CharacterStatusComponent->GetLevel();
 	}
 
-	UFUNCTION(BlueprintPure,Category="ARPGBASIC")
+	UFUNCTION(BlueprintPure, Category="ARPGBASIC")
 	int GetMaxHP() const
 	{
 		return CharacterStatusComponent->GetMaxHP();
 	}
 
 
-	UFUNCTION(BlueprintPure,Category="ARPGBASIC")
+	UFUNCTION(BlueprintPure, Category="ARPGBASIC")
 	int GetCurrentHP() const
 	{
 		return CharacterStatusComponent->GetCurrentHP();
 	}
 
-	UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
+	UFUNCTION(BlueprintCallable, Category="ARPGBASIC")
 	void SetCurrentHP(const int CurrentHP) const
 	{
 		CharacterStatusComponent->SetCurrentHP(CurrentHP);
 	}
 
-	UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
+	UFUNCTION(BlueprintCallable, Category="ARPGBASIC")
 	void UpdateCurrentHP(const int DeltaHP) const
 	{
 		CharacterStatusComponent->UpdateCharacterHP(DeltaHP);
 	}
 
-	UFUNCTION(BlueprintPure,Category="ARPGBASIC")
+	UFUNCTION(BlueprintPure, Category="ARPGBASIC")
 	int GetMaxSP() const
 	{
 		return CharacterStatusComponent->GetMaxSP();
 	}
 
-	UFUNCTION(BlueprintPure,Category="ARPGBASIC")
+	UFUNCTION(BlueprintPure, Category="ARPGBASIC")
 	int GetCurrentSP() const
 	{
 		return CharacterStatusComponent->GetCurrentSP();
 	}
 
-	UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
+	UFUNCTION(BlueprintCallable, Category="ARPGBASIC")
 	void SetCurrentSP(const int CurrentSP) const
 	{
 		CharacterStatusComponent->SetCurrentSP(CurrentSP);
 	}
 
-	UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
+	UFUNCTION(BlueprintCallable, Category="ARPGBASIC")
 	void UpdateCurrentSP(const int DeltaSP) const
 	{
 		CharacterStatusComponent->UpdateCharacterSP(DeltaSP);
 	}
 
-	UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
+	UFUNCTION(BlueprintCallable, Category="ARPGBASIC")
 	int GetCoins() const
 	{
 		return CharacterStatusComponent->GetCoins();
 	}
 
-	UFUNCTION(BlueprintCallable,Category="ARPGBASIC")
+	UFUNCTION(BlueprintCallable, Category="ARPGBASIC")
 	void UpdateCoins(const int DeltaCoins) const
 	{
 		CharacterStatusComponent->UpdateCharacterCoins(DeltaCoins);
@@ -265,37 +271,41 @@ public:
 	}
 
 	//转发常用属性到ARPGCharacterCombatComponent
-	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	UFUNCTION(BlueprintCallable, Category="ARPGCharacterCombatComponent")
 	UTranscendentalCombatComponent* GetCharacterCombatComponent() const
 	{
 		return CharacterCombatComponent;
 	}
 
-	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	UFUNCTION(BlueprintCallable, Category="ARPGCharacterCombatComponent")
 	bool TryToMeleeAttack()
 	{
 		return CharacterCombatComponent->TryToMeleeAttack();
 	};
 
 
-	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	UFUNCTION(BlueprintCallable, Category="ARPGCharacterCombatComponent")
 	bool TryToUseAbility(AARPGCastAction* Spell)
 	{
 		return CharacterCombatComponent->TryToCastSpell(Spell);
 	};
 
-	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	UFUNCTION(BlueprintCallable, Category="ARPGCharacterCombatComponent")
 	bool CauseRigid(const float Duration, AARPGCharacter* Causer)
 	{
 		return CharacterCombatComponent->CauseRigid(Duration, Causer);
 	};
 
-	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	UFUNCTION(BlueprintCallable, Category="ARPGCharacterCombatComponent")
 	bool GetIsRigid() const { return CharacterCombatComponent->GetIsRigid(); }
 
-	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	UFUNCTION(BlueprintCallable, Category="ARPGCharacterCombatComponent")
 	bool GetIsActing() const { return CharacterCombatComponent->GetIsActing(); }
 
-	UFUNCTION(BlueprintCallable,Category="ARPGCharacterCombatComponent")
+	UFUNCTION(BlueprintCallable, Category="ARPGCharacterCombatComponent")
 	AARPGAction* GetCurrentActiveAction() const { return CharacterCombatComponent->GetCurrentActiveAction(); }
+
+	FCharacterLifeCircleDelegate& OnPreInitializeComponents() { return PreInitializeComponentsDelegate; }
+
+	FCharacterLifeCircleDelegate& OnPostInitializeComponents() { return PostInitializeComponentsDelegate; }
 };

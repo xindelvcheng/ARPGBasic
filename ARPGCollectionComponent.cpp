@@ -181,7 +181,7 @@ bool UARPGBagComponent::TryToUseGameItemInBag(AARPGCharacter* User)
 
 bool UARPGSpellsManagerComponent::TryToActivateCurrentSelectedSpell(AARPGCharacter* User)
 {
-	User = User ? User : GetOwnerCharacter();
+	User = User ? User : GetDirectlyOwnerCharacter();
 	if (!User)
 	{
 		return false;	

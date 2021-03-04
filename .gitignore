@@ -1,2 +1,5 @@
-Test*
+TestProject.h
+TestProject.cpp
+TestProjectCharacter.h
+TestProjectCharacter.cpp
 .VSCodeCounter

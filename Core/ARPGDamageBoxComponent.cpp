@@ -119,6 +119,10 @@ void UARPGDamageBoxComponent::CauseDamage(FHitResult HitResult)
 	                                   HitResult.Location, HitResult,
 	                                   DamageInstigatorController,
 	                                   GetOwner(), DamageDetectDescriptionStruct.DamageTypeClass);
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow,TEXT("DamageOnce"));
+	}
 	ActorDamagedInSingleAttack.Add(HitActor);
 }
 #pragma optimize("",on)

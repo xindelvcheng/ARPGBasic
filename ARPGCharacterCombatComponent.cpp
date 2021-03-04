@@ -42,22 +42,22 @@ void UARPGCharacterCombatComponent::ReInitCharacterActions()
 
 	if (bUseCharacterDataAssetInit)
 	{
-		if (!GetOwnerCharacter())
+		if (!GetDirectlyOwnerCharacter())
 		{
 			return;
 		}
 
-		if (!GetOwnerCharacter()->GetCharacterConfigDataAsset())
+		if (!GetDirectlyOwnerCharacter()->GetCharacterConfigDataAsset())
 		{
 			UARPGStaticFunctions::PrintLogToScreen(
 				FString::Printf(
 					TEXT("%s设置bUseCharacterDataAssetInit=true却没有配置CharacterConfigDataAsset"),
-					*GetOwnerCharacter()->GetName()));
+					*GetDirectlyOwnerCharacter()->GetName()));
 		}
-		MeleeAttacks = GetOwnerCharacter()->GetCharacterConfigDataAsset()->MeleeAttacks;
-		AbilityClasses = GetOwnerCharacter()->GetCharacterConfigDataAsset()->AbilityClasses;
-		BuffClasses = GetOwnerCharacter()->GetCharacterConfigDataAsset()->BuffClasses;
-		SpellNames = GetOwnerCharacter()->GetCharacterConfigDataAsset()->SpellNames;
+		MeleeAttacks = GetDirectlyOwnerCharacter()->GetCharacterConfigDataAsset()->MeleeAttacks;
+		AbilityClasses = GetDirectlyOwnerCharacter()->GetCharacterConfigDataAsset()->AbilityClasses;
+		BuffClasses = GetDirectlyOwnerCharacter()->GetCharacterConfigDataAsset()->BuffClasses;
+		SpellNames = GetDirectlyOwnerCharacter()->GetCharacterConfigDataAsset()->SpellNames;
 	}
 
 	AbilityClasses.RemoveAll([](auto e) { return !e; });
@@ -66,7 +66,7 @@ void UARPGCharacterCombatComponent::ReInitCharacterActions()
 	for (const auto MeleeAttackActionDescriptionStruct : MeleeAttacks)
 	{
 		if (AARPGMeleeAttackAction* Action = AARPGAction::CreateARPGAction<AARPGMeleeAttackAction>(
-			AARPGMeleeAttackAction::StaticClass(), GetOwnerCharacter(),
+			AARPGMeleeAttackAction::StaticClass(), GetDirectlyOwnerCharacter(),
 			FActionFinishDelegate::CreateUObject(
 				this,
 				&UARPGCharacterCombatComponent::BindToActionFinished)))
@@ -85,7 +85,7 @@ void UARPGCharacterCombatComponent::ReInitCharacterActions()
 	{
 		CurrentMeleeAttackCollection = MeleeAttackCollectionActions[0];
 	}
-	else if (GetOwnerCharacter()->GetCharacterConfigDataAsset())
+	else if (GetDirectlyOwnerCharacter()->GetCharacterConfigDataAsset())
 	{
 		UARPGStaticFunctions::PrintLogToScreen(
 			FString::Printf(TEXT("%s的DataAsset未配置MeleeAttacks"), *GetOwner()->GetName()));
@@ -96,7 +96,7 @@ void UARPGCharacterCombatComponent::ReInitCharacterActions()
 	{
 		if (AARPGMeleeAttackAction* MeleeAction = Cast<AARPGMeleeAttackAction>(CurrentMeleeAttackCollection))
 		{
-			AARPGCastAction* Action = AARPGCastAction::Create(GetOwnerCharacter(), SpellName,
+			AARPGCastAction* Action = AARPGCastAction::Create(GetDirectlyOwnerCharacter(), SpellName,
 			                                                  FActionFinishDelegate::CreateUObject(
 				                                                  this,
 				                                                  &UARPGCharacterCombatComponent::BindToActionFinished));
@@ -109,7 +109,7 @@ void UARPGCharacterCombatComponent::ReInitCharacterActions()
 		if (ActionClass)
 		{
 			AARPGCastAction* ARPGAction = AARPGAction::CreateARPGAction<AARPGCastAction>(
-				ActionClass, GetOwnerCharacter(),
+				ActionClass, GetDirectlyOwnerCharacter(),
 				FActionFinishDelegate::CreateUObject(
 					this,
 					&UARPGCharacterCombatComponent::BindToActionFinished));
@@ -128,7 +128,7 @@ void UARPGCharacterCombatComponent::ReInitCharacterActions()
 	{
 		if (ActionClass)
 		{
-			BuffActions.Emplace(AARPGAction::CreateARPGAction<AARPGBuff>(ActionClass, GetOwnerCharacter(),
+			BuffActions.Emplace(AARPGAction::CreateARPGAction<AARPGBuff>(ActionClass, GetDirectlyOwnerCharacter(),
 			                                                             FActionFinishDelegate::CreateUObject(
 				                                                             this,
 				                                                             &UARPGCharacterCombatComponent::BindToActionFinished)));
@@ -180,7 +180,7 @@ bool UARPGCharacterCombatComponent::TryToMeleeAttack()
 	{
 		return false;
 	}
-	if (CurrentMeleeAttackCollection->TryToActivateAction(GetOwnerCharacter()))
+	if (CurrentMeleeAttackCollection->TryToActivateAction(GetDirectlyOwnerCharacter()))
 	{
 		ExclusiveGroupActionsMap.Add(CurrentMeleeAttackCollection->GetActionExclusiveGroupID(),
 		                             CurrentMeleeAttackCollection);
@@ -199,14 +199,14 @@ bool UARPGCharacterCombatComponent::TryToCastSpell(AARPGCastAction* Spell)
 		return false;
 	}
 
-	UARPGAimComponent* AimComponent = GetOwnerCharacter()->GetAimComponent();
+	UARPGAimComponent* AimComponent = GetDirectlyOwnerCharacter()->GetAimComponent();
 	if (AimComponent && AimComponent->IsAimTargetResultIsValid())
 	{
 		Spell->SetActorTransform(AimComponent->GetAimTargetActor()->GetActorTransform());
 	}
 	else
 	{
-		UARPGLockTargetComponent* LockTargetComponent = GetOwnerCharacter()->GetCharacterLockTargetComponent();
+		UARPGLockTargetComponent* LockTargetComponent = GetDirectlyOwnerCharacter()->GetCharacterLockTargetComponent();
 
 		if (AARPGCharacter* LockingTarget = LockTargetComponent->GetLockingTarget())
 		{
@@ -219,7 +219,7 @@ bool UARPGCharacterCombatComponent::TryToCastSpell(AARPGCastAction* Spell)
 		else
 		{
 			Spell->SetActorTransform(
-				UARPGStaticFunctions::GetActorNearPositionTransform(GetOwnerCharacter(),
+				UARPGStaticFunctions::GetActorNearPositionTransform(GetDirectlyOwnerCharacter(),
 				                                                    {
 					                                                    Spell->GetMaxDistance(), 0, 0
 				                                                    }, FRotator{}));
@@ -227,7 +227,7 @@ bool UARPGCharacterCombatComponent::TryToCastSpell(AARPGCastAction* Spell)
 	}
 
 
-	if (Spell->TryToActivateAction(GetOwnerCharacter()))
+	if (Spell->TryToActivateAction(GetDirectlyOwnerCharacter()))
 	{
 		ExclusiveGroupActionsMap.Add(Spell->GetActionExclusiveGroupID(), Spell);
 		CurrentActiveAction = Spell;
@@ -252,9 +252,9 @@ bool UARPGCharacterCombatComponent::CauseRigid(float Duration, AARPGCharacter* C
 	WorldTimeManager.SetTimer(RigidTimerHandle,
 	                          FTimerDelegate::CreateLambda([&]()
 	                          {
-		                          if (GetOwnerCharacter())
+		                          if (GetDirectlyOwnerCharacter())
 		                          {
-			                          GetOwnerCharacter()->GetCharacterMovement()->Activate();
+			                          GetDirectlyOwnerCharacter()->GetCharacterMovement()->Activate();
 			                          IsRigid = false;
 			                          OnResumeFromRigid.Broadcast(WorldTimeManager.GetTimerElapsed(RigidTimerHandle));
 		                          }
@@ -264,7 +264,7 @@ bool UARPGCharacterCombatComponent::CauseRigid(float Duration, AARPGCharacter* C
 	OnRigid.Broadcast(TimerRemaining);
 
 	ActivateBuff(0, 0.3, Causer);
-	GetOwnerCharacter()->GetCharacterMovement()->Deactivate();
+	GetDirectlyOwnerCharacter()->GetCharacterMovement()->Deactivate();
 
 	return true;
 }
@@ -279,7 +279,7 @@ bool UARPGCharacterCombatComponent::ActivateBuff(int BuffIndex, float Duration, 
 
 	AARPGBuff* Buff = BuffActions[BuffIndex];
 	Buff->SetDuration(Duration);
-	if (Buff->TryToActivateAction(GetOwnerCharacter()))
+	if (Buff->TryToActivateAction(GetDirectlyOwnerCharacter()))
 	{
 		ExclusiveGroupActionsMap.Add(Buff->GetActionExclusiveGroupID(), Buff);
 		return true;
