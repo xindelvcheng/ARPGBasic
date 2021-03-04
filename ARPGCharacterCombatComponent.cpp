@@ -242,7 +242,7 @@ bool UARPGCharacterCombatComponent::CauseRigid(float Duration, AARPGCharacter* C
 	//打断当前的攻击和技能
 	if (CurrentActiveAction)
 	{
-		CurrentActiveAction->InterruptAction(Causer);
+		CurrentActiveAction->FinishAction();
 	}
 	FTimerManager& WorldTimeManager = GetWorld()->GetTimerManager();
 

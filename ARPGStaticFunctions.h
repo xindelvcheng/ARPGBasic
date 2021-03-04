@@ -64,4 +64,6 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category="ARPGGameInstanceSubsystem",meta=(WorldContext=WorldContextObject))
 	static void SetInputMode(UObject* WorldContextObject,EInputMode InputMode);
+
+	
 };

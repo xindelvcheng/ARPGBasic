@@ -118,6 +118,7 @@ private:
 	UPROPERTY(EditAnywhere,meta=(AllowPrivateAccess))
 	UAnimSequence* DeathAnimation;
 
+
 protected:
 	virtual void InitializeComponent() override;
 

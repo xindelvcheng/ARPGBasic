@@ -13,6 +13,9 @@ class AARPGCharacter;
 class AARPGAction;
 DECLARE_DELEGATE_OneParam(FActionFinishDelegate, AARPGAction*);
 
+UENUM()
+enum class EActionStateEnum:uint8 { Run, Stop };
+
 UCLASS(Blueprintable,HideCategories=("GameItemFlag"))
 class AARPGAction : public AARPGCollectableObject
 {
@@ -20,19 +23,20 @@ class AARPGAction : public AARPGCollectableObject
 
 	DECLARE_MULTICAST_DELEGATE_OneParam(FActionFinishEvent, AARPGAction*);
 	FActionFinishEvent ActionFinishedEvent;
+
+	/*当前Action状态，Stop状态才能启动，Run状态才能停止*/
+	EActionStateEnum ActionState;
+
+	TWeakObjectPtr<AARPGCharacter> User;
+	TWeakObjectPtr<AARPGCharacter> Target;
 protected:
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGAction")
 	int ExclusiveGroupID = 0;
-
+	
 	virtual void OnActionActivate();
 
 	virtual void OnActionFinished(AARPGAction* Action)
-	{
-	};
-
-	UFUNCTION(BlueprintCallable,Category="ARPGAction")
-	virtual void OnActionInterrupted(AARPGCharacter* Causer)
 	{
 	};
 
@@ -44,24 +48,20 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent,DisplayName="OnActionActive")
 	void BPFunc_OnActionActivate();
 
-	UFUNCTION(BlueprintImplementableEvent,DisplayName="OnInterrupt")
-	void BPFunc_OnActionInterrupted(AARPGCharacter* Character);
-
 	virtual void BeginPlay() override;
 
 public:
 	AARPGAction();
 
 	UFUNCTION(BlueprintCallable,Category="ARPGAction")
-	void FinishAction();
+	bool TryToActivateAction(AARPGCharacter* NewUser = nullptr, AARPGCharacter* NewTarget = nullptr);
 
+	/*结束Action，可能由Action自己调用（例如到时长了），也可以由外界调用打断Action*/
 	UFUNCTION(BlueprintCallable,Category="ARPGAction")
-	void InterruptAction(AARPGCharacter* Causer);
+	void FinishAction();
 
 	int GetActionExclusiveGroupID() const { return ExclusiveGroupID; }
 
-	UFUNCTION(BlueprintCallable,Category="ARPGAction")
-	bool TryToActivateAction(AARPGCharacter* User = nullptr, AARPGCharacter* Target = nullptr);
 
 	template <typename T>
 	static T* CreateARPGAction(TSubclassOf<AARPGAction> ActionClass,
@@ -78,10 +78,19 @@ public:
 		return ActionFinishedEvent;
 	}
 
-
+	//- Getter&Setter -
 	virtual int GetItemNumber() const override { return -1; };
-
 	virtual FText GetItemNumberText() const override { return FText{}; };
+
+	EActionStateEnum GetActionState() const { return ActionState; }
+	void SetActionState(const EActionStateEnum NewActionState) { this->ActionState = NewActionState; }
+
+	AARPGCharacter* GetUser() const { return User.Get(); }
+	void SetUser(const TWeakObjectPtr<AARPGCharacter>& NewUser) { this->User = NewUser; }
+
+	AARPGCharacter* GetTarget() const { return Target.Get(); }
+	void SetTarget(const TWeakObjectPtr<AARPGCharacter>& NewTarget) { this->Target = NewTarget; }
+	//- Getter&Setter -
 };
 
 
@@ -90,17 +99,28 @@ class AARPGMontageAction : public AARPGAction
 {
 	GENERATED_BODY()
 
+	UPROPERTY()
+	UAnimInstance* OwnerCharacterAnimInstance;
+
+	UPROPERTY(BlueprintReadWrite,Category="ARPGMontageAction",meta=(AllowPrivateAccess))
+	UAnimMontage* ActionMontage;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGMontageAction",meta=(AllowPrivateAccess))
+	FName StartSectionName = NAME_None;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGMontageAction",meta=(AllowPrivateAccess))
+	float PlayRate = 1;
+
+	int MontageInstanceID;
+
 	void BindDelegateToOwnerCharacterAnimInstance();
 
 protected:
 
 	virtual void BeginPlay() override;
 
-	UPROPERTY()
-	UAnimInstance* OwnerCharacterAnimInstance;
-
-
 	virtual void OnActionActivate() override;
+	virtual void OnActionFinished(AARPGAction* Action) override;
 
 	UFUNCTION()
 	void BindToMontageBegin(UAnimMontage* Montage);
@@ -109,31 +129,14 @@ protected:
 	UFUNCTION()
 	void BindToMontageStop(UAnimMontage* Montage, bool bInterrupted);
 
-	virtual void OnMontageBegin(UAnimMontage* Montage)
-	{
-	};
 
-	virtual void OnMontageNotify(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload)
-	{
-	};
-
-	virtual void OnMontageStop(UAnimMontage* Montage, bool bInterrupted)
-	{
-	};
-
-	virtual void OnActionInterrupted(AARPGCharacter* Causer) override;
+	/*- Play montage callback-*/
+	virtual void OnMontageBegin(UAnimMontage* Montage) { ; }
+	virtual void OnMontageNotify(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload) { ; }
+	virtual void OnMontageStop(UAnimMontage* Montage, bool bInterrupted) { FinishAction(); }
+	/*- Play montage callback-*/
 
 public:
-	UPROPERTY(BlueprintReadWrite,Category="ARPGMontageAction")
-	UAnimMontage* ActionMontage;
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGMontageAction")
-	FName StartSectionName = NAME_None;
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGMontageAction")
-	float PlayRate = 1;
-
-	int MontageInstanceID;
 
 	UFUNCTION(BlueprintImplementableEvent,DisplayName="OnMontageBegin")
 	void BPFunc_OnMontageBegin(AARPGCharacter* Character);
@@ -141,19 +144,12 @@ public:
 	void BPFunc_OnMontageNotify(FName NotifyName, AARPGCharacter* Character);
 	UFUNCTION(BlueprintImplementableEvent,DisplayName="OnMontageStop")
 	void BPFunc_OnMontageStop(AARPGCharacter* Character);
-};
 
-UCLASS(Blueprintable)
-class AARPGSingleMontageAction : public AARPGMontageAction
-{
-	GENERATED_BODY()
-public:
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSingleMontageAction")
-	UAnimMontage* ActionMontageAsset;
 
-	virtual void OnActionActivate() override;
-
-	virtual void OnMontageStop(UAnimMontage* Montage, bool bInterrupted) override;
+	/*- Getter&Setter */
+	UAnimMontage* GetActionMontage() const { return ActionMontage; }
+	void SetActionMontage(UAnimMontage* const NewActionMontage) { this->ActionMontage = NewActionMontage; }
+	/*- Getter&Setter */
 };
 
 USTRUCT(BlueprintType)
@@ -165,14 +161,13 @@ struct FMeleeAttackActionDescriptionStruct
 	TArray<UAnimMontage*> MeleeAttackMontages;
 };
 
-UCLASS(Blueprintable)
+UCLASS(Blueprintable,HideCategories=("ARPGMontageAction"))
 class AARPGMeleeAttackAction : public AARPGMontageAction
 {
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly,Category="ARPGMeleeAttackAction",meta=(AllowPrivateAccess))
 	int MeleeAttackIndex;
-
 
 public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGMeleeAttackCollection",meta=(AllowPrivateAccess=true))
@@ -185,11 +180,9 @@ public:
 	virtual void OnMontageNotify(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload) override;
 
 	virtual void OnMontageStop(UAnimMontage* Montage, bool bInterrupted) override;
-
-	virtual void OnActionInterrupted(AARPGCharacter* Causer) override;
 };
 
-UCLASS(Blueprintable)
+UCLASS(Blueprintable,HideCategories=("ARPGMontageAction"))
 class AARPGMultiMontageAction : public AARPGMontageAction
 {
 	GENERATED_BODY()

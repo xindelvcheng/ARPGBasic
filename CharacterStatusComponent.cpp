@@ -47,7 +47,7 @@ void UCharacterStatusComponent::ReInitCharacterProperties(UCharacterConfigPrimar
 		DeathAnimation = CharacterConfigDataAsset->DeathAnimationAsset;
 	}
 
-	SetMaxHP(CalculateValueBySpecialty(HealthSpecialty));
+	SetMaxHP(CalculateValueBySpecialty(HealthSpecialty) * 10);
 	SetCurrentHP(MaxHP);
 	SetMaxSP(CalculateValueBySpecialty(StaminaSpecialty));
 	SetCurrentSP(MaxSP);

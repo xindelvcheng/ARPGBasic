@@ -126,7 +126,7 @@ float AARPGCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 	UpdateCurrentHP(-ActualDamage);
 
 
-	//受伤特效
+	//受伤视效和音效
 	FVector HitLocation = GetActorLocation();
 	
 	if(DamageEvent.IsOfType(FPointDamageEvent::ClassID))
@@ -157,7 +157,7 @@ float AARPGCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 			EventInstigator ? EventInstigator->GetTargetLocation() : HitLocation,
 			GetActorLocation()) * ImpactForceFactor),
 		true, true);
-	CauseRigid(1 * (DamageAmount / GetMaxHP()), nullptr);
+	CauseRigid(1 * (DamageAmount / GetMaxHP()), Cast<AARPGCharacter>(DamageCauser));
 
 	return ActualDamage;
 }

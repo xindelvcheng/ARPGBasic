@@ -28,35 +28,36 @@ bool AARPGAction::BPFunc_CheckActionActivateConditionAndPayCost_Implementation()
 void AARPGAction::BeginPlay()
 {
 	Super::BeginPlay();
+
+	ActionState = EActionStateEnum::Stop;
 }
 
 AARPGAction::AARPGAction()
 {
-	
 }
 
 void AARPGAction::FinishAction()
 {
-	SetActorTickEnabled(false);
+	if (ActionState == EActionStateEnum::Run)
+	{
+		ActionState = EActionStateEnum::Stop;
 
-	OnActionFinished(this);
-	ActionFinishedEvent.Broadcast(this);
+		SetActorTickEnabled(false);
+
+		OnActionFinished(this);
+		ActionFinishedEvent.Broadcast(this);
+	}
 }
 
-void AARPGAction::InterruptAction(AARPGCharacter* Causer)
-{
-	FinishAction();
-
-	OnActionInterrupted(Causer);
-	BPFunc_OnActionInterrupted(Causer);
-}
-
-bool AARPGAction::TryToActivateAction(AARPGCharacter* User, AARPGCharacter* Target)
+bool AARPGAction::TryToActivateAction(AARPGCharacter* NewUser, AARPGCharacter* NewTarget)
 {
 	verifyf(GetOwnerCharacter(), TEXT("未显式调用InitWithOwningCharacter，也没有在激活Actor时指定OwningCharacter"));
 
-	if (CheckActionActivateConditionAndPayCost())
+	if (CheckActionActivateConditionAndPayCost() && ActionState == EActionStateEnum::Stop)
 	{
+		ActionState = EActionStateEnum::Run;
+		User = NewUser;
+		Target = NewTarget;
 		OnActionActivate();
 		return true;
 	}
@@ -129,7 +130,6 @@ void AARPGMontageAction::BindDelegateToOwnerCharacterAnimInstance()
 void AARPGMontageAction::OnActionActivate()
 {
 	Super::OnActionActivate();
-	BindDelegateToOwnerCharacterAnimInstance();
 	GetOwnerCharacter()->PlayAnimMontage(ActionMontage, PlayRate, StartSectionName);
 }
 
@@ -177,29 +177,19 @@ void AARPGMontageAction::BindToMontageStop(UAnimMontage* Montage, bool bInterrup
 	BPFunc_OnMontageStop(GetOwnerCharacter());
 }
 
-void AARPGMontageAction::OnActionInterrupted(AARPGCharacter* Causer)
+void AARPGMontageAction::OnActionFinished(AARPGAction* Action)
 {
 	OwnerCharacterAnimInstance->Montage_Stop(0.2, ActionMontage);
-	Super::OnActionInterrupted(Causer);
+	Super::OnActionFinished(Action);
 }
 
-
-void AARPGSingleMontageAction::OnActionActivate()
-{
-	ActionMontage = ActionMontageAsset;
-	Super::OnActionActivate();
-}
-
-void AARPGSingleMontageAction::OnMontageStop(UAnimMontage* Montage, bool bInterrupted)
-{
-	Super::OnMontageStop(Montage, bInterrupted);
-
-	FinishAction();
-}
 
 void AARPGMeleeAttackAction::OnActionActivate()
 {
-	ActionMontage = MeleeAttackMontages[MeleeAttackIndex];
+	if (MeleeAttackMontages.IsValidIndex(MeleeAttackIndex))
+	{
+		SetActionMontage(MeleeAttackMontages[MeleeAttackIndex]);
+	}
 	Super::OnActionActivate();
 }
 
@@ -216,7 +206,10 @@ void AARPGMeleeAttackAction::OnMontageNotify(FName NotifyName,
 	if (NotifyName.ToString() == TEXT("AppendAttack") || NotifyName == NAME_None)
 	{
 		MeleeAttackIndex = (MeleeAttackIndex + 1) % MeleeAttackMontages.Num();
-		FinishAction();
+
+		/*广播此Action已结束（但并不实际调用FinishAction中止Montage）*/
+		SetActionState(EActionStateEnum::Stop);
+		OnActionFinishedEvent().Broadcast(this);
 	}
 }
 
@@ -230,16 +223,13 @@ void AARPGMeleeAttackAction::OnMontageStop(UAnimMontage* Montage, bool bInterrup
 	}
 }
 
-void AARPGMeleeAttackAction::OnActionInterrupted(AARPGCharacter* Causer)
-{
-	MeleeAttackIndex = 0;
-
-	Super::OnActionInterrupted(Causer);
-}
-
 void AARPGMultiMontageAction::OnActionActivate()
 {
-	ActionMontage = ActionMontages[MontageIndex];
+	if (ActionMontages.IsValidIndex(MontageIndex))
+	{
+		SetActionMontage(ActionMontages[MontageIndex]);	
+	}
+	
 	MontageIndex = (MontageIndex + 1) % ActionMontages.Num();
 	Super::OnActionActivate();
 }
