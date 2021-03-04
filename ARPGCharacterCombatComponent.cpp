@@ -193,6 +193,7 @@ bool UARPGCharacterCombatComponent::TryToMeleeAttack()
 
 bool UARPGCharacterCombatComponent::TryToCastSpell(AARPGCastAction* Spell)
 {
+	
 	if (IsRigid || !Spell || ExclusiveGroupActionsMap.Contains(Spell->GetActionExclusiveGroupID()))
 	{
 		return false;
@@ -287,13 +288,13 @@ bool UARPGCharacterCombatComponent::ActivateBuff(int BuffIndex, float Duration, 
 }
 
 
-UActivateActionBlueprintNode* UActivateActionBlueprintNode::ActivateAction(AARPGCharacter* Instigator, FName ActionName)
+UActivateActionBlueprintNode* UActivateActionBlueprintNode::ActivateAction(AARPGCharacter* Instigator, FName ActionName, bool& bActivateSuccess)
 {
 	UActivateActionBlueprintNode* ActionBlueprintNode = NewObject<UActivateActionBlueprintNode>();
-	ActionBlueprintNode->ActivateActionInternal(Instigator, ActionName);
+	bActivateSuccess = ActionBlueprintNode->ActivateActionInternal(Instigator, ActionName);
 	return ActionBlueprintNode;
 }
-#pragma optimize("",off)
+
 bool UActivateActionBlueprintNode::ActivateActionInternal(AARPGCharacter* Instigator, FName ActionName)
 {
 	if (!Instigator)
@@ -315,8 +316,7 @@ bool UActivateActionBlueprintNode::ActivateActionInternal(AARPGCharacter* Instig
 		{
 			ActionFinished.Broadcast();
 		});
-		return Action->TryToActivateAction();
+		return CharacterCombatComponent->TryToCastSpell(Action);
 	}
 	return false;
 }
-#pragma optimize("",on)

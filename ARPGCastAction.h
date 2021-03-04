@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "ARPGAction.h"
 #include "ARPGCoreSubsystem.h"
+#include "ARPGSpellCreature.h"
 #include "Engine/DataTable.h"
 
 #include "ARPGCastAction.generated.h"
@@ -142,7 +143,7 @@ struct FSimpleTaskStruct
 	float Duration = 0.5;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
-	TSubclassOf<ASpellawCreature> SpecialEffectCreatureClass;
+	TSubclassOf<AARPGSpellCreature> SpecialEffectCreatureClass;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
 	FGridLayoutStruct LayoutDescription;
@@ -197,10 +198,10 @@ class UARPGSimpleTask : public UTask
 {
 	GENERATED_BODY()
 
-	TSubclassOf<ASpellawCreature> SpecialEffectCreatureClass;
+	TSubclassOf<AARPGSpellCreature> SpecialEffectCreatureClass;
 
 	UPROPERTY()
-	ASpellawCreature* SpecialEffectCreature;
+	AARPGSpellCreature* SpecialEffectCreature;
 
 	FGridLayoutStruct LayoutDescription;
 
@@ -292,6 +293,7 @@ public:
 	
 
 protected:
+	virtual void PostInitializeComponents() override;
 	virtual void BeginPlay() override;
 
 	virtual bool CheckActionActivateConditionAndPayCost() override;
@@ -299,3 +301,5 @@ protected:
 	virtual void OnActionActivate() override;
 	virtual void OnActionFinished(AARPGAction* Action) override;
 };
+
+class UARPGDamageBoxComponent;

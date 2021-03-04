@@ -180,7 +180,7 @@ public:
 	FActionFinished ActionFinished;
 
 	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true"))
-	static UActivateActionBlueprintNode* ActivateAction(AARPGCharacter* Instigator, FName ActionName);
+	static UActivateActionBlueprintNode* ActivateAction(AARPGCharacter* Instigator, FName ActionName, bool& bActivateSuccess);
 
 private:
 	bool ActivateActionInternal(AARPGCharacter* Instigator, FName ActionName);

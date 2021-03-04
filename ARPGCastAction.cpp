@@ -11,10 +11,10 @@
 #include "ARPGCharacter.h"
 #include "ARPGConfigSubsystem.h"
 #include "ARPGCoreSubsystem.h"
+#include "ARPGDamageBoxComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "ARPGSpecialEffectsSubsystem.h"
 #include "ARPGStaticFunctions.h"
-#include "SpellawCreature.h"
 
 void AARPGCastAction::InitTasks()
 {
@@ -105,6 +105,13 @@ AARPGCastAction* AARPGCastAction::Create(AARPGCharacter* ActionOwnerCharacter, c
 	return nullptr;
 }
 
+void AARPGCastAction::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	InitTasks();
+}
+
 void AARPGCastAction::BeginPlay()
 {
 	Super::BeginPlay();
@@ -192,7 +199,7 @@ void UARPGSimpleTask::OnTaskExecuted()
 	OwnerAction->GetWorldTimerManager().SetTimer(StartTimerHandle, FTimerDelegate::CreateLambda([&]()
 	{
 		Transform = LayoutDescription.CalculateAbsoluteTransform(OwnerAction->GetActorLocation(),OwnerAction->GetActorRotation());
-		SpecialEffectCreature = ASpellawCreature::Create(SpecialEffectCreatureClass, Transform,
+		SpecialEffectCreature = AARPGSpellCreature::Create(SpecialEffectCreatureClass, Transform,
 		                                                           OwnerAction->GetOwnerCharacter());
 	}), StartTime, false);
 
