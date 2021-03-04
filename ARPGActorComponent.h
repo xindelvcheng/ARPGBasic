@@ -8,32 +8,26 @@
 
 class AARPGCharacter;
 
-UCLASS(ClassGroup=(ARPGBasic),meta=(BlueprintSpawnableComponent))
+UCLASS(ClassGroup=(ARPGBasic), meta=(BlueprintSpawnableComponent))
 class TESTPROJECT_API UARPGActorComponent : public UActorComponent
 {
 	GENERATED_BODY()
-
-	UPROPERTY(BlueprintReadOnly,meta=(AllowPrivateAccess))
-	TWeakObjectPtr<AARPGCharacter> OwnerCharacter;
-public:	
+public:
 	// Sets default values for this component's properties
 	UARPGActorComponent();
 
+	AARPGCharacter* GetOwnerCharacter() const { return GetOwner<AARPGCharacter>(); }
+
 protected:
 
-	FORCEINLINE AARPGCharacter* GetOwnerCharacter() const { return OwnerCharacter.Get(); }
-	virtual void SetOwnerCharacter(AARPGCharacter* NewOwner);
-	
+
 	// Called when the game starts
 	virtual void BeginPlay() override;
-	
-	virtual void InitializeComponent() override;
 
-	
+
 public:
-	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-		
+	// Called every frame
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
+	                           FActorComponentTickFunction* ThisTickFunction) override;
 };

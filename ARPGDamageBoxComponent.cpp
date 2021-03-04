@@ -7,7 +7,7 @@
 #include "ARPGBasicSettings.h"
 #include "ARPGCharacter.h"
 #include "ARPGDamageTypes.h"
-
+#include "ARPGStaticFunctions.h"
 
 
 UARPGDamageBoxComponent::UARPGDamageBoxComponent()
@@ -70,7 +70,7 @@ void UARPGDamageBoxComponent::TickComponent(float DeltaTime, ELevelTick TickType
 
 	for (FHitResult HitResult : HitResults)
 	{
-	if (HitResult.GetComponent() != this)
+		if (HitResult.GetComponent() != this)
 		{
 			OnHitDetected(HitResult);
 		}
@@ -80,7 +80,7 @@ void UARPGDamageBoxComponent::TickComponent(float DeltaTime, ELevelTick TickType
 }
 
 
-
+#pragma optimize("",off)
 void UARPGDamageBoxComponent::OnHitDetected(FHitResult HitResult)
 {
 	HitDetectedDelegate.Broadcast(HitResult);
@@ -90,12 +90,12 @@ void UARPGDamageBoxComponent::OnHitDetected(FHitResult HitResult)
 	{
 		ElementInteract(DamageBoxComponent);
 	}
-
 	if (DamageDetectDescriptionStruct.bCauseDamage)
 	{
 		CauseDamage(HitResult);
 	}
 }
+
 
 void UARPGDamageBoxComponent::CauseDamage(FHitResult HitResult)
 {
@@ -104,31 +104,24 @@ void UARPGDamageBoxComponent::CauseDamage(FHitResult HitResult)
 	{
 		return;
 	}
-	if (AARPGCharacter* OwnerCharacter = GetOwner<AARPGCharacter>())
+
+	float BaseDamage = DamageDetectDescriptionStruct.DamageBias;
+	AController* DamageInstigatorController = nullptr;
+	if (AARPGCharacter* OwnerCharacter = GetOwnerCharacter())
 	{
 		const float BaseAttack = OwnerCharacter->GetCharacterStatusComponent()->GetAttack();
-		const float BaseDamage = DamageDetectDescriptionStruct.DamageWeight * BaseAttack +
-            DamageDetectDescriptionStruct.DamageBias + GetOwner()->GetVelocity().Size() *
-            DamageDetectDescriptionStruct.VelocityDamageBonusWeight;
-
-
-		UGameplayStatics::ApplyPointDamage(
-            HitActor, BaseDamage,
-            HitResult.Location, HitResult,
-            OwnerCharacter->GetController(),
-            OwnerCharacter, DamageDetectDescriptionStruct.DamageTypeClass);
-		ActorDamagedInSingleAttack.Add(HitActor);
+		BaseDamage = DamageDetectDescriptionStruct.DamageWeight * BaseAttack +
+			DamageDetectDescriptionStruct.DamageBias + GetOwner()->GetVelocity().Size() *
+			DamageDetectDescriptionStruct.VelocityDamageBonusWeight;
+		DamageInstigatorController = OwnerCharacter->GetController();
 	}
-	else //机关伤害
-		{
-		UGameplayStatics::ApplyPointDamage(
-            HitActor, DamageDetectDescriptionStruct.DamageBias,
-            HitResult.Location, HitResult,
-            nullptr,
-            nullptr,
-            DamageDetectDescriptionStruct.DamageTypeClass);
-		}
+	UGameplayStatics::ApplyPointDamage(HitActor, BaseDamage,
+	                                   HitResult.Location, HitResult,
+	                                   DamageInstigatorController,
+	                                   GetOwner(), DamageDetectDescriptionStruct.DamageTypeClass);
+	ActorDamagedInSingleAttack.Add(HitActor);
 }
+#pragma optimize("",on)
 
 void UARPGDamageBoxComponent::ElementInteract(UARPGDamageBoxComponent* EnvironmentDamageBox)
 {
@@ -214,4 +207,18 @@ void UARPGDamageBoxComponent::OnDamageDecrease(float DeltaDamageWeightCoefficien
 void UARPGDamageBoxComponent::SetDebugEnable(bool bShowDebug)
 {
 	bDrawDebug = bShowDebug;
+}
+
+AARPGCharacter* UARPGDamageBoxComponent::GetOwnerCharacter() const
+{
+	AActor* Owner = GetOwner();
+	while (Owner)
+	{
+		if (AARPGCharacter* GetOwnerCharacter = Cast<AARPGCharacter>(Owner))
+		{
+			return GetOwnerCharacter;
+		}
+		Owner = Owner->GetOwner();
+	}
+	return nullptr;
 }

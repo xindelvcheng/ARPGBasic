@@ -5,8 +5,11 @@
 
 #include "CoreMinimal.h"
 
+
 #include "Components/BoxComponent.h"
 #include "ARPGDamageBoxComponent.generated.h"
+
+class AARPGCharacter;
 
 USTRUCT()
 struct FDamageDetectDescriptionStruct
@@ -18,7 +21,7 @@ struct FDamageDetectDescriptionStruct
 	FVector DamageBoxHalfSizeInTrace = FVector(100, 100, 100);
 	bool bCauseDamage = true;
 	float DamageWeight = 1;
-	float DamageBias = 0;
+	float DamageBias = 10;
 	float VelocityDamageBonusWeight = 0.01;
 	TSubclassOf<UDamageType> DamageTypeClass;
 
@@ -138,4 +141,6 @@ public:
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDamageDetectedEvent, FHitResult, HitResult);
 	UPROPERTY(BlueprintAssignable,Category="ARPGDamageBoxComponent")
 	FDamageDetectedEvent DamageDetectedEvent;
+
+	AARPGCharacter* GetOwnerCharacter() const;
 };

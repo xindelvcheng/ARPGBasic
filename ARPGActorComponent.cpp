@@ -17,23 +17,12 @@ UARPGActorComponent::UARPGActorComponent()
 }
 
 
-void UARPGActorComponent::SetOwnerCharacter(AARPGCharacter* NewOwner)
-{
-	OwnerCharacter = NewOwner; 
-}
-
 // Called when the game starts
 void UARPGActorComponent::BeginPlay()
 {
 	Super::BeginPlay();
 }
 
-void UARPGActorComponent::InitializeComponent()
-{
-	Super::InitializeComponent();
-
-	OwnerCharacter = GetOwner<AARPGCharacter>();
-}
 
 
 // Called every frame
