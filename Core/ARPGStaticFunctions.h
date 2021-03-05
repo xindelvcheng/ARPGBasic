@@ -51,11 +51,11 @@ public:
 	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",BlueprintPure)
 	static FVector2D GetScreenSize();
 
-
+	/*获取相对坐标（局部坐标转世界坐标为线性变换）*/
 	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",BlueprintPure)
-	static FTransform GetActorNearPositionTransform(AActor* OriginActor,
-	                                                const FVector LocationOffset,
-	                                                const FRotator RotationOffset);
+	static FTransform GetActorLocalTransform(AActor* OriginActor,
+	                                                const FVector& LocationOffset = {},
+	                                                const FRotator& RotationOffset = {}, const FVector& RelativeScale = {});
 
 	static FTimerHandle DelayDo(UWorld* World,FTimerDelegate TaskDelegate,float Delay);
 

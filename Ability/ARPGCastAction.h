@@ -10,7 +10,6 @@
 
 #include "ARPGCastAction.generated.h"
 
-class ASpellawCreature;
 class AARPGCastAction;
 DECLARE_DYNAMIC_DELEGATE(FTaskDelegate);
 
@@ -54,7 +53,7 @@ public:
 	void FinishTask();
 };
 
-struct FSimpleTaskStruct;
+struct FSimpleTaskDescriptionStruct;
 
 
 UENUM(BlueprintType)
@@ -130,9 +129,8 @@ struct FGridLayoutStruct
 	}
 };
 
-
 USTRUCT(BlueprintType)
-struct FSimpleTaskStruct
+struct FTaskDescriptionStruct
 {
 	GENERATED_BODY()
 
@@ -144,10 +142,41 @@ struct FSimpleTaskStruct
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
 	TSubclassOf<AARPGSpellCreature> SpecialEffectCreatureClass;
+};
+
+/**
+ * 用于在ARPGCastAction中配置式创建ARPGSimpleTask
+ */
+USTRUCT(BlueprintType)
+struct FSimpleTaskDescriptionStruct : public FTaskDescriptionStruct
+{
+	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
 	FGridLayoutStruct LayoutDescription;
 };
+
+UCLASS(BlueprintType)
+class UARPGSimpleTask : public UTask
+{
+	GENERATED_BODY()
+
+	TSubclassOf<AARPGSpellCreature> SpecialEffectCreatureClass;
+
+	UPROPERTY()
+	AARPGSpellCreature* SpecialEffectCreature;
+
+	FGridLayoutStruct LayoutDescription;
+
+	virtual void OnTaskExecuted() override;
+	virtual void OnTaskFinished() override;
+public:
+	float CreatureLifeDuration = 0.5;
+
+	static UARPGSimpleTask* Create(AARPGCastAction* TaskOwnerAction, FSimpleTaskDescriptionStruct ActionTaskStruct,
+	                               FTransform RelativeTransform);
+};
+
 
 UENUM()
 enum class ESpellTypeEnum:uint8
@@ -156,13 +185,82 @@ enum class ESpellTypeEnum:uint8
 	Target
 };
 
+UENUM()
+enum class ESpellCreatureClusterEnum :uint8 { Polygon, Radiation };
+
+
+/**
+ * 用于在ARPGCastAction中配置式创建ClusterDescriptionTask
+ */
+USTRUCT()
+struct FClusterDescriptionTask : public FTaskDescriptionStruct
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category="ARPGSpell Definition")
+	ESpellCreatureClusterEnum SpellCreatureClusterEnum;
+
+	/*半径*/
+	UPROPERTY(EditAnywhere, Category="ARPGSpell Definition")
+	float Radius = 100;
+
+	/*弧度*/
+	UPROPERTY(EditAnywhere, Category="ARPGSpell Definition",
+		meta=(EditCondition="SpellCreatureClusterEnum==ESpellCreatureClusterEnum::Radiation", EditConditionHides))
+	float Radian = PI / 6;
+
+	UPROPERTY
+	(EditAnywhere, Category="ARPGSpell Definition")
+	int ElementsNum;
+};
+
+UCLASS()
+class UClusterTask : public UTask
+{
+	GENERATED_BODY()
+
+	TSubclassOf<AARPGSpellCreature> SpecialEffectCreatureClass;
+
+	UPROPERTY(EditAnywhere, Category="ClusterTask")
+	ESpellCreatureClusterEnum SpellCreatureClusterEnum;
+
+	/*半径*/
+	UPROPERTY(EditAnywhere, Category="ClusterTask")
+	float Radius = 100;
+
+	/*弧度*/
+	UPROPERTY(EditAnywhere, Category="ClusterTask",
+		meta=(EditCondition="SpellCreatureClusterEnum==ESpellCreatureClusterEnum::Radiation", EditConditionHides))
+	float Radian;
+
+	UPROPERTY(EditAnywhere, Category="ClusterTask")
+	int ElementsNum;
+
+	UPROPERTY()
+	TArray<AARPGSpellCreature*> Creatures;
+
+	void SpawnCreatures();
+protected:
+	virtual void OnTaskExecuted() override;
+	virtual void OnTaskFinished() override;
+
+public:
+	static UClusterTask* Create(AARPGCastAction* TaskOwnerAction, FClusterDescriptionTask ClusterDescriptionTask);
+};
+
+/**
+ * 用于生成配置式生成AARPGCastAction，不需要手动创建继承AARPGCastAction的蓝图资源
+ */
 USTRUCT(BlueprintType)
 struct FSimpleCastActionDescriptionStruct : public FTableRowBase
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGSpell Definition")
-	TArray<FSimpleTaskStruct> ActionTaskStructs;
+	TArray<FSimpleTaskDescriptionStruct> ActionTaskStructs;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGCastAction", meta=(AllowPrivateAccess))
+	TArray<FClusterDescriptionTask> ActionClusterTaskStructs;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGSpell Definition")
 	ESpellTypeEnum SpellTypeEnum;
@@ -191,27 +289,6 @@ struct FSimpleCastActionDescriptionStruct : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGSpell Information")
 	FText DetailDescription;
-};
-
-UCLASS(BlueprintType)
-class UARPGSimpleTask : public UTask
-{
-	GENERATED_BODY()
-
-	TSubclassOf<AARPGSpellCreature> SpecialEffectCreatureClass;
-
-	UPROPERTY()
-	AARPGSpellCreature* SpecialEffectCreature;
-
-	FGridLayoutStruct LayoutDescription;
-
-	virtual void OnTaskExecuted() override;
-	virtual void OnTaskFinished() override;
-public:
-	float CreatureLifeDuration = 0.5;
-
-	static UARPGSimpleTask* Create(AARPGCastAction* TaskOwnerAction, FSimpleTaskStruct ActionTaskStruct,
-	                               FTransform RelativeTransform);
 };
 
 
@@ -243,8 +320,13 @@ class AARPGCastAction : public AARPGMultiMontageAction
 		"!bUseLastTaskEndTimeAsCastActionFinishTime", EditConditionHides))
 	float Duration = 1.5;
 
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGCastAction", meta=(AllowPrivateAccess))
-	TArray<FSimpleTaskStruct> ActionTaskStructs;
+	TArray<FSimpleTaskDescriptionStruct> ActionSimpleTaskStructs;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGCastAction", meta=(AllowPrivateAccess))
+	TArray<FClusterDescriptionTask> ActionClusterTaskStructs;
+
 
 	UPROPERTY()
 	TArray<UTask*> Tasks;
@@ -265,14 +347,14 @@ public:
 	AARPGCastAction();
 
 
-	virtual TArray<FSimpleTaskStruct>& GetActionTaskStructs()
+	virtual TArray<FSimpleTaskDescriptionStruct>& GetActionTaskStructs()
 	{
-		return ActionTaskStructs;
+		return ActionSimpleTaskStructs;
 	}
 
-	virtual void SetActionTaskStructs(const TArray<FSimpleTaskStruct>& NewActionTaskStructs)
+	virtual void SetActionTaskStructs(const TArray<FSimpleTaskDescriptionStruct>& NewActionTaskStructs)
 	{
-		this->ActionTaskStructs = NewActionTaskStructs;
+		this->ActionSimpleTaskStructs = NewActionTaskStructs;
 		InitTasks();
 	}
 

@@ -82,14 +82,20 @@ T* UARPGStaticFunctions::SpawnActor(UClass* ActorClass, FTransform Transform, AA
 }
 
 
-FTransform UARPGStaticFunctions::GetActorNearPositionTransform(AActor* OriginActor,
-                                                               const FVector LocationOffset,
-                                                               const FRotator RotationOffset)
+FTransform UARPGStaticFunctions::GetActorLocalTransform(AActor* OriginActor,
+                                                               const FVector& LocationOffset,
+                                                               const FRotator& RotationOffset,
+                                                               const FVector& RelativeScale)
 {
+	if (!OriginActor)
+	{
+		return FTransform{};
+	}
 	return FTransform{
 		OriginActor->GetActorRotation() + RotationOffset,
 		OriginActor->GetActorLocation() + OriginActor->GetActorForwardVector() * LocationOffset.X + OriginActor->
-		GetActorRightVector() * LocationOffset.Y + OriginActor->GetActorUpVector() * LocationOffset.Z
+		GetActorRightVector() * LocationOffset.Y + OriginActor->GetActorUpVector() * LocationOffset.Z,
+		OriginActor->GetActorScale3D() * RelativeScale
 	};
 }
 

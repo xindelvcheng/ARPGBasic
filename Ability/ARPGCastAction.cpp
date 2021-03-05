@@ -21,7 +21,7 @@ void AARPGCastAction::InitTasks()
 	Tasks.Empty();
 
 	float LastTaskEndTime = 0;
-	for (const FSimpleTaskStruct ActionTaskStruct : ActionTaskStructs)
+	for (const FSimpleTaskDescriptionStruct ActionTaskStruct : ActionSimpleTaskStructs)
 	{
 		Tasks.Emplace(UARPGSimpleTask::Create(this, ActionTaskStruct, GetActorTransform()));
 		LastTaskEndTime = std::max(
@@ -32,7 +32,6 @@ void AARPGCastAction::InitTasks()
 	{
 		Duration = LastTaskEndTime;
 	}
-	
 }
 
 AARPGCastAction::AARPGCastAction()
@@ -102,7 +101,8 @@ AARPGCastAction* AARPGCastAction::Create(AARPGCharacter* ActionOwnerCharacter, c
 		}
 	}
 
-	UARPGStaticFunctions::PrintLogToScreen(FString::Printf(TEXT("生成技能执行者%s失败，配置错误"), *SpellName.ToString()),15,FColor::Red);
+	UARPGStaticFunctions::PrintLogToScreen(FString::Printf(TEXT("生成技能执行者%s失败，配置错误"), *SpellName.ToString()), 15,
+	                                       FColor::Red);
 	return nullptr;
 }
 
@@ -180,7 +180,8 @@ void AARPGCastAction::PostEditChangeProperty(FPropertyChangedEvent& PropertyChan
 #endif
 
 
-UARPGSimpleTask* UARPGSimpleTask::Create(AARPGCastAction* TaskOwnerAction, FSimpleTaskStruct ActionTaskStruct,
+UARPGSimpleTask* UARPGSimpleTask::Create(AARPGCastAction* TaskOwnerAction,
+                                         FSimpleTaskDescriptionStruct ActionTaskStruct,
                                          FTransform TaskTransform)
 {
 	UARPGSimpleTask* Task = UTask::Create<UARPGSimpleTask>(UARPGSimpleTask::StaticClass(), TaskOwnerAction,
@@ -193,15 +194,93 @@ UARPGSimpleTask* UARPGSimpleTask::Create(AARPGCastAction* TaskOwnerAction, FSimp
 	return Task;
 }
 
+void UClusterTask::SpawnCreatures()
+{
+	FVector Origin = OwnerAction->GetActorLocation();
+	FTransform CreatureTransform;
+	FVector CreatureLocation;
+	switch (SpellCreatureClusterEnum)
+	{
+	case ESpellCreatureClusterEnum::Polygon:
+		for (int i = 0; i < ElementsNum; ++i)
+		{
+			const float Theta = 2 * PI * i / ElementsNum;
+			CreatureLocation = Origin + FVector{Radius * cosf(Theta), Radius * sinf(Theta), 0} * OwnerAction->
+				GetActorForwardVector();
+			CreatureTransform.SetLocation(CreatureLocation);
+			CreatureTransform.SetRotation((CreatureLocation - Origin).ToOrientationQuat());
+			CreatureTransform.SetScale3D(OwnerAction->GetActorScale3D());
+			Creatures.Add(AARPGSpellCreature::Create(SpecialEffectCreatureClass, CreatureTransform,
+			                                         OwnerAction->GetOwnerCharacter()));
+		}
+		break;
+	case ESpellCreatureClusterEnum::Radiation:
+		for (int i = 0; i < ElementsNum; ++i)
+		{
+			const float Theta = -Radian / 2 + Radian * i / ElementsNum;
+			CreatureLocation = Origin + FVector{Radius * cosf(Theta), Radius * sinf(Theta), 0} * OwnerAction->
+				GetActorForwardVector();
+			CreatureTransform.SetLocation(CreatureLocation);
+			CreatureTransform.SetRotation((CreatureLocation - Origin).ToOrientationQuat());
+			CreatureTransform.SetScale3D(OwnerAction->GetActorScale3D());
+			Creatures.Add(AARPGSpellCreature::Create(SpecialEffectCreatureClass, CreatureTransform,
+			                                         OwnerAction->GetOwnerCharacter()));
+		}
+		break;
+	}
+}
+
+void UClusterTask::OnTaskExecuted()
+{
+	Super::OnTaskExecuted();
+
+	OwnerAction->GetWorldTimerManager().SetTimer(EndTimerHandle, FTimerDelegate::CreateLambda([&]()
+	{
+		SpawnCreatures();
+	}), StartTime, false);
+
+	OwnerAction->GetWorldTimerManager().SetTimer(EndTimerHandle, FTimerDelegate::CreateLambda([&]()
+	{
+		FinishTask();
+	}), EndTime, false);
+}
+
+void UClusterTask::OnTaskFinished()
+{
+	Super::OnTaskFinished();
+
+	for (AARPGSpellCreature* SpellCreature : Creatures)
+	{
+		if (SpellCreature)
+		{
+			SpellCreature->Destroy();
+		}
+	}
+}
+
+UClusterTask* UClusterTask::Create(AARPGCastAction* TaskOwnerAction, FClusterDescriptionTask ClusterDescriptionTask)
+{
+	UClusterTask* Task = UTask::Create<UClusterTask>(UARPGSimpleTask::StaticClass(), TaskOwnerAction,
+	                                                 ClusterDescriptionTask.CreateEffectCreatureTime,
+	                                                 ClusterDescriptionTask.Duration, FTaskDelegate{},
+	                                                 FTaskDelegate{});
+	Task->SpellCreatureClusterEnum = ClusterDescriptionTask.SpellCreatureClusterEnum;
+	Task->Radius = ClusterDescriptionTask.Radius;
+	Task->Radian = ClusterDescriptionTask.Radian;
+	Task->ElementsNum = ClusterDescriptionTask.ElementsNum;
+	return Task;
+}
+
 void UARPGSimpleTask::OnTaskExecuted()
 {
 	Super::OnTaskExecuted();
 
 	OwnerAction->GetWorldTimerManager().SetTimer(StartTimerHandle, FTimerDelegate::CreateLambda([&]()
 	{
-		Transform = LayoutDescription.CalculateAbsoluteTransform(OwnerAction->GetActorLocation(),OwnerAction->GetActorRotation());
+		Transform = LayoutDescription.CalculateAbsoluteTransform(OwnerAction->GetActorLocation(),
+		                                                         OwnerAction->GetActorRotation());
 		SpecialEffectCreature = AARPGSpellCreature::Create(SpecialEffectCreatureClass, Transform,
-		                                                           OwnerAction->GetOwnerCharacter());
+		                                                   OwnerAction->GetOwnerCharacter());
 	}), StartTime, false);
 
 	OwnerAction->GetWorldTimerManager().SetTimer(EndTimerHandle, FTimerDelegate::CreateLambda([&]()

@@ -220,10 +220,10 @@ bool UARPGCharacterCombatComponent::TryToCastSpell(AARPGCastAction* Spell)
 		else
 		{
 			Spell->SetActorTransform(
-				UARPGStaticFunctions::GetActorNearPositionTransform(GetDirectlyOwnerCharacter(),
+				UARPGStaticFunctions::GetActorLocalTransform(GetDirectlyOwnerCharacter(),
 				                                                    {
 					                                                    Spell->GetMaxDistance(), 0, 0
-				                                                    }, FRotator{}));
+				                                                    }, FRotator{},));
 		}
 	}
 
