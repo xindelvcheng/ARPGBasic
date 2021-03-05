@@ -240,7 +240,7 @@ bool UARPGCharacterCombatComponent::TryToCastSpell(AARPGCastAction* Spell)
 bool UARPGCharacterCombatComponent::CauseRigid(float Duration, AARPGCharacter* Causer = nullptr)
 {
 	IsRigid = true;
-	//打断当前的攻击和技能
+	//打断当前的攻击和技能，因为取消了技能后摇，可能造成Character鬼畜（如果不间断地使用技能）
 	if (CurrentActiveAction)
 	{
 		CurrentActiveAction->FinishAction();
