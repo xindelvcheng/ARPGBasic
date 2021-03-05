@@ -205,9 +205,8 @@ void UClusterTask::SpawnCreatures()
 		for (int i = 0; i < ElementsNum; ++i)
 		{
 			const float Theta = 2 * PI * i / ElementsNum;
-			CreatureLocation = Origin + FVector{Radius * cosf(Theta), Radius * sinf(Theta), 0} * OwnerAction->
-				GetActorForwardVector();
-			CreatureTransform.SetLocation(CreatureLocation);
+			CreatureTransform = UARPGStaticFunctions::GetActorLocalTransform(
+                OwnerAction, FVector{Radius * cosf(Theta), Radius * sinf(Theta), 0});
 			CreatureTransform.SetRotation((CreatureLocation - Origin).ToOrientationQuat());
 			CreatureTransform.SetScale3D(OwnerAction->GetActorScale3D());
 			Creatures.Add(AARPGSpellCreature::Create(SpecialEffectCreatureClass, CreatureTransform,
@@ -218,9 +217,8 @@ void UClusterTask::SpawnCreatures()
 		for (int i = 0; i < ElementsNum; ++i)
 		{
 			const float Theta = -Radian / 2 + Radian * i / ElementsNum;
-			CreatureLocation = Origin + FVector{Radius * cosf(Theta), Radius * sinf(Theta), 0} * OwnerAction->
-				GetActorForwardVector();
-			CreatureTransform.SetLocation(CreatureLocation);
+			CreatureTransform = UARPGStaticFunctions::GetActorLocalTransform(
+				OwnerAction, FVector{Radius * cosf(Theta), Radius * sinf(Theta), 0});
 			CreatureTransform.SetRotation((CreatureLocation - Origin).ToOrientationQuat());
 			CreatureTransform.SetScale3D(OwnerAction->GetActorScale3D());
 			Creatures.Add(AARPGSpellCreature::Create(SpecialEffectCreatureClass, CreatureTransform,

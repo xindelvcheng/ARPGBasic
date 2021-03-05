@@ -91,6 +91,7 @@ FTransform UARPGStaticFunctions::GetActorLocalTransform(AActor* OriginActor,
 	{
 		return FTransform{};
 	}
+	
 	return FTransform{
 		OriginActor->GetActorRotation() + RotationOffset,
 		OriginActor->GetActorLocation() + OriginActor->GetActorForwardVector() * LocationOffset.X + OriginActor->
