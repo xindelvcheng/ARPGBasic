@@ -32,6 +32,7 @@ void AARPGCastAction::InitTasks()
 	{
 		Duration = LastTaskEndTime;
 	}
+	
 }
 
 AARPGCastAction::AARPGCastAction()

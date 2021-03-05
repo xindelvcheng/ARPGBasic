@@ -37,7 +37,7 @@ AARPGAction::AARPGAction()
 }
 
 void AARPGAction::FinishAction()
-{
+{	
 	if (ActionState == EActionStateEnum::Run)
 	{
 		ActionState = EActionStateEnum::Stop;
@@ -247,6 +247,8 @@ void AARPGMultiMontageAction::OnMontageStop(UAnimMontage* Montage, bool bInterru
 void AARPGMultiMontageAction::OnActionFinished(AARPGAction* Action)
 {
 	Super::OnActionFinished(Action);
+
+	MontageIndex = 0;
 }
 
 

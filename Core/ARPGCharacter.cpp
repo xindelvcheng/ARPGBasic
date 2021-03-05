@@ -27,16 +27,16 @@ AARPGCharacter::AARPGCharacter()
 
 	CharacterStatusComponent = CreateDefaultSubobject<UCharacterStatusComponent>("CharacterStatusComponent");
 	CharacterCombatComponent = CreateDefaultSubobject<UTranscendentalCombatComponent>("ARPGCharacterCombaComponent");
-	
+
 	AIPerceptionStimuliSourceComponent = CreateDefaultSubobject<UARPGAIPerceptionStimuliSourceComponent>(
 		"AIPerceptionStimuliSourceComponent");
-	
+
 	GameItemsManagerComponent = CreateDefaultSubobject<UARPGBagComponent>("GameItemsManagerComponent");
 	SpellsManagerComponent = CreateDefaultSubobject<UARPGSpellsManagerComponent>("SpellsManagerComponent");
 
 	CharacterLockTargetComponent = CreateDefaultSubobject<UARPGLockTargetComponent>("ARPGLockTargetComponent");
 	CharacterLockTargetComponent->SetupAttachment(RootComponent);
-	
+
 	AimComponent = CreateDefaultSubobject<UARPGAimComponent>(TEXT("AimComponent"));
 	AimComponent->SetupAttachment(RootComponent);
 
@@ -52,7 +52,6 @@ AARPGCharacter::AARPGCharacter()
 		}
 	}
 }
-
 
 
 FText AARPGCharacter::GetCharacterDisplayName() const
@@ -92,9 +91,8 @@ void AARPGCharacter::LoadCharacterConfigDataAsset()
 	else
 	{
 		UARPGStaticFunctions::PrintLogToScreen(
-            FString::Printf(TEXT("角色%s未设置CharacterConfigPDataAsset"), *GetName()));
+			FString::Printf(TEXT("角色%s未设置CharacterConfigPDataAsset"), *GetName()));
 	}
-	
 }
 
 void AARPGCharacter::PostInitializeComponents()
@@ -107,9 +105,9 @@ float AARPGCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
                                  AActor* DamageCauser)
 {
 	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-	
+
 	//同招不可互接机制
-	if (int& DamageTypeCounter = DamageToleranceCounter.FindOrAdd(DamageEvent.DamageTypeClass,0))
+	if (int& DamageTypeCounter = DamageToleranceCounter.FindOrAdd(DamageEvent.DamageTypeClass, 0))
 	{
 		ActualDamage *= pow(2, -(DamageTypeCounter++));
 
@@ -128,8 +126,8 @@ float AARPGCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 
 	//受伤视效和音效
 	FVector HitLocation = GetActorLocation();
-	
-	if(DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+
+	if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
 	{
 		const FPointDamageEvent* PointDamageEvent = static_cast<const FPointDamageEvent*>(&DamageEvent);
 		HitLocation = PointDamageEvent->HitInfo.Location;
@@ -165,6 +163,8 @@ float AARPGCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 void AARPGCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	
 }
 
 // Called to bind functionality to input

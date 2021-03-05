@@ -48,9 +48,9 @@ public:
 	                 float TaskDuration,
 	                 FTaskDelegate TaskOnTaskExecuted, FTaskDelegate TaskOnTaskFinished);
 
-	UFUNCTION(BlueprintCallable,Category="SpellTask")
+	UFUNCTION(BlueprintCallable, Category="SpellTask")
 	void ExecuteTask();
-	UFUNCTION(BlueprintCallable,Category="SpellTask")
+	UFUNCTION(BlueprintCallable, Category="SpellTask")
 	void FinishTask();
 };
 
@@ -70,37 +70,37 @@ struct FGridLayoutStruct
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
 	float Length = 1500;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
 	float Width = 1500;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
 	float Height = 300;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
 	float RowsNumber = 3;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
 	float ColumnsNumber = 3;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
 	float LayersNumber = 1;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
 	float RowIndex = 1;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
 	float ColumnIndex = 1;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
 	float LayerIndex = 0;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
 	ERotationTypeEnum RotationType = ERotationTypeEnum::NoRotation;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
 	FVector Scale = FVector{1, 1, 1};
 
 	FVector GetRelativeLocation() const
@@ -136,16 +136,16 @@ struct FSimpleTaskStruct
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
 	float CreateEffectCreatureTime = 0.1;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
-	float Duration = 0.5;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
+	float Duration = 1.4;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
 	TSubclassOf<AARPGSpellCreature> SpecialEffectCreatureClass;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="ARPGSpell")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
 	FGridLayoutStruct LayoutDescription;
 };
 
@@ -161,35 +161,35 @@ struct FSimpleCastActionDescriptionStruct : public FTableRowBase
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Definition")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGSpell Definition")
 	TArray<FSimpleTaskStruct> ActionTaskStructs;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Definition")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGSpell Definition")
 	ESpellTypeEnum SpellTypeEnum;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Definition")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGSpell Definition")
 	float SPCost = 1;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Definition")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGSpell Definition")
 	float MaxDistance = 1500;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Definition")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGSpell Definition")
 	bool bUseLastTaskEndTimeAsCastActionFinishTime = true;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Definition",meta=(AllowPrivateAccess,EditCondition=
-		"!bUseLastTaskEndTimeAsCastActionFinishTime",EditConditionHides))
-	float Duration = 1.6;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGSpell Definition", meta=(AllowPrivateAccess, EditCondition=
+		"!bUseLastTaskEndTimeAsCastActionFinishTime", EditConditionHides))
+	float Duration = 1.5;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Information")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGSpell Information")
 	FText ActionDisplayName;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Information")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGSpell Information")
 	UTexture2D* ItemIcon;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Information")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGSpell Information")
 	FText Introduction;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpell Information")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGSpell Information")
 	FText DetailDescription;
 };
 
@@ -224,26 +224,26 @@ class AARPGCastAction : public AARPGMultiMontageAction
 	GENERATED_BODY()
 
 	/*ARPGCastAction的位置是定向法术的伤害中心*/
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="ARPGCastAction", meta=(AllowPrivateAccess))
 	USceneComponent* DefaultSceneComponent;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGCastAction", meta=(AllowPrivateAccess))
 	ESpellTypeEnum SpellTypeEnum;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGCastAction", meta=(AllowPrivateAccess))
 	float SPCost = 1;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGCastAction", meta=(AllowPrivateAccess))
 	float MaxDistance;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGCastAction", meta=(AllowPrivateAccess))
 	bool bUseLastTaskEndTimeAsCastActionFinishTime;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess,EditCondition=
-		"!bUseLastTaskEndTimeAsCastActionFinishTime",EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGCastAction", meta=(AllowPrivateAccess, EditCondition=
+		"!bUseLastTaskEndTimeAsCastActionFinishTime", EditConditionHides))
 	float Duration = 1.5;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGCastAction",meta=(AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGCastAction", meta=(AllowPrivateAccess))
 	TArray<FSimpleTaskStruct> ActionTaskStructs;
 
 	UPROPERTY()
@@ -290,7 +290,6 @@ public:
 		return MaxDistance;
 	}
 
-	
 
 protected:
 	virtual void PostInitializeComponents() override;
@@ -300,6 +299,12 @@ protected:
 
 	virtual void OnActionActivate() override;
 	virtual void OnActionFinished(AARPGAction* Action) override;
+
+	/*-Start- 施法动画仅是视觉特效 -Start-*/
+	virtual void OnMontageBegin(UAnimMontage* Montage) override { ; }
+	virtual void OnMontageNotify(FName NotifyName, const FBranchingPointNotifyPayload& PointPayload) override { ; }
+	virtual void OnMontageStop(UAnimMontage* Montage, bool bInterrupted) override { ; }
+	/*-End- 施法动画仅是视觉特效 -End-*/
 };
 
 class UARPGDamageBoxComponent;

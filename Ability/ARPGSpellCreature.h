@@ -18,7 +18,7 @@ struct FARPGCreatureTimeLineTaskStruct
 	float DamageStartTime = 0.3;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
-	float Duration = 0.2;
+	float Duration = 1.2;
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="ARPGSpecialEffect")
 	USoundBase* SoundEffectAsset;
