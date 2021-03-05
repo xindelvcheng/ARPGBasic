@@ -12,6 +12,7 @@
 #include "ARPGStaticFunctions.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GamePlay/TranscendentalCombatComponent.h"
 
 
 // Sets default values for this component's properties
