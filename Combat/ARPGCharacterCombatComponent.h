@@ -50,28 +50,30 @@ class UARPGCharacterCombatComponent : public UARPGActorComponent
 	TArray<TSubclassOf<AARPGBuff>> BuffClasses;
 
 
-	/*缓存技能释放对象*/
+	/*-Start- 缓存技能释放对象 -Start-*/
+
 	UPROPERTY()
 	TArray<AARPGAction*> MeleeAttackCollectionActions;
-
+	
 	UPROPERTY()
 	AARPGAction* CurrentMeleeAttackCollection;
-
+	
 	UPROPERTY()
 	TArray<AARPGCastAction*> AbilityActions;
-
-	
 
 	UPROPERTY()
 	TArray<AARPGBuff*> BuffActions;
 
+	/*-End- 缓存技能释放对象 -End-*/
+
+	
 	FARPGMeleeAttackActionDelegate MeleeAttackStartDelegate;
 	FARPGMeleeAttackActionDelegate MeleeAttackEndDelegate;
 
 public:
 	// Sets default values for this component's properties
 	UARPGCharacterCombatComponent();
-	
+
 	UPROPERTY()
 	TMap<FName, AARPGCastAction*> AbilityActionsMap;
 
@@ -180,7 +182,8 @@ public:
 	FActionFinished ActionFinished;
 
 	UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true"))
-	static UActivateActionBlueprintNode* ActivateAction(AARPGCharacter* Instigator, FName ActionName, bool& bActivateSuccess);
+	static UActivateActionBlueprintNode* ActivateAction(AARPGCharacter* Instigator, FName ActionName,
+	                                                    bool& bActivateSuccess);
 
 private:
 	bool ActivateActionInternal(AARPGCharacter* Instigator, FName ActionName);

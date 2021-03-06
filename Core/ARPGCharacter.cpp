@@ -155,7 +155,9 @@ float AARPGCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 			EventInstigator ? EventInstigator->GetTargetLocation() : HitLocation,
 			GetActorLocation()) * ImpactForceFactor),
 		true, true);
-	CauseRigid(1 * (DamageAmount / GetMaxHP()), Cast<AARPGCharacter>(DamageCauser));
+
+	/*普通攻击不会造成硬直*/
+	// CauseRigid(1 * (DamageAmount / GetMaxHP()), Cast<AARPGCharacter>(DamageCauser));
 
 	return ActualDamage;
 }

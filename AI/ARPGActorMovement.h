@@ -17,6 +17,7 @@ class UARPGActorMovementComponent : public UActorComponent
 	FTransform OriginTransform;
 
 public:
+	
 	DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(FTransform, FMoveFunction, float, Time);
 
 private:
@@ -25,12 +26,16 @@ private:
 public:
 	// Sets default values for this component's properties
 	UARPGActorMovementComponent();
-	
+
+	/*以函数移动，函数的参数为t，返回值为FTransform（本地坐标系）*/
 	UFUNCTION(BlueprintCallable,Category="ARPGActorMovement")
 	void Move(FMoveFunction NewMoveFunction);
 
 	UFUNCTION(BlueprintCallable,Category="ARPGActorMovement")
     void MoveForward();
+
+	UFUNCTION(BlueprintCallable,Category="ARPGActorMovement")
+	void Stop();
 
 	UFUNCTION()
 	FTransform MoveForwardFunction(float Time);

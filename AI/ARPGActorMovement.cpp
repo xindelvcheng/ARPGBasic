@@ -15,7 +15,7 @@ UARPGActorMovementComponent::UARPGActorMovementComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
+	PrimaryComponentTick.SetTickFunctionEnable(false);
 	// ...
 }
 
@@ -24,6 +24,7 @@ void UARPGActorMovementComponent::Move(FMoveFunction NewMoveFunction)
 	Timer = 0;
 	OriginTransform = GetOwner()->GetActorTransform();
 	MoveFunction = NewMoveFunction;
+	PrimaryComponentTick.SetTickFunctionEnable(true);
 }
 
 void UARPGActorMovementComponent::MoveForward()
@@ -33,24 +34,30 @@ void UARPGActorMovementComponent::MoveForward()
 	Move(NewMoveFunction);
 }
 
+void UARPGActorMovementComponent::Stop()
+{
+	MoveFunction = FMoveFunction{};
+	PrimaryComponentTick.SetTickFunctionEnable(false);
+}
+
 
 // ReSharper disable once CppMemberFunctionMayBeConst
 FTransform UARPGActorMovementComponent::MoveForwardFunction(float Time)
 {
 	FTransform Transform;
-	
+
 	if (AActor* OwnerActor = GetOwner())
 	{
-		const FVector XYForwardVector = FVector{OwnerActor->GetActorForwardVector().X,OwnerActor->GetActorForwardVector().Y,0}.GetSafeNormal();
-		Transform.SetLocation(XYForwardVector * Time * 5);
+		// const FVector XYForwardVector = FVector{OwnerActor->GetActorForwardVector().X,OwnerActor->GetActorForwardVector().Y,0}.GetSafeNormal();
+		Transform.SetLocation(OwnerActor->GetActorForwardVector().GetSafeNormal() * Time * 5);
 	}
-	
+
 	return Transform;
 }
 
 // Called every frame
 void UARPGActorMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-                                                   FActorComponentTickFunction* ThisTickFunction)
+                                                FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
@@ -62,16 +69,20 @@ void UARPGActorMovementComponent::TickComponent(float DeltaTime, ELevelTick Tick
 		{
 			Actor->SetActorTransform({
 				OriginTransform.GetRotation() + MoveFunction.Execute(Timer).GetRotation(),
-				OriginTransform.GetLocation() + MoveFunction.Execute(Timer).GetLocation() * 100,
+				OriginTransform.GetLocation() + MoveFunction.Execute(Timer).GetLocation().X * 100 * OriginTransform.
+				Rotator().GetComponentForAxis(EAxis::X) + MoveFunction.Execute(Timer).GetLocation().Y * 100 *
+				OriginTransform.
+				Rotator().GetComponentForAxis(EAxis::Y) + MoveFunction.Execute(Timer).GetLocation().Z * 100 *
+				OriginTransform.
+				Rotator().GetComponentForAxis(EAxis::Z),
 				OriginTransform.GetScale3D() * MoveFunction.Execute(Timer).GetScale3D()
 			});
-			UARPGStaticFunctions::PrintMessageToLog(UKismetStringLibrary::Conv_VectorToString(OriginTransform.GetLocation() + MoveFunction.Execute(Timer).GetLocation() * 100));
 		};
 	}
 }
 
 void UARPGActorTowardsActorMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-                                                   FActorComponentTickFunction* ThisTickFunction)
+                                                            FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
@@ -93,7 +104,7 @@ void UARPGActorTowardsActorMovementComponent::MoveTowardsActor(AActor* Target, f
 }
 
 void UARPGActorTowardsActorMovementComponent::MoveTowardsActor(AActor* Target, FMoveFunction AdditionalFunction,
-                                                      float NewAcceptableRadius)
+                                                               float NewAcceptableRadius)
 {
 	TargetActor = Target;
 	AcceptableRadius = NewAcceptableRadius;

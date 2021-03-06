@@ -110,6 +110,7 @@ UClusterTask* UClusterTask::Create(AARPGCastAction* TaskOwnerAction, FClusterTas
 	                                                 FTaskDelegate{});
 	Task->SpecialEffectCreatureClass = ClusterTaskDescription.SpecialEffectCreatureClass;
 	Task->SpellCreatureClusterEnum = ClusterTaskDescription.SpellCreatureClusterEnum;
+	Task->SpellCreatureDirectionEnum = ClusterTaskDescription.SpellCreatureDirectionEnum;
 	Task->Radius = ClusterTaskDescription.Radius;
 	Task->Radian = ClusterTaskDescription.Radian;
 	Task->ElementsNum = ClusterTaskDescription.ElementsNum;
@@ -138,7 +139,7 @@ void UClusterTask::SpawnCreatures()
 {
 	for (int i = 0; i < ElementsNum; ++i)
 	{
-		if (SpawnTimeInterval != 0)
+		if (SpawnTimeInterval > 0)
 		{
 			FTimerHandle TimerHandle;
 			OwnerAction->GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([this]()

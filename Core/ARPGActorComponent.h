@@ -21,6 +21,7 @@ public:
 	UARPGActorComponent();
 
 	AARPGCharacter* GetDirectlyOwnerCharacter() const ;
+	FORCEINLINE AARPGCharacter* GetOwnerCharacter() const { return GetOwner<AARPGCharacter>(); }
 
 protected:
 	// Called when the game starts

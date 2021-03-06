@@ -200,7 +200,7 @@ bool UARPGCharacterCombatComponent::TryToCastSpell(AARPGCastAction* Spell)
 		return false;
 	}
 
-	UARPGAimComponent* AimComponent = GetDirectlyOwnerCharacter()->GetAimComponent();
+	UARPGAimComponent* AimComponent = GetOwnerCharacter()->GetAimComponent();
 	if (AimComponent && AimComponent->IsAimTargetResultIsValid())
 	{
 		Spell->SetActorTransform(AimComponent->GetAimTargetActor()->GetActorTransform());
