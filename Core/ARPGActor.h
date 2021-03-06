@@ -18,6 +18,7 @@ public:
 	// Sets default values for this actor's properties
 	AARPGActor();
 
+	AARPGCharacter* GetDirectlyOwnerCharacter() const;
 	FORCEINLINE AARPGCharacter* GetOwnerCharacter() const { return GetOwner<AARPGCharacter>(); }
 
 	void SetActorVisibility(bool bNewVisibility);

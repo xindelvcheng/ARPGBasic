@@ -12,7 +12,7 @@ UENUM()
 enum class EChoice:uint8 { ChoiceA, ChoiceB };
 
 UENUM(BlueprintType)
-enum class EInputMode:uint8 {GameOnly, UIOnly,GameAndUI};
+enum class EInputMode:uint8 { GameOnly, UIOnly, GameAndUI };
 
 /**
  * 工具函数库
@@ -45,25 +45,40 @@ public:
 	}
 
 
-	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",meta=(ExpandEnumAsExecs="Choice"))
+	UFUNCTION(BlueprintCallable, Category="ARPGBASIC", meta=(ExpandEnumAsExecs="Choice"))
 	static void RandomChoice(float ChanceA, EChoice& Choice);
 
-	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",BlueprintPure)
+	UFUNCTION(BlueprintCallable, Category="ARPGBASIC", BlueprintPure)
 	static FVector2D GetScreenSize();
 
 	/*获取相对坐标（局部坐标转世界坐标为线性变换）*/
-	UFUNCTION(BlueprintCallable,Category="ARPGBASIC",BlueprintPure)
-	static FTransform GetActorLocalTransform(AActor* OriginActor,
-	                                                const FVector& LocationOffset = {},
-	                                                const FRotator& RotationOffset = {}, const FVector& RelativeScale = {});
+	UFUNCTION(BlueprintCallable, Category="ARPGBASIC", BlueprintPure)
+	static FTransform ConvActorLocalTransformToWorldTransform(AActor* OriginActor,
+	                                                          const FVector& LocationOffset,
+	                                                          const FRotator& RotationOffset,
+	                                                          const FVector& RelativeScale);
 
-	static FTimerHandle DelayDo(UWorld* World,FTimerDelegate TaskDelegate,float Delay);
+	static FTransform ConvActorLocalTransformToWorldTransform(AActor* OriginActor,
+	                                                          const FVector& LocationOffset)
+	{
+		return ConvActorLocalTransformToWorldTransform(OriginActor, LocationOffset, FRotator::ZeroRotator,
+		                                               FVector::OneVector);
+	};
 
-	
-	static void SetInputMode(AController* Controller,EInputMode InputMode);
+	static FTransform ConvActorLocalTransformToWorldTransform(AActor* OriginActor,
+	                                                          const FTransform& LocalTransform)
+	{
+		return ConvActorLocalTransformToWorldTransform(OriginActor, LocalTransform.GetLocation(),
+		                                               LocalTransform.GetRotation().Rotator(),
+		                                               LocalTransform.GetScale3D());
+	};
 
-	UFUNCTION(BlueprintCallable,Category="ARPGGameInstanceSubsystem",meta=(WorldContext=WorldContextObject))
-	static void SetInputMode(UObject* WorldContextObject,EInputMode InputMode);
 
-	
+	static FTimerHandle DelayDo(UWorld* World, FTimerDelegate TaskDelegate, float Delay);
+
+
+	static void SetInputMode(AController* Controller, EInputMode InputMode);
+
+	UFUNCTION(BlueprintCallable, Category="ARPGGameInstanceSubsystem", meta=(WorldContext=WorldContextObject))
+	static void SetInputMode(UObject* WorldContextObject, EInputMode InputMode);
 };

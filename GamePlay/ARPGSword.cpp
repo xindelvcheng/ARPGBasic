@@ -69,8 +69,8 @@ void AARPGSword::BeginPlay()
 
 void AARPGSword::Attack()
 {
-	FVector DummyTargetLocation = UARPGStaticFunctions::GetActorLocalTransform(
-		GetOwnerCharacter(), FVector{500, 0, 0}, FRotator{},).GetLocation();
+	FVector DummyTargetLocation = UARPGStaticFunctions::ConvActorLocalTransformToWorldTransform(
+		GetOwnerCharacter(), FVector{500, 0, 0}).GetLocation();
 }
 
 void AARPGSword::Defend()
@@ -95,8 +95,8 @@ void AARPGSword::Tick(float DeltaTime)
 			SetActorRelativeRotation(FRotator{0, 0, 0});
 			break;
 		case ESwordStateEnum::Combat:
-			FVector DummyTargetLocation = UARPGStaticFunctions::GetActorLocalTransform(
-				GetOwnerCharacter(), FVector{500, 0, 0}, FRotator{},).GetLocation();
+			FVector DummyTargetLocation = UARPGStaticFunctions::ConvActorLocalTransformToWorldTransform(
+				GetOwnerCharacter(), FVector{500, 0, 0}).GetLocation();
 
 			float const R = (DummyTargetLocation - GetOwnerCharacter()->GetActorLocation()).Size();
 			float const Theta = PI / 2;

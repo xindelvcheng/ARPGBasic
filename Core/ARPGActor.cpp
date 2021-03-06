@@ -3,6 +3,8 @@
 
 #include "ARPGActor.h"
 
+
+#include "ARPGCharacter.h"
 #include "ARPGCoreSubsystem.h"
 #include "ARPGStaticFunctions.h"
 
@@ -11,6 +13,20 @@ AARPGActor::AARPGActor()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+}
+
+AARPGCharacter* AARPGActor::GetDirectlyOwnerCharacter() const
+{
+	AActor* OwnerActor = GetOwner();
+	while (OwnerActor)
+	{
+		if (AARPGCharacter* GetOwnerCharacter = Cast<AARPGCharacter>(OwnerActor))
+		{
+			return GetOwnerCharacter;
+		}
+		OwnerActor = OwnerActor->GetOwner();
+	}
+	return nullptr;
 }
 
 void AARPGActor::SetActorVisibility(bool bNewVisibility)

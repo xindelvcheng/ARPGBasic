@@ -13,6 +13,21 @@
 class AARPGCastAction;
 DECLARE_DYNAMIC_DELEGATE(FTaskDelegate);
 
+USTRUCT(BlueprintType)
+struct FTaskDescriptionStruct
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
+	float CreateEffectCreatureTime = 0.1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
+	float Duration = 1.4;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
+	TSubclassOf<AARPGSpellCreature> SpecialEffectCreatureClass;
+};
+
 UCLASS()
 class UTask : public UObject
 {
@@ -64,85 +79,7 @@ enum class ERotationTypeEnum:uint8
 	CircleFaceOuter
 };
 
-USTRUCT(BlueprintType)
-struct FGridLayoutStruct
-{
-	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
-	float Length = 1500;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
-	float Width = 1500;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
-	float Height = 300;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
-	float RowsNumber = 3;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
-	float ColumnsNumber = 3;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
-	float LayersNumber = 1;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
-	float RowIndex = 1;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
-	float ColumnIndex = 1;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
-	float LayerIndex = 0;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
-	ERotationTypeEnum RotationType = ERotationTypeEnum::NoRotation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
-	FVector Scale = FVector{1, 1, 1};
-
-	FVector GetRelativeLocation() const
-	{
-		return (FVector{RowsNumber, ColumnsNumber, LayersNumber} / 2 - FVector{
-			RowIndex + 0.5f, ColumnIndex + 0.5f, LayerIndex + 0.5f
-		}) * FVector{(Width / RowsNumber), -(Length / ColumnsNumber), (Height / LayersNumber)};
-	}
-
-	FRotator GetAbsoluteRotation(FRotator OriginRotation) const
-	{
-		switch (RotationType)
-		{
-		case ERotationTypeEnum::NoRotation:
-			return OriginRotation;
-		case ERotationTypeEnum::CircleFaceInner:
-			return (-GetRelativeLocation()).Rotation() + OriginRotation;
-		case ERotationTypeEnum::CircleFaceOuter:
-			return GetRelativeLocation().Rotation() + OriginRotation;
-		}
-		return OriginRotation;
-	};
-
-	FTransform CalculateAbsoluteTransform(FVector Origin, FRotator OriginRotation) const
-	{
-		return FTransform{GetAbsoluteRotation(OriginRotation), Origin + GetRelativeLocation(), Scale};
-	}
-};
-
-USTRUCT(BlueprintType)
-struct FTaskDescriptionStruct
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
-	float CreateEffectCreatureTime = 0.1;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
-	float Duration = 1.4;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
-	TSubclassOf<AARPGSpellCreature> SpecialEffectCreatureClass;
-};
 
 /**
  * 用于在ARPGCastAction中配置式创建ARPGSimpleTask
@@ -153,7 +90,7 @@ struct FSimpleTaskDescriptionStruct : public FTaskDescriptionStruct
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ARPGSpell")
-	FGridLayoutStruct LayoutDescription;
+	FTransform LocalCoordinateTransform;
 };
 
 UCLASS(BlueprintType)
@@ -166,15 +103,14 @@ class UARPGSimpleTask : public UTask
 	UPROPERTY()
 	AARPGSpellCreature* SpecialEffectCreature;
 
-	FGridLayoutStruct LayoutDescription;
+	FTransform LocalTransform;
 
 	virtual void OnTaskExecuted() override;
 	virtual void OnTaskFinished() override;
 public:
 	float CreatureLifeDuration = 0.5;
 
-	static UARPGSimpleTask* Create(AARPGCastAction* TaskOwnerAction, FSimpleTaskDescriptionStruct ActionTaskStruct,
-	                               FTransform RelativeTransform);
+	static UARPGSimpleTask* Create(AARPGCastAction* TaskOwnerAction, FSimpleTaskDescriptionStruct ActionTaskStruct);
 };
 
 
@@ -188,17 +124,23 @@ enum class ESpellTypeEnum:uint8
 UENUM()
 enum class ESpellCreatureClusterEnum :uint8 { Polygon, Radiation };
 
+UENUM()
+enum class ESpellCreatureDirectionEnum :uint8 { Outward, Inward, Forward };
+
 
 /**
  * 用于在ARPGCastAction中配置式创建ClusterDescriptionTask
  */
 USTRUCT()
-struct FClusterDescriptionTask : public FTaskDescriptionStruct
+struct FClusterTaskDescription : public FTaskDescriptionStruct
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, Category="ARPGSpell Definition")
 	ESpellCreatureClusterEnum SpellCreatureClusterEnum;
+
+	UPROPERTY(EditAnywhere, Category="ARPGSpell Definition")
+	ESpellCreatureDirectionEnum SpellCreatureDirectionEnum;
 
 	/*半径*/
 	UPROPERTY(EditAnywhere, Category="ARPGSpell Definition")
@@ -211,7 +153,14 @@ struct FClusterDescriptionTask : public FTaskDescriptionStruct
 
 	UPROPERTY
 	(EditAnywhere, Category="ARPGSpell Definition")
-	int ElementsNum;
+	int ElementsNum = 3;
+
+	/*生成Creature的时间间隔，若不为0，Creature将逆时针依次产生，此时需注意调整Duration包含这些后续生成的Creature的存在时间*/
+	UPROPERTY(EditAnywhere, Category="ClusterTask")
+	float SpawnTimeInterval = 0;
+
+	UPROPERTY(EditAnywhere, Category="ClusterTask",meta=(EditCondition="SpawnTimeInterval > 0", EditConditionHides))
+	bool bAutoCalculateDuration = true;
 };
 
 UCLASS()
@@ -223,6 +172,9 @@ class UClusterTask : public UTask
 
 	UPROPERTY(EditAnywhere, Category="ClusterTask")
 	ESpellCreatureClusterEnum SpellCreatureClusterEnum;
+
+	UPROPERTY(EditAnywhere, Category="ClusterTask")
+	ESpellCreatureDirectionEnum SpellCreatureDirectionEnum;
 
 	/*半径*/
 	UPROPERTY(EditAnywhere, Category="ClusterTask")
@@ -236,16 +188,25 @@ class UClusterTask : public UTask
 	UPROPERTY(EditAnywhere, Category="ClusterTask")
 	int ElementsNum;
 
+	int ElementIndex;
+
+	UPROPERTY(EditAnywhere, Category="ClusterTask")
+	float SpawnTimeInterval = 0;
+
 	UPROPERTY()
 	TArray<AARPGSpellCreature*> Creatures;
 
+	TArray<FTimerHandle> TimerHandles;
+
 	void SpawnCreatures();
+
+	void SpawnNextCreature();
 protected:
 	virtual void OnTaskExecuted() override;
 	virtual void OnTaskFinished() override;
 
 public:
-	static UClusterTask* Create(AARPGCastAction* TaskOwnerAction, FClusterDescriptionTask ClusterDescriptionTask);
+	static UClusterTask* Create(AARPGCastAction* TaskOwnerAction, FClusterTaskDescription ClusterTaskDescription);
 };
 
 /**
@@ -260,7 +221,7 @@ struct FSimpleCastActionDescriptionStruct : public FTableRowBase
 	TArray<FSimpleTaskDescriptionStruct> ActionTaskStructs;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGCastAction", meta=(AllowPrivateAccess))
-	TArray<FClusterDescriptionTask> ActionClusterTaskStructs;
+	TArray<FClusterTaskDescription> ActionClusterTaskStructs;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGSpell Definition")
 	ESpellTypeEnum SpellTypeEnum;
@@ -314,7 +275,7 @@ class AARPGCastAction : public AARPGMultiMontageAction
 	float MaxDistance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGCastAction", meta=(AllowPrivateAccess))
-	bool bUseLastTaskEndTimeAsCastActionFinishTime;
+	bool bUseLastTaskEndTimeAsCastActionFinishTime = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGCastAction", meta=(AllowPrivateAccess, EditCondition=
 		"!bUseLastTaskEndTimeAsCastActionFinishTime", EditConditionHides))
@@ -325,7 +286,7 @@ class AARPGCastAction : public AARPGMultiMontageAction
 	TArray<FSimpleTaskDescriptionStruct> ActionSimpleTaskStructs;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ARPGCastAction", meta=(AllowPrivateAccess))
-	TArray<FClusterDescriptionTask> ActionClusterTaskStructs;
+	TArray<FClusterTaskDescription> ActionClusterTaskStructs;
 
 
 	UPROPERTY()
@@ -345,18 +306,6 @@ class AARPGCastAction : public AARPGMultiMontageAction
 
 public:
 	AARPGCastAction();
-
-
-	virtual TArray<FSimpleTaskDescriptionStruct>& GetActionTaskStructs()
-	{
-		return ActionSimpleTaskStructs;
-	}
-
-	virtual void SetActionTaskStructs(const TArray<FSimpleTaskDescriptionStruct>& NewActionTaskStructs)
-	{
-		this->ActionSimpleTaskStructs = NewActionTaskStructs;
-		InitTasks();
-	}
 
 	static AARPGCastAction* Create(AARPGCharacter* ActionOwnerCharacter,
 	                               const FSimpleCastActionDescriptionStruct& CastActionDescription,
@@ -387,6 +336,28 @@ protected:
 	virtual void OnMontageNotify(FName NotifyName, const FBranchingPointNotifyPayload& PointPayload) override { ; }
 	virtual void OnMontageStop(UAnimMontage* Montage, bool bInterrupted) override { ; }
 	/*-End- 施法动画仅是视觉特效 -End-*/
+
+public:
+	/*-Start- Getter & Setter -Start-*/
+
+	virtual TArray<FSimpleTaskDescriptionStruct>& GetActionTaskStructs() { return ActionSimpleTaskStructs; }
+
+	virtual void SetActionTaskStructs(const TArray<FSimpleTaskDescriptionStruct>& NewActionTaskStructs)
+	{
+		this->ActionSimpleTaskStructs = NewActionTaskStructs;
+		InitTasks();
+	}
+
+
+	TArray<FClusterTaskDescription>& GetActionClusterTaskStructs() { return ActionClusterTaskStructs; }
+
+	void SetActionClusterTaskStructs(const TArray<FClusterTaskDescription>& NewActionClusterTaskStructs)
+	{
+		this->ActionClusterTaskStructs = NewActionClusterTaskStructs;
+		InitTasks();
+	}
+
+	/*-End- Getter & Setter -End-*/
 };
 
 class UARPGDamageBoxComponent;

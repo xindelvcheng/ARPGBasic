@@ -82,7 +82,7 @@ T* UARPGStaticFunctions::SpawnActor(UClass* ActorClass, FTransform Transform, AA
 }
 
 
-FTransform UARPGStaticFunctions::GetActorLocalTransform(AActor* OriginActor,
+FTransform UARPGStaticFunctions::ConvActorLocalTransformToWorldTransform(AActor* OriginActor,
                                                                const FVector& LocationOffset,
                                                                const FRotator& RotationOffset,
                                                                const FVector& RelativeScale)
